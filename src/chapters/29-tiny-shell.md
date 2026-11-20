@@ -34,6 +34,13 @@ Unix/Linux programming:
   until a specific child process has finished executing. This ensures our
   shell prompt doesn't reappear until the command's output is complete.
 
+If `execvp` fails (for example, the command does not exist), it returns, and
+the child is still a copy of our shell. It must stop at once with `_exit()`
+rather than `exit()`: `exit()` would also clean up the stdio buffers the child
+copied from its parent, and when the shell reads its commands from a file that
+cleanup can rewind the input the two processes share, making the parent read
+the same commands over and over.
+
 Let's build our own `bash`!
 
 ## Full Source
@@ -97,7 +104,7 @@ Let's build our own `bash`!
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>   // For strtok()
-#include <unistd.h>   // For fork(), execvp()
+#include <unistd.h>   // For fork(), execvp(), _exit()
 #include <sys/wait.h> // For waitpid()
 
 // --- Constants ---
@@ -201,7 +208,18 @@ int main(void)
             {
                 // If `execvp` returns, an error occurred (e.g., command not found).
                 perror("execvp failed");
-                exit(1); // IMPORTANT: Terminate the child process on failure.
+
+                // IMPORTANT: The child must end here, or it would carry on
+                // running a second copy of the shell's loop. We use `_exit()`,
+                // not `exit()`. The child shares the parent's open files, and
+                // `exit()` would also clean up the stdio buffers it copied from
+                // the parent. When the shell's input is a file
+                // (`./29_tiny_shell < commands.txt`), that cleanup can move the
+                // shared read position back, so the parent reads the same lines
+                // again, forever. `_exit()` (from <unistd.h>) ends the process
+                // at once, without touching stdio. 127 is the exit status shells
+                // use for "command not found".
+                _exit(127);
             }
         }
         else

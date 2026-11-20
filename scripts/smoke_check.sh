@@ -253,6 +253,17 @@ run_tiny_shell_check() {
 
     expect_contains "$shell_output" "Command too long. Maximum length is 78 characters." "TinyShell did not reject an overlong command line."
     expect_not_contains "$shell_output" "execvp failed" "TinyShell split an overlong command into a second command."
+
+    # Commands read from a regular file (seekable stdin), ending at EOF, with
+    # unknown commands: a child that calls exit() instead of _exit() after a
+    # failed execvp rewinds the shared input, and when the parent refills its
+    # buffer at the end it reads the same commands again, forever.
+    run_lesson_with_input "$shell_bin" 'no_such_command_cftgu\nno_such_command_cftgu\n'
+    expect_status 0 "TinyShell did not exit cleanly after unknown commands read from a file."
+    failures=$(printf '%s\n' "$RUN_OUTPUT" | grep -c 'execvp failed' || true)
+    if [ "$failures" -ne 2 ]; then
+        fail_with_output "TinyShell ran 2 unknown commands from a file but reported $failures failures." "$RUN_OUTPUT"
+    fi
 }
 
 # Run a lesson binary with the given stdin text, failing if it does not exit

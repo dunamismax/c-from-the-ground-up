@@ -514,13 +514,17 @@ the lessons it serves.
 
 - [x] **Unchecked `scanf` made interactive lessons misbehave.** Done
       2026-11-20; see the Done log.
-- [ ] **EOF and hang sweep for the remaining lessons.** Lessons 3, 5, 6 and 13
-      are covered by `run_input_checks` in `scripts/smoke_check.sh`. A manual
-      `</dev/null` run of lessons 9, 12, 17, 18 and 29 found no hangs. Sweep
-      every other lesson that reads stdin the same way. Lessons that need
-      arguments (16, 25, 34, ...) should print usage and exit non-zero, which is
-      fine. Add any interactive lesson to `run_input_checks` with
-      valid, garbage and EOF cases.
+- [x] **EOF and hang sweep for the remaining lessons.** Done 2026-11-20: every
+      lesson except 26 (needs a server) and 33 and 35 (ncurses, need a
+      terminal) was run with empty stdin and with garbage input from a file
+      under a 5-second limit, and lesson 25 also with a file argument and
+      valid commands. All exit cleanly except lesson 29, which looped forever
+      when its commands came from a file: after a failed `execvp` the child
+      called `exit()`, whose stdio cleanup rewound the input it shares with
+      the parent. It now calls `_exit(127)` and explains why, chapter 29 says
+      so, and the smoke check feeds it unknown commands from a file (that
+      check fails against the old lesson). Lessons that need arguments print
+      usage and exit non-zero. Not covered: 33 and 35 under a pseudo-terminal.
 - [ ] **Uninitialized-read detection.** The behavioural checks cannot see a
       read of an uninitialized variable when the garbage value happens to
       produce the right output. The old lesson 13 passed them for exactly that
@@ -693,6 +697,10 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** EOF and hang sweep of the lessons (see Now). Fixed lesson
+  29's infinite loop on file input (`_exit` after a failed `execvp`) and
+  added a smoke-check regression for it.
 
 - **2026-11-20:** milestone W4, learner experience.
   - Progress: `site/src/lib/progress/` (pure snapshot logic and a
