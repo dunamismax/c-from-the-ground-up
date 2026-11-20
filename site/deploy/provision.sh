@@ -74,8 +74,11 @@ if ! grep -qE "^host[[:space:]]+$DB[[:space:]]+$WEB[[:space:]]" "$HBA"; then
   chown --reference="$HBA" "$HBA.next"
   chmod --reference="$HBA" "$HBA.next"
   mv -f "$HBA.next" "$HBA"
-  pg_ctlcluster 18 main reload
 fi
+# Reload only a file PostgreSQL parses cleanly. (pg_ctlcluster's reload does
+# not work on this host, so ask the server directly.)
+[[ $(psql_admin -At -c "select count(*) from pg_hba_file_rules where error is not null") == 0 ]] || die "$HBA has errors (see pg_hba_file_rules); not reloading"
+psql_admin -At -c 'select pg_reload_conf()' >/dev/null
 
 # --- Environment files (root-only; systemd reads them as root). --------------
 umask 077
