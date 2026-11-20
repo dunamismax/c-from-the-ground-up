@@ -73,9 +73,14 @@ systemctl reload caddy
 # Verify through Caddy with the real hostname and certificate.
 live=$(local_get /version.txt) || die 'site did not answer over HTTPS'
 [[ $live == "$commit" ]] || die "live version.txt is $live, expected $commit"
-local_get / | grep -q 'C From The Ground Up' || die 'home page failed through Caddy'
+# Fetch each page in full before matching it. Piping curl into `grep -q`
+# breaks under pipefail: grep exits at the first match, curl fails writing
+# the rest (error 23), and local_get retries that until it gives up.
+home=$(local_get /) || die 'home page failed through Caddy'
+[[ $home == *'C From The Ground Up'* ]] || die 'home page through Caddy lacks the site title'
 [[ $(local_get /healthz) == '{"status":"ok","database":"ok"}' ]] || die '/healthz failed through Caddy'
-local_get /api/account | grep -q '"enabled":' || die '/api/account failed through Caddy'
+account=$(local_get /api/account) || die '/api/account failed through Caddy'
+[[ $account == *'"enabled":'* ]] || die "/api/account through Caddy returned $account"
 # The app must see the address Caddy saw (here loopback), never one the client
 # claims in X-Forwarded-For: rate limiting depends on it.
 seen=$(curl -fsS --max-time 10 --resolve "$HOST:443:127.0.0.1" -H 'X-Forwarded-For: 203.0.113.9' "https://$HOST/healthz/address") || die '/healthz/address failed through Caddy'

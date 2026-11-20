@@ -41,7 +41,10 @@ smoke_port=$(( 20000 + RANDOM % 20000 ))
 smoke_pid=$!
 trap 'kill "$smoke_pid" 2>/dev/null || true; rm -rf "$smoke"' EXIT
 for _ in {1..30}; do curl -fsS --max-time 2 "http://127.0.0.1:$smoke_port/" >/dev/null 2>&1 && break; sleep 0.5; done
-curl -fsS --max-time 5 "http://127.0.0.1:$smoke_port/" | grep -q 'C From The Ground Up' || die 'smoke: home page did not render'
+# Fetch the whole page, then match: `curl | grep -q` fails under pipefail
+# when grep exits early and curl cannot finish writing.
+smoke_home=$(curl -fsS --max-time 5 "http://127.0.0.1:$smoke_port/") || die 'smoke: home page did not render'
+[[ $smoke_home == *'C From The Ground Up'* ]] || die 'smoke: home page lacks the site title'
 [[ $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://127.0.0.1:$smoke_port/healthz") == 503 ]] || die 'smoke: /healthz did not report the missing database'
 kill "$smoke_pid"; wait "$smoke_pid" 2>/dev/null || true
 # The bundled migrator runs without node_modules too, and reads every migration.
