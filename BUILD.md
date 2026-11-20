@@ -51,11 +51,16 @@ first for conventions and the verification workflow.
   design system, landing, course overview, part, lesson, setup, about and 404
   pages, all prerendered. W4 is done: progress in the browser, search,
   "Try it online" through Compiler Explorer, keyboard shortcuts and zip
-  downloads. W5 has CSP now; W7 has its SEO basics. Open: the W5 client-IP
-  test and migrator, W6 (needs decision D7), and the rest of W7.
+  downloads. W5 is done in code: CSP, the client-IP test and the bundled
+  migrator (its first production run is the next deploy). W6 is built with
+  D7's default (GitHub sign-in only): accounts, synced progress, rate limits,
+  the account and privacy pages. Accounts stay off in production until the
+  maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics; the
+  rest of W7 is open.
 - **Live:** https://cfromthegroundup.com serves the full course (W2-W4, the
   CSP and the SEO basics) from `ubuntu-vm`, commit `ae2d9cf`, deployed
-  2026-11-20 with `site/deploy/`. W5's remaining items are listed there.
+  2026-11-20 with `site/deploy/`. W5's migrator and client-IP check and W6 are
+  not deployed yet.
 
 ---
 
@@ -157,7 +162,14 @@ before relying on memory. In particular:
 - [x] Cloudflare setup: both records are **DNS only**. They resolve straight to
       the host's public IP, so Caddy's automatic HTTPS applies (D10).
 - [ ] Decisions D6-D10 below. Every one has a default, so W1-W5 can proceed
-      without them.
+      without them. W6 was built with D7's default (GitHub only); say if you
+      want something else.
+- [ ] A GitHub OAuth app for sign-in (W6), under the maintainer's account:
+      homepage `https://cfromthegroundup.com`, callback
+      `https://cfromthegroundup.com/api/auth/callback/github`. Then write
+      `/etc/web-apps/cfromthegroundup/accounts.env` on the server as
+      `site/deploy/README.md` ("Accounts") says. Until then accounts are off
+      and the site works as in W4.
 
 #### W1. Scaffold the app
 
@@ -338,11 +350,18 @@ runbook.
       `EnvironmentFile=/etc/web-apps/cfromthegroundup/web.env` (host convention),
       `Restart=on-failure` and systemd hardening (`NoNewPrivileges`,
       `ProtectSystem=strict` and so on).
-- [ ] Production environment template. Done: `DATABASE_URL` in `web.env`
-      (written by `provision.sh`), and `ORIGIN`, `PORT`, `HOST`,
-      `ADDRESS_HEADER=X-Forwarded-For` and `XFF_DEPTH=1` in the unit (DNS only,
-      so Caddy is the only proxy). Still open: the test below, which needs an
-      endpoint that reports the address.
+- [x] Production environment template: `DATABASE_URL` in `web.env`
+      (written by `provision.sh`), the optional `accounts.env` (W6), and
+      `ORIGIN`, `PORT`, `HOST`, `ADDRESS_HEADER=X-Forwarded-For` and
+      `XFF_DEPTH=1` in the unit (DNS only, so Caddy is the only proxy). Tested
+      2026-11-20: `GET /healthz/address` reports `getClientAddress()`.
+      `healthz/address/address.e2e.ts` starts `node build` with the unit's
+      proxy settings and checks that the right-most `X-Forwarded-For` entry
+      wins, then puts a real Caddy in front (when `caddy` is installed, as on
+      the maintainer's Mac) and checks that a spoofed header is ignored.
+      Caddy's documented default is to ignore incoming `X-Forwarded-*` from
+      untrusted clients. `cutover.sh` repeats the spoof check through the
+      production Caddy on every deploy.
   - `DATABASE_URL`, `ORIGIN=https://cfromthegroundup.com`, `PORT`, `HOST`
   - the adapter-node proxy settings (`PROTOCOL_HEADER`, `HOST_HEADER`,
     `ADDRESS_HEADER`, `XFF_DEPTH`)
@@ -358,11 +377,17 @@ runbook.
   - applies migrations
   - restarts the service and waits for `/healthz`
   - keeps the previous build directory for a quick rollback
-- [ ] Migrations at deploy time: there are none yet. Before the first one (W6),
-      bundle a migrator into the build (the host's other SvelteKit site ships
-      `build/migrate/migrate.js`) and have `cutover.sh` run it as
-      `cfromthegroundup_migration` before the switch. Until then, cutover
-      refuses a release with a `drizzle/` directory.
+- [x] Migrations at deploy time: `scripts/migrate.ts` (drizzle-orm's
+      migrator, bookkeeping in schema `app`, `SET ROLE` to the owner) is
+      bundled by `npm run build` into `build/migrate/migrate.js` with rolldown,
+      so it runs without `node_modules`. `prepare.sh` checks the bundle reads
+      every migration; `cutover.sh` takes a backup and runs it before the
+      switch, as `cfromthegroundup_migration` in a sandboxed `systemd-run` unit
+      reading `migration.env`. Rehearsed locally against roles set up exactly
+      as `provision.sh` does: the tables belong to the owner, the web role can
+      read and write rows but not create tables, and a second run applies
+      nothing. The runbook explains forward-only, backward-compatible
+      migrations.
 - [x] PostgreSQL 18 setup (`site/deploy/provision.sh`; 18 was already
       installed from Ubuntu's archive):
   - install from Ubuntu's archive if it ships 18, otherwise from the PGDG apt
@@ -381,25 +406,47 @@ runbook.
 - **Done when:** `https://cfromthegroundup.com` serves the site with valid TLS,
   `www` redirects, `/healthz` is green, a redeploy is one command, and a
   database backup exists.
-- **Status (2026-11-20):** live. TLS, the `www` redirect, `/healthz` and a
-  backup are verified. A redeploy is two commands (prepare, then cutover). Open
-  items: the client-IP test and the migrator. The CSP is live since the
-  `ae2d9cf` deploy.
+- **Status (2026-11-20):** done. TLS, the `www` redirect, `/healthz` and a
+  backup are verified live. A redeploy is two commands (prepare, then
+  cutover). The migrator and the client-IP check through the production Caddy
+  run for the first time at the next deploy.
 
-#### W6. Accounts and synced progress (needs D7)
+#### W6. Accounts and synced progress (built with D7's default)
 
-- [ ] Authentication with Better Auth (`npx sv add better-auth`) and its Drizzle
-      adapter, using the sign-in methods chosen in D7.
-- [ ] Add a `lesson_progress` table (user, lesson slug, `completed_at`,
-      `last_viewed_at`, unique on user and slug), and have the progress store
-      talk to it through remote functions.
-- [ ] On first sign-in, merge the progress already in `localStorage` into the
-      account.
-- [ ] Rate-limit sign-in and other write endpoints.
-- [ ] Account page with data export and account deletion.
-- [ ] Privacy policy page covering what is stored and why.
+- [x] Authentication with Better Auth 1.7 and its Drizzle adapter, GitHub
+      sign-in only (D7's default). Installed by hand rather than with
+      `sv add better-auth`, which adds demo routes. Config in
+      `src/lib/server/auth-options.ts` (sessions 30 days, GitHub tokens stored
+      encrypted, rate limits, telemetry off), the instance in `auth.ts`,
+      mounted under `/api/auth/` in `hooks.server.ts`. Accounts are on only
+      when all four `BETTER_AUTH_*` / `GITHUB_*` variables are set.
+- [x] A `lesson_progress` table (user, lesson slug, `completed_at`,
+      `last_viewed_at`, primary key on user and slug), with Better Auth's
+      tables, all in schema `app` (migration `0000_accounts_and_progress`).
+      The progress store talks to it through `GET`/`POST`/`PUT /api/progress`
+      (see the Decision log for why not remote functions), via
+      `src/lib/progress/account-backend.ts`.
+- [x] Merging: progress in `localStorage` is merged into the account on first
+      sign-in (union of completions, newest view), and again whenever this
+      browser changed completions while signed out or offline. Otherwise the
+      account wins, so "not complete" on one device sticks on the others.
+- [x] Rate limits: Better Auth's own (10 a minute for sign-in and callbacks,
+      60 for the rest of `/api/auth/`) plus 120 writes a minute per client
+      address on all of `/api/` (`src/lib/server/rate-limit.ts`).
+- [x] Account page (`/account`): sign in, progress, download your data (JSON,
+      no secrets), sign out, delete the account (cascades to sessions, the
+      GitHub link and progress).
+- [x] Privacy policy (`/privacy`): what is stored with and without an account,
+      where, for how long, and how to export or delete it. Linked from the
+      footer, the account page and About.
 - **Done when:** progress follows a signed-in learner across devices, and
   signed-out learning still works exactly as in W4.
+- **Status (2026-11-20):** done in code. `account/account.e2e.ts` signs
+  browsers in with Better Auth's test helpers and covers the GitHub redirect,
+  the first-sign-in merge, two browsers syncing both ways, sign-out,
+  export and deletion, API validation and axe on the signed-in page; the
+  W4 tests still pass with accounts on. Production needs the GitHub OAuth app
+  (W0) before anyone can sign in.
 
 #### W7. Launch and make the site the front door
 
@@ -438,7 +485,7 @@ runbook.
   - Default: keep publishing it until W7, then add a banner on every page
     pointing to the matching lesson on the site.
   - Alternatives: full redirect, or retire it.
-- [ ] **D7. Sign-in methods.**
+- [ ] **D7. Sign-in methods.** W6 was built with the default (2026-11-20).
   - Default: GitHub OAuth only. It fits the audience and needs no email service.
   - Options: add email magic links (requires an SMTP or email API provider),
     and/or email + password.
@@ -657,6 +704,15 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-20: W6 uses `+server.ts` JSON endpoints, not remote functions.**
+  BUILD.md planned remote functions for progress, but in SvelteKit 3.1 they
+  are still experimental and need Svelte's experimental async mode across the
+  app. Three small endpoints under `/api/progress` do the same job with stable
+  APIs; JSON bodies cannot be sent cross-site without CORS, so they are safe
+  from CSRF. Revisit when remote functions are stable.
+- **2026-11-20: W6 built with D7's default (GitHub sign-in only)**, so the
+  code is ready; the maintainer can still pick other methods. Accounts are off
+  until the GitHub OAuth app and `accounts.env` exist.
 - **2026-11-20: production deploy follows the host's conventions.** The site
   runs on `ubuntu-vm` like its other sites rather than as BUILD.md first
   sketched: port 4317 (not 3000), `/srv/www/cfromthegroundup.com/releases`
@@ -698,6 +754,18 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** W5 finished in code and W6 built.
+  - W5: `/healthz/address` and its tests (adapter-node behind the unit's proxy
+    settings, and behind a real Caddy); the bundled migrator, run by
+    `cutover.sh` after a backup; `prepare.sh` checks it.
+  - W6: Better Auth with GitHub, schema `app` with Better Auth's tables and
+    `lesson_progress`, `/api/account` (state, export, delete),
+    `/api/progress`, synced progress with merge on sign-in, rate limits,
+    `/account` and `/privacy`, an optional `accounts.env` in the unit, and the
+    runbook's "Migrations" and "Accounts" sections. 19 new unit tests (sync,
+    merging, rate limits, config) and 8 account e2e tests; the whole suite
+    (63 e2e tests) is green with accounts on.
 
 - **2026-11-20:** second production deploy, commit `ae2d9cf` (the course site:
   W2-W4, CSP, sitemap and structured data, lesson 29 fix). Prepare and cutover

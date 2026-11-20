@@ -44,6 +44,8 @@ for _ in {1..30}; do curl -fsS --max-time 2 "http://127.0.0.1:$smoke_port/" >/de
 curl -fsS --max-time 5 "http://127.0.0.1:$smoke_port/" | grep -q 'C From The Ground Up' || die 'smoke: home page did not render'
 [[ $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://127.0.0.1:$smoke_port/healthz") == 503 ]] || die 'smoke: /healthz did not report the missing database'
 kill "$smoke_pid"; wait "$smoke_pid" 2>/dev/null || true
+# The bundled migrator runs without node_modules too, and reads every migration.
+"$NODE" "$smoke/build/migrate/migrate.js" --check drizzle || die 'smoke: the bundled migrator cannot read drizzle/'
 trap - EXIT; rm -rf "$smoke"
 
 # The release: the adapter-node build, package.json ("type": "module" for

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MemoryStorage } from './memory-storage.js';
 import {
 	continueSlug,
 	EMPTY_PROGRESS,
@@ -13,28 +14,6 @@ import {
 
 const now = new Date('2026-11-20T12:00:00Z');
 const order = ['01-hello-world', '02-variables-and-data-types', '03-user-input'];
-
-class MemoryStorage implements Storage {
-	#items = new Map<string, string>();
-	get length() {
-		return this.#items.size;
-	}
-	clear() {
-		this.#items.clear();
-	}
-	getItem(key: string) {
-		return this.#items.get(key) ?? null;
-	}
-	key(index: number) {
-		return [...this.#items.keys()][index] ?? null;
-	}
-	removeItem(key: string) {
-		this.#items.delete(key);
-	}
-	setItem(key: string, value: string) {
-		this.#items.set(key, value);
-	}
-}
 
 describe('progress', () => {
 	it('marks lessons complete and incomplete without mutating', () => {

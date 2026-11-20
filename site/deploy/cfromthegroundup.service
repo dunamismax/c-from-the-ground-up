@@ -6,7 +6,7 @@
 # proxies everything else here. Learner state lives in the local PostgreSQL 18
 # database `cfromthegroundup` (schema `app`), reached over 127.0.0.1 as
 # `cfromthegroundup_web`; DATABASE_URL is in the root-only web.env. Migrations
-# are never run by this service.
+# are never run by this service (cutover.sh runs them as the migration role).
 #
 # Client IPs: Caddy is the only proxy (Cloudflare DNS only) and sets
 # X-Forwarded-For to the visitor's address, so XFF_DEPTH=1 makes
@@ -24,6 +24,9 @@ WorkingDirectory=/srv/www/cfromthegroundup.com/current
 Environment=NODE_ENV=production HOST=127.0.0.1 PORT=4317 ORIGIN=https://cfromthegroundup.com
 Environment=ADDRESS_HEADER=X-Forwarded-For XFF_DEPTH=1
 EnvironmentFile=/etc/web-apps/cfromthegroundup/web.env
+# Optional: the four account settings (GitHub sign-in, BUILD.md W6). Without
+# the file the site runs with accounts off. See README.md, "Accounts".
+EnvironmentFile=-/etc/web-apps/cfromthegroundup/accounts.env
 ExecStart=/opt/node-runtime/bin/node /srv/www/cfromthegroundup.com/current/build
 Restart=always
 RestartSec=5

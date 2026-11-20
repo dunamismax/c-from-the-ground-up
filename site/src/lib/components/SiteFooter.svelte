@@ -21,6 +21,7 @@
 			<a class="hover:text-ink" href="/about">About</a>
 			<a class="hover:text-ink" href="/downloads/c-from-the-ground-up.zip">Download (.zip)</a>
 			<a class="hover:text-ink" href={LICENSE_URL}>MIT License</a>
+			<a class="hover:text-ink" href="/privacy">Privacy</a>
 		</nav>
 	</div>
 </footer>

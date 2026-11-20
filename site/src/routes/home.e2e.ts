@@ -65,12 +65,14 @@ test('/healthz reports a healthy app and database', async ({ request }) => {
 test('robots.txt and the sitemap list every public page', async ({ request }) => {
 	const robots = await (await request.get('/robots.txt')).text();
 	expect(robots).toContain('Sitemap: https://cfromthegroundup.com/sitemap.xml');
+	expect(robots).toContain('Disallow: /api/');
 	const sitemap = await request.get('/sitemap.xml');
 	expect(sitemap.status()).toBe(200);
 	const xml = await sitemap.text();
 	expect(xml.match(/<loc>https:\/\/cfromthegroundup\.com\/lessons\/\d{2}-/g)).toHaveLength(35);
 	expect(xml).toContain('<loc>https://cfromthegroundup.com/parts/5</loc>');
 	expect(xml).toContain('<loc>https://cfromthegroundup.com/setup</loc>');
+	expect(xml).toContain('<loc>https://cfromthegroundup.com/privacy</loc>');
 });
 
 test('pages carry structured data', async ({ page }) => {

@@ -6,6 +6,8 @@
 	},
 	"include": [
 		"src",
+		"scripts",
+		"e2e",
 		"vite.config.ts",
 		"prettier.config.js",
 		"eslint.config.js",

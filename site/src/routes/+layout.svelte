@@ -5,7 +5,8 @@
 	import SearchDialog from '#lib/components/SearchDialog.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import SiteHeader from '#lib/components/SiteHeader.svelte';
-	import { localStorageBackend } from '#lib/progress/progress.js';
+	import { account } from '#lib/account/account.svelte.js';
+	import { browserBackend } from '#lib/progress/account-backend.js';
 	import { progress } from '#lib/progress/progress.svelte.js';
 	import { searchUi } from '#lib/search-ui.svelte.js';
 	import { isTypingTarget } from '#lib/shortcuts.js';
@@ -14,9 +15,11 @@
 	let { children }: LayoutProps = $props();
 
 	// Learner progress lives in this browser (milestone W4). Pages render
-	// without it and fill in once it is read.
+	// without it and fill in once it is read. For a signed-in learner the
+	// account then takes over (milestone W6).
 	onMount(() => {
-		const disconnect = progress.connect(localStorageBackend(window.localStorage, window));
+		const disconnect = progress.connect(browserBackend(window.localStorage, window));
+		void account.load();
 		// Lets end-to-end tests wait until the page is interactive.
 		document.documentElement.dataset.hydrated = '';
 		return disconnect;

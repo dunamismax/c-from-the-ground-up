@@ -170,21 +170,30 @@ site/src/routes/lessons/[slug]/    lesson page; files/[name] serves each lesson 
 site/src/routes/*.e2e.ts           Playwright tests, including a11y.e2e.ts (axe-core, WCAG 2.2 AA, both themes)
 site/src/lib/components/           Svelte components (CodeBlock, RunPanel, CourseSidebar, ...)
 site/src/lib/site.ts               site-wide constants (name, URLs)
-site/src/lib/progress/             learner progress: snapshot logic, ProgressBackend (localStorage now, database in W6)
+site/src/lib/progress/             learner progress: snapshot logic, ProgressBackend (browser), account-backend.ts (synced), api.ts
+site/src/lib/account/              account.svelte.ts: the browser's account state, sign-in/out and delete (fetch, no auth client)
 site/src/lib/search.ts             search index options shared by /search-index.json and SearchDialog.svelte
 site/src/lib/compiler-explorer.ts  "Try it online" (Compiler Explorer client state and shortener call)
 site/src/routes/downloads/         prerendered zip downloads (per lesson and the whole course)
 site/src/routes/healthz/+server.ts health probe: 200 when the database answers `select 1`, else 503
+site/src/routes/healthz/address/   the client address the app sees (getClientAddress); cutover checks it through Caddy
+site/src/routes/api/               dynamic JSON endpoints: account (state, export, delete) and progress
+site/src/routes/account/, privacy/ account page (prerendered shell, fills in from /api/account) and privacy policy
+site/src/hooks.server.ts           Better Auth under /api/auth/, session lookup and write rate limit for /api/
 site/src/lib/                      shared code, imported as #lib/...
 site/src/lib/server/               server-only code (never shipped to the browser)
-site/src/lib/server/db/            Drizzle: schema.ts (tables) and index.ts (getDb(), lazy postgres.js client)
+site/src/lib/server/db/            Drizzle: schema.ts (tables, schema `app`) and index.ts (getDb(), lazy postgres.js client)
+site/src/lib/server/auth*.ts       Better Auth: auth-options.ts (shared with e2e), auth.ts (getAuth(), getSessionUser())
+site/src/lib/server/progress*.ts   progress in the database (applyOps, mergeProgress) and request validation (valibot)
 site/src/lib/server/content/       build-time content loader: SUMMARY.md + chapters + lesson files -> Lesson objects
 site/src/lib/server/content/metadata.ts  per-lesson link flags, platform, example args; generates compile commands
 site/src/lib/content/types.ts      Course / Lesson / Segment types shared with pages and components
-site/drizzle/                      generated migrations (committed; created by the first db:generate)
+site/drizzle/                      generated migrations (committed)
+site/scripts/migrate.ts            the migrator; build-migrator.ts bundles it into build/migrate/migrate.js
+site/e2e/accounts.ts               e2e account settings and signIn() (Better Auth test helpers, no GitHub)
 site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
 site/.env.example                  copy to site/.env (git-ignored) for local development
-site/playwright.config.ts          e2e tests run against `node build`, not the dev server
+site/playwright.config.ts          e2e tests run against `node build` (after the migrator), not the dev server
 site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover/rollback, runbook
 ```
 
@@ -192,7 +201,7 @@ Commands (run in `site/`):
 
 ```sh
 npm run dev                 # dev server
-npm run build               # production build into build/
+npm run build               # production build into build/, plus build/migrate/migrate.js
 npm run start               # node build, loading .env if present
 npm run check               # svelte-check
 npm run lint                # prettier --check + eslint
@@ -201,7 +210,7 @@ npm test                    # vitest: *.spec.ts (node) and *.svelte.spec.ts (bro
 npm run test:e2e            # playwright: *.e2e.ts against node build on :4173
 npm run db:start            # docker compose up --wait (db:stop to stop)
 npm run db:generate         # migration from schema.ts into drizzle/
-npm run db:migrate          # apply migrations
+npm run db:migrate          # apply drizzle/ with scripts/migrate.ts (what production runs)
 ```
 
 Conventions:
@@ -228,6 +237,18 @@ Conventions:
   `progress.ready`. Inside an `$effect`, wrap progress writes in `untrack`.
   Tests that press keys right after loading must wait for
   `html[data-hydrated]`.
+- **Accounts are optional** (GitHub sign-in through Better Auth, W6). They are
+  on only when all four `BETTER_AUTH_*` / `GITHUB_*` variables are set; a
+  partial set fails at startup. Every page must work signed out. Pages are
+  prerendered, so account state comes from `GET /api/account` after load
+  (`account.status`). For a signed-in learner `accountBackend` makes the
+  database the record and localStorage a cache; see its header comment for
+  how browser progress is merged at sign-in. API endpoints live under
+  `/api/`, set `prerender = false`, use `requireUser()` / `readBody()` from
+  `#lib/server/api.js`, and validate bodies with valibot in server-only
+  modules (keep validators out of the browser bundle). `npm run start` needs
+  `ORIGIN`, as production sets it: without it adapter-node assumes https and
+  Better Auth does not recognise its own URLs.
 - **Content Security Policy** lives in `csp` in `vite.config.ts`
   (`csp.e2e.ts` fails on violations). A new third-party origin the browser
   talks to needs a directive there; an inline `<script>` in `app.html` is
@@ -235,11 +256,15 @@ Conventions:
 - **Accessibility is tested.** `a11y.e2e.ts` fails on any axe-core WCAG 2.2 AA
   violation. Keep text at AA contrast (do not dim text with `opacity`), give
   every scrollable `pre` `tabindex="0"`, and keep focus rings visible.
-- **Drizzle:** tables go in `src/lib/server/db/schema.ts`. Change the schema,
-  run `npm run db:generate`, review and commit the SQL under `drizzle/`. Do not
-  use `drizzle-kit push`; production applies the committed migrations. The
-  client is postgres.js (`postgres`). Get it through `getDb()`, which connects
-  lazily so builds never need a database.
+- **Drizzle:** tables go in `src/lib/server/db/schema.ts`, in `pgSchema('app')`
+  (production's web role may only use schema `app`). Change the schema, run
+  `npm run db:generate`, review and commit the SQL under `drizzle/`. Do not use
+  `drizzle-kit push` or `drizzle-kit migrate`; `npm run db:migrate` and
+  production both use `scripts/migrate.ts`, which keeps its bookkeeping in
+  schema `app`. Migrations are forward-only and run while the previous release
+  is still live, so a migration must not break it: add first, drop or rename a
+  release later. The client is postgres.js (`postgres`). Get it through
+  `getDb()`, which connects lazily so builds never need a database.
 - **Database holds learner state only.** Course content comes from the lesson
   and chapter files at build time; never copy it into `site/`.
 - **Content loader:** pages get content through `getCourse()` / `getLesson()`
@@ -255,10 +280,13 @@ Conventions:
   `npm run lint` must pass.
 - **Tests:** unit tests sit next to the code as `*.spec.ts`; component tests are
   `*.svelte.spec.ts` (Vitest browser mode, Chromium); e2e tests are `*.e2e.ts`.
+  The e2e server runs with accounts on and test-only settings; sign a browser
+  context in with `createLearner()` and `signIn()` from `e2e/accounts.ts`.
   Keep logic in plain modules (like `src/lib/server/health.ts`) so it can be unit
   tested without a server or database.
 - **Secrets:** `site/.env` is git-ignored; only `site/.env.example` is
-  committed. Production configuration lives on the server.
+  committed. Production configuration lives on the server
+  (`/etc/web-apps/cfromthegroundup/*.env`, see the runbook).
 - **Deploying:** production is `ubuntu-vm`, shared with other sites.
   Follow `site/deploy/README.md` exactly (prepare as `sawyer`, then cutover as
   root under `with-deploy-lock`). Deploy only when the maintainer asks, and

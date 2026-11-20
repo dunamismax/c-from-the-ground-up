@@ -39,8 +39,9 @@
 
 		<h2 id="privacy">Privacy</h2>
 		<p>
-			There are no accounts, ads, trackers or cookies. Your browser remembers your theme and your
-			preferred operating system tab on this device only.
+			There are no ads or trackers. Accounts are optional: without one, your browser remembers your
+			progress, theme and preferred operating system tab on this device only. The
+			<a href="/privacy">privacy policy</a> says exactly what an account stores.
 		</p>
 
 		<h2 id="help">Help and contributing</h2>

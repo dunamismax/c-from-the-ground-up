@@ -77,6 +77,19 @@ remove_unit() {
   systemctl daemon-reload
 }
 
+# Apply a release's migrations (build/migrate/migrate.js, see
+# site/scripts/migrate.ts) as the migration role, in a throwaway sandboxed
+# unit like the site's own. The credentials reach it only through
+# EnvironmentFile, never a command line.
+migrate_release() {
+  local release=$1
+  systemd-run --quiet --wait --pipe --collect --service-type=exec \
+    -p DynamicUser=yes -p EnvironmentFile="$MIGRATION_ENV" -p WorkingDirectory="$release" \
+    -p NoNewPrivileges=yes -p ProtectSystem=strict -p ProtectHome=yes -p PrivateTmp=yes \
+    -p PrivateDevices=yes -p 'RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6' \
+    "$NODE" build/migrate/migrate.js drizzle
+}
+
 # The server answers /healthz with 200 once it is up and the database answers.
 wait_site_service() {
   local attempt

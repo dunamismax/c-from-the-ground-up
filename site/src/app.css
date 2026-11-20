@@ -28,6 +28,7 @@
 	--c-ember-soft: #fbecd9;
 	--c-success: #1d6b3a;
 	--c-success-soft: #dff3e5;
+	--c-danger: #b42318;
 	/* Code is dark in both themes. */
 	--c-code: #0d1117;
 	--c-code-bar: #161b22;
@@ -54,6 +55,7 @@
 	--c-ember-soft: #33240f;
 	--c-success: #7ad19a;
 	--c-success-soft: #12291b;
+	--c-danger: #ff9b8f;
 	--c-code: #0a0d12;
 	--c-code-bar: #12161c;
 	--c-code-line: #232a33;
@@ -76,6 +78,7 @@
 	--color-ember-soft: var(--c-ember-soft);
 	--color-success: var(--c-success);
 	--color-success-soft: var(--c-success-soft);
+	--color-danger: var(--c-danger);
 	--color-code: var(--c-code);
 	--color-code-bar: var(--c-code-bar);
 	--color-code-line: var(--c-code-line);

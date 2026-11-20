@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { account } from '#lib/account/account.svelte.js';
 	import { progress } from '#lib/progress/progress.svelte.js';
 
-	// "Mark complete" at the end of a lesson. Saved in this browser.
+	// "Mark complete" at the end of a lesson. Saved in this browser, or in the
+	// learner's account when signed in.
 	let { slug }: { slug: string } = $props();
 	const complete = $derived(progress.isComplete(slug));
 </script>
@@ -15,7 +17,7 @@
 		<p class="font-semibold">{complete ? 'Lesson complete' : 'Finished this lesson?'}</p>
 		<p class="text-sm text-muted">
 			{complete
-				? 'Nice work. Your progress is saved in this browser.'
+				? `Nice work. Your progress is saved ${account.status === 'signed-in' ? 'to your account' : 'in this browser'}.`
 				: 'Mark it complete to track your progress through the course.'}
 		</p>
 	</div>

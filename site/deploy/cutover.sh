@@ -2,7 +2,7 @@
 # Atomic, reversible cutover of a prepared release. Run as root under the
 # shared lock:
 #   /usr/local/sbin/with-deploy-lock CANDIDATE/site/deploy/cutover.sh CANDIDATE
-# Writes only /srv/www/cfromthegroundup.com, /etc/caddy/sites/cfromthegroundup.com.caddy,
+# Writes only /srv/www/cfromthegroundup.com, the site's database (migrations), /etc/caddy/sites/cfromthegroundup.com.caddy,
 # /etc/systemd/system/cfromthegroundup.service and a root-only backup in
 # /root/cfromthegroundup-backup-*; restarts the site server and reloads Caddy.
 # On any failure it restores the previous state through rollback.sh.
@@ -47,10 +47,16 @@ else
 fi
 [[ -f $release/build/index.js ]] || die 'release has no server build'
 [[ $(cat "$release/build/client/version.txt") == "$commit" ]] || die 'release version.txt does not match the commit'
-# There are no migrations yet (schema.ts is empty until milestone W6). The
-# first migration must ship with a bundled migrator that cutover runs here,
-# as the migration role, before the switch.
-[[ ! -d $release/drizzle ]] || die 'release has migrations but this cutover cannot apply them yet (see BUILD.md, W5/W6)'
+# Migrations are forward-only and run before the switch, so the new release
+# never starts on an old schema. The live release keeps serving meanwhile, and
+# a rollback restores code but not data, so every migration must also work
+# for the release before it (add things; drop or rename only a release later).
+# A full backup comes first.
+if [[ -d $release/drizzle ]]; then
+  [[ -f $release/build/migrate/migrate.js ]] || die 'release has migrations but no bundled migrator'
+  /usr/local/sbin/cfromthegroundup-backup || die 'pre-migration backup failed'
+  migrate_release "$release" || die 'migration failed; the backup above holds the database as it was'
+fi
 
 # Install and validate the site config before anything goes live.
 install -m 0644 -o root -g root "$backup/staged/config/cfromthegroundup.com.caddy" "$SITE"
@@ -69,6 +75,11 @@ live=$(local_get /version.txt) || die 'site did not answer over HTTPS'
 [[ $live == "$commit" ]] || die "live version.txt is $live, expected $commit"
 local_get / | grep -q 'C From The Ground Up' || die 'home page failed through Caddy'
 [[ $(local_get /healthz) == '{"status":"ok","database":"ok"}' ]] || die '/healthz failed through Caddy'
+local_get /api/account | grep -q '"enabled":' || die '/api/account failed through Caddy'
+# The app must see the address Caddy saw (here loopback), never one the client
+# claims in X-Forwarded-For: rate limiting depends on it.
+seen=$(curl -fsS --max-time 10 --resolve "$HOST:443:127.0.0.1" -H 'X-Forwarded-For: 203.0.113.9' "https://$HOST/healthz/address") || die '/healthz/address failed through Caddy'
+[[ $seen == '{"address":"127.0.0.1"}' ]] || die "client address through Caddy is $seen, expected 127.0.0.1"
 [[ $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --resolve "www.$HOST:443:127.0.0.1" "https://www.$HOST/") == 301 ]] || die 'www does not redirect to the apex'
 
 preserved > "$backup/preserved-after"

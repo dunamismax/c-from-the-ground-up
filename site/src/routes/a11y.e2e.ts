@@ -12,6 +12,8 @@ const pages = [
 	'/lessons/33-advanced-terminal-ui',
 	'/setup',
 	'/about',
+	'/privacy',
+	'/account',
 	'/no-such-page'
 ];
 

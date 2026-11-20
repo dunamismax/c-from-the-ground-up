@@ -13,7 +13,8 @@ export const GET: RequestHandler = async () => {
 		...course.parts.map((part) => `/parts/${part.number}`),
 		...course.lessons.map((lesson) => `/lessons/${lesson.slug}`),
 		'/setup',
-		'/about'
+		'/about',
+		'/privacy'
 	];
 	const urls = paths.map((path) => `\t<url><loc>${SITE_URL}${path}</loc></url>`).join('\n');
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { account } from '#lib/account/account.svelte.js';
 	import { searchUi } from '#lib/search-ui.svelte.js';
 	import { GITHUB_URL } from '#lib/site.js';
 	import Logo from './Logo.svelte';
@@ -58,6 +59,15 @@
 					/
 				</kbd>
 			</button>
+			{#if account.status === 'signed-in' || account.status === 'signed-out'}
+				<a
+					href="/account"
+					class="rounded-lg px-3 py-2 font-medium text-muted hover:bg-sunken hover:text-ink aria-[current=page]:text-ink"
+					aria-current={isCurrent('/account') ? 'page' : undefined}
+				>
+					{account.status === 'signed-in' ? 'Account' : 'Sign in'}
+				</a>
+			{/if}
 			<a
 				href={GITHUB_URL}
 				class="inline-flex size-9 items-center justify-center rounded-lg text-muted hover:bg-sunken hover:text-ink"
