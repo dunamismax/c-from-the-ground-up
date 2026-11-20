@@ -195,5 +195,5 @@ int main(int argc, char *argv[])
 
 ```sh
 cc -Wall -Wextra -std=c11 -o 27_build_your_own_grep 27_build_your_own_grep.c
-./27_build_your_own_grep
+./27_build_your_own_grep main 27_build_your_own_grep.c
 ```

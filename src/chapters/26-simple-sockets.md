@@ -582,18 +582,19 @@ int main(int argc, char *argv[])
 Build both programs:
 
 ```sh
-cc -Wall -Wextra -std=c11 -o socket_server 26_simple_socket_server.c
-cc -Wall -Wextra -std=c11 -o socket_client 26_simple_socket_client.c
+cc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c
+cc -Wall -Wextra -std=c11 -o 26_simple_socket_client 26_simple_socket_client.c
 ```
 
 Run the server in one terminal:
 
 ```sh
-./socket_server 8080
+./26_simple_socket_server 8888
 ```
 
-Connect with the client in another terminal:
+Connect with the client in another terminal, giving the server's address, its
+port and a message:
 
 ```sh
-./socket_client 127.0.0.1 8080
+./26_simple_socket_client 127.0.0.1 8888 "Hello from the C client!"
 ```

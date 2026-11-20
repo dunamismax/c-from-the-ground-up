@@ -438,5 +438,5 @@ void delete_line(int line_number)
 
 ```sh
 cc -Wall -Wextra -std=c11 -o 25_simple_text_editor 25_simple_text_editor.c
-./25_simple_text_editor
+./25_simple_text_editor my_document.txt
 ```

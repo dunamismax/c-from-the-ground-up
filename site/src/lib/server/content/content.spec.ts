@@ -110,6 +110,21 @@ describe('course content', () => {
 		}
 	});
 
+	it('shows the same run commands in the chapter as the metadata generates', () => {
+		for (const lesson of course.lessons) {
+			const parsed = parseChapter(
+				readFileSync(path.join(root, lesson.chapterPath), 'utf8'),
+				lesson.chapterPath
+			);
+			const chapterLines = (parsed.run?.children ?? [])
+				.flatMap((node) => (node.type === 'code' ? node.value.split('\n') : []))
+				.map((line) => line.trim());
+			for (const command of lesson.commands.run) {
+				expect(chapterLines, `${lesson.chapterPath}: "${command}"`).toContain(command);
+			}
+		}
+	});
+
 	it('builds a table of contents whose ids exist in the page', () => {
 		for (const lesson of course.lessons) {
 			const html = lesson.segments.map((s) => (s.kind === 'html' ? s.html : '')).join('');

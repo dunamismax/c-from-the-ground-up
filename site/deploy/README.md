@@ -11,7 +11,7 @@ same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
 | App server      | `cfromthegroundup.service`, `node build` on `127.0.0.1:4317`, `DynamicUser` |
 | Caddy site      | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)             |
 | Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`     |
-| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration}.env` (root only)          |
+| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration}.env` (root only)            |
 | Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer` |
 | Cutover backups | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (each has a rollback)     |
 | Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`   |

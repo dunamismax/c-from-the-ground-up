@@ -285,5 +285,7 @@ void print_user(const User *user)
 
 ```sh
 cc -Wall -Wextra -std=c11 -o 34_parsing_data_files 34_parsing_data_files.c
-./34_parsing_data_files
+./34_parsing_data_files users.dat
 ```
+
+Create `users.dat` first, with the sample lines shown in the source above.

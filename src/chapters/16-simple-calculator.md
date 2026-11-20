@@ -190,5 +190,9 @@ int main(int argc, char *argv[])
 
 ```sh
 cc -Wall -Wextra -std=c11 -o 16_simple_calculator 16_simple_calculator.c
-./16_simple_calculator
+./16_simple_calculator 5 + 3
 ```
+
+To multiply, quote the operator, as in `./16_simple_calculator 7 '*' 6`.
+Unquoted, the shell expands `*` into the names of the files in the current
+directory.

@@ -192,5 +192,7 @@ int main(int argc, char *argv[])
 
 ```sh
 cc -Wall -Wextra -std=c11 -o 15_command_line_arguments 15_command_line_arguments.c
-./15_command_line_arguments
+./15_command_line_arguments Bob 42
 ```
+
+Run it with no arguments, or with too many, to see the usage message.

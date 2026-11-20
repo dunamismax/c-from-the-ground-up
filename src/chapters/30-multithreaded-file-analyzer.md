@@ -344,5 +344,5 @@ int main(int argc, char *argv[])
 
 ```sh
 cc -Wall -Wextra -std=c11 -pthread -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c
-./30_multithreaded_file_analyzer <filename>
+./30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c
 ```
