@@ -51,8 +51,8 @@ first for conventions and the verification workflow.
   design system, landing, course overview, part, lesson, setup, about and 404
   pages, all prerendered. W4 is done: progress in the browser, search,
   "Try it online" through Compiler Explorer, keyboard shortcuts and zip
-  downloads. Next: the open W5 items (CSP, client-IP test, migrator), then
-  W6, which needs decision D7.
+  downloads. W5 has CSP now; W7 has its SEO basics. Open: the W5 client-IP
+  test and migrator, W6 (needs decision D7), and the rest of W7.
 - **Live:** https://cfromthegroundup.com serves the W1 placeholder from
   `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
   remaining items are listed there.
@@ -278,13 +278,15 @@ before relying on memory. In particular:
       of page in both themes; other e2e tests cover the skip link, keyboard tab
       switching and the mobile outline. A manual screen-reader pass belongs to
       the W7 launch check.
-- [ ] Performance target: Lighthouse 95+ on mobile for lesson pages. Not yet
-      measured. Pages ship no web fonts and little JavaScript; the largest
-      lesson page (35) is 20 KB with Brotli.
+- [x] Performance target: Lighthouse 95+ on mobile for lesson pages.
+      Measured 2026-11-20 with Lighthouse 12 (mobile, against `node build`
+      locally): performance 100 on `/`, `/lessons` and lesson 1, and 99 on
+      lesson 35 (the largest page); accessibility, best practices and SEO 100
+      on all four. Re-measure on the production URL in the W7 launch check.
 - **Done when:** every lesson is readable on the site at parity with the mdBook,
   on desktop and mobile, in both themes, and Playwright e2e tests cover the
   landing page, a lesson page and navigation.
-- **Status (2026-11-20):** done except the Lighthouse measurement.
+- **Status:** done 2026-11-20.
 
 #### W4. Learner experience (no accounts yet)
 
@@ -400,11 +402,13 @@ runbook.
 
 #### W7. Launch and make the site the front door
 
-- [ ] SEO:
-  - per-page `<title>`, description and canonical URL
-  - Open Graph images, generated per lesson at build time
-  - `sitemap.xml` and `robots.txt`
-  - `Course` / `LearningResource` structured data
+- [x] SEO basics: per-page `<title>`, description, canonical URL and Open
+      Graph tags (`PageMeta.svelte`); `sitemap.xml` (prerendered) and
+      `robots.txt` pointing at it; `Course` JSON-LD on the landing page and
+      `LearningResource` plus `BreadcrumbList` on lesson pages
+      (`site/src/lib/structured-data.ts`).
+- [ ] Open Graph images, generated per lesson at build time (for example
+      with satori and resvg, which need a font file committed under `site/`).
 - [ ] Point everything at the site:
   - set the repo homepage to `https://cfromthegroundup.com`
   - make the site the first link in `README.md`

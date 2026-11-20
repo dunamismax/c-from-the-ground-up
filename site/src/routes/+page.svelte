@@ -2,6 +2,7 @@
 	import ContinueCard from '#lib/components/ContinueCard.svelte';
 	import PageMeta from '#lib/components/PageMeta.svelte';
 	import { BOOK_URL, GITHUB_URL } from '#lib/site.js';
+	import { courseJsonLd } from '#lib/structured-data.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -25,7 +26,7 @@
 	];
 </script>
 
-<PageMeta />
+<PageMeta jsonLd={courseJsonLd(data.lessonCount)} />
 
 <section class="relative overflow-hidden border-b border-line">
 	<div

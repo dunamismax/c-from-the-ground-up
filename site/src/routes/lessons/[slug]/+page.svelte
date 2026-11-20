@@ -12,6 +12,7 @@
 	import TableOfContents from '#lib/components/TableOfContents.svelte';
 	import { progress } from '#lib/progress/progress.svelte.js';
 	import { lessonShortcut } from '#lib/shortcuts.js';
+	import { lessonJsonLd } from '#lib/structured-data.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -35,7 +36,11 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<PageMeta title="Lesson {lesson.number}: {lesson.title}" description={data.summary} />
+<PageMeta
+	title="Lesson {lesson.number}: {lesson.title}"
+	description={data.summary}
+	jsonLd={lessonJsonLd({ ...lesson, description: data.summary })}
+/>
 
 <div
 	class="mx-auto max-w-7xl px-4 sm:px-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[15rem_minmax(0,1fr)_13rem]"

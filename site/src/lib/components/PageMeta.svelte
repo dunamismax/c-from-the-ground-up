@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site.js';
+	import { jsonLdScript } from '#lib/structured-data.js';
 
-	// Per-page <title>, description and canonical URL. (W7 adds Open Graph
-	// images and structured data.)
-	let { title, description = SITE_DESCRIPTION }: { title?: string; description?: string } =
-		$props();
+	// Per-page <title>, description, canonical URL, Open Graph tags and
+	// optional schema.org structured data.
+	let {
+		title,
+		description = SITE_DESCRIPTION,
+		jsonLd
+	}: { title?: string; description?: string; jsonLd?: unknown } = $props();
 
 	const fullTitle = $derived(title ? `${title} | ${SITE_NAME}` : SITE_NAME);
 	const canonical = $derived(`${SITE_URL}${page.url.pathname === '/' ? '/' : page.url.pathname}`);
@@ -20,4 +24,8 @@
 	<meta property="og:url" content={canonical} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content={SITE_NAME} />
+	{#if jsonLd}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- JSON-LD from our own data, with < escaped -->
+		{@html jsonLdScript(jsonLd)}
+	{/if}
 </svelte:head>
