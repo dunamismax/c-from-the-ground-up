@@ -550,7 +550,11 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
-- (empty: add ideas here)
+- **Linux smoke check from macOS.** Add a `make smoke-linux` target that runs
+  `scripts/smoke_check.sh` in a Docker image (for example `gcc:15` plus
+  `libncurses-dev` and `clang`). macOS headers define things glibc hides in
+  strict `-std=` modes (lesson 32's `M_PI` passed locally but failed CI for
+  several commits), so a local Linux run would catch that before pushing.
 
 ---
 
@@ -590,6 +594,12 @@ pick them up.
 
 ## Done log
 
+- **2026-11-20:** lesson 32 compiles on Linux again. `M_PI` is not ISO C, and
+  glibc hides it under `-std=c23`, so CI's smoke check had failed on both
+  compilers since at least the relicense commit, although macOS passed. The
+  lesson now defines `M_PI` behind an `#ifndef` guard and explains why, and its
+  wrong "defined in <math.h>" comment is fixed. Verified with GCC 15 and Clang
+  on Linux.
 - **2026-11-20:** milestone W1, site scaffold.
   - `site/` created with `sv create` (minimal, TypeScript) and the prettier,
     eslint, vitest, playwright, tailwindcss (typography), adapter-node and

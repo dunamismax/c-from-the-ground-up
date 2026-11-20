@@ -76,6 +76,15 @@ or in an external library file (like in this lesson).
 #include <stdio.h>
 #include <math.h>
 
+// M_PI, the value of Pi, is NOT part of ISO C. Many systems (macOS, and Linux
+// in its default GNU mode) define it in <math.h> anyway, but a strict standard
+// mode such as `-std=c11` on Linux hides it. Using the #ifndef guard from the
+// preprocessor lesson, we define it ourselves only when it is missing, so the
+// program compiles everywhere.
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // --- Part 2: The Main Function ---
 
 int main(void)
@@ -105,7 +114,7 @@ int main(void)
 
     // --- Using sin() ---
     // Let's try a trigonometric function. `sin()` takes an angle in RADIANS.
-    // M_PI is a constant defined in <math.h> for the value of Pi.
+    // M_PI is the value of Pi (see the #ifndef guard at the top of the file).
     double angle_radians = M_PI / 2.0; // 90 degrees
     double sin_result = sin(angle_radians);
 
