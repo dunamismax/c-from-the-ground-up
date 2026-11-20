@@ -46,6 +46,9 @@ first for conventions and the verification workflow.
   Cloudflare points at the maintainer's self-hosted Ubuntu server. W1 is done:
   `site/` holds a SvelteKit 3 scaffold with a placeholder home page and
   `/healthz`, wired into `make verify` and CI. Continue at milestone W2.
+- **Live:** https://cfromthegroundup.com serves the W1 placeholder from
+  `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
+  remaining items are listed there.
 
 ---
 
@@ -128,20 +131,24 @@ before relying on memory. In particular:
   version in `site/.nvmrc` and in `engines`.
 - **Secrets stay out of git.** Commit `site/.env.example`; `site/.env` is ignored.
   Production configuration lives in an environment file on the server (see W5).
-- **Agents cannot reach the server.** They write configs, scripts and a runbook
-  in `site/deploy/`, and the maintainer runs the server-side steps.
+- **Deploys go through `site/deploy/`.** Configs, scripts and the runbook
+  (`site/deploy/README.md`) live in git. Agents may run them over
+  `ssh root@ubuntu-vm` only when the maintainer asks for a deploy.
 
 ### Milestones
 
 #### W0. Inputs from the maintainer (agents: ask, do not block on these)
 
-- [ ] Server facts:
-  - Ubuntu version
-  - whether Caddy and PostgreSQL are already installed, and whether other
-    sites run on the box
-  - SSH user and app directory to deploy to (default `/srv/cfromthegroundup`)
-- [ ] Cloudflare setup for `cfromthegroundup.com` and `www`: is the record
-      proxied (orange cloud) or DNS only? Determines the TLS setup (D10).
+- [x] Server facts (found by inspection, 2026-11-20):
+  - `ubuntu-vm`, Ubuntu 26.04.1 LTS, x86_64; reached as `ssh root@ubuntu-vm`
+  - Caddy 2.11 (custom build) and PostgreSQL 18.6 were already installed, and
+    about ten other sites run on the box, each with its own
+    `/etc/caddy/sites/*.caddy`, `/srv/www/<site>/releases`, systemd unit and
+    database, deployed under the host-wide lock `with-deploy-lock`
+  - app directory `/srv/www/cfromthegroundup.com` (host convention), checkout
+    at `/home/sawyer/github/c-from-the-ground-up`
+- [x] Cloudflare setup: both records are **DNS only**. They resolve straight to
+      the host's public IP, so Caddy's automatic HTTPS applies (D10).
 - [ ] Decisions D6-D10 below. Every one has a default, so W1-W5 can proceed
       without them.
 
@@ -270,46 +277,66 @@ before relying on memory. In particular:
   with persistent progress in one browser, find any topic by search, and run
   portable lessons without installing anything.
 
-#### W5. Production deployment (agents write it, the maintainer runs it)
+#### W5. Production deployment
 
 Everything goes in `site/deploy/`, with a step-by-step `site/deploy/README.md`
 runbook.
 
-- [ ] `Caddyfile`:
-  - `cfromthegroundup.com` reverse-proxies to `127.0.0.1:3000`, and `www`
-    redirects to the apex
+- [x] `Caddyfile` (`site/deploy/cfromthegroundup.com.caddy`):
+  - `cfromthegroundup.com` reverse-proxies to `127.0.0.1:4317` (3000 was the
+    plan; 4311-4316 belong to other sites), serves client assets from disk,
+    and `www` redirects to the apex
   - `encode zstd gzip`
   - long-lived `Cache-Control` for `/_app/immutable/*`
   - security headers: HSTS, `X-Content-Type-Options`, `Referrer-Policy`
-  - a `/healthz` health check
-  - TLS according to D10
-- [ ] `cfromthegroundup.service`: a systemd unit that runs `node build` as a
-      dedicated unprivileged user, with `EnvironmentFile=/etc/cfromthegroundup/site.env`,
+  - a `/healthz` health check (cutover waits on it and checks it through
+    Caddy)
+  - TLS according to D10 (automatic HTTPS, Let's Encrypt)
+- [x] `cfromthegroundup.service`: a systemd unit that runs `node build` as a
+      dedicated unprivileged user (`DynamicUser`), with
+      `EnvironmentFile=/etc/astro-apps/cfromthegroundup/web.env` (host convention),
       `Restart=on-failure` and systemd hardening (`NoNewPrivileges`,
       `ProtectSystem=strict` and so on).
-- [ ] Production environment template:
+- [ ] Production environment template. Done: `DATABASE_URL` in `web.env`
+      (written by `provision.sh`), and `ORIGIN`, `PORT`, `HOST`,
+      `ADDRESS_HEADER=X-Forwarded-For` and `XFF_DEPTH=1` in the unit (DNS only,
+      so Caddy is the only proxy). Still open: the test below, which needs an
+      endpoint that reports the address.
   - `DATABASE_URL`, `ORIGIN=https://cfromthegroundup.com`, `PORT`, `HOST`
   - the adapter-node proxy settings (`PROTOCOL_HEADER`, `HOST_HEADER`,
     `ADDRESS_HEADER`, `XFF_DEPTH`)
   Choose the proxy settings so that `event.getClientAddress()` returns the
   visitor's real IP through Cloudflare and Caddy (Caddy `trusted_proxies`), and
   test it.
-- [ ] `deploy.sh`, run on the server, which:
+- [x] Deploy scripts, run on the server: `prepare.sh` (as `sawyer`) and
+      `cutover.sh` (as root under the lock) replace the planned `deploy.sh`,
+      following the host's other sites. They build a pushed commit from
+      `git archive` rather than `git pull`. Original plan:
   - updates the code (`git pull` on `main`)
   - runs `npm ci` and `npm run build`
   - applies migrations
   - restarts the service and waits for `/healthz`
   - keeps the previous build directory for a quick rollback
-- [ ] PostgreSQL 18 setup steps:
+- [ ] Migrations at deploy time: there are none yet. Before the first one (W6),
+      bundle a migrator into the build (the host's other SvelteKit site ships
+      `build/migrate/migrate.js`) and have `cutover.sh` run it as
+      `cfromthegroundup_migration` before the switch. Until then, cutover
+      refuses a release with a `drizzle/` directory.
+- [x] PostgreSQL 18 setup (`site/deploy/provision.sh`; 18 was already
+      installed from Ubuntu's archive):
   - install from Ubuntu's archive if it ships 18, otherwise from the PGDG apt
     repository
   - a dedicated database and role, local-only connections
   - a nightly `pg_dump` systemd timer with rotation
+    (`cfromthegroundup-backup.timer`, 30 days in `/var/backups/cfromthegroundup`)
 - [ ] Use CSP in SvelteKit's `csp` config (nonce- or hash-based) rather than a
       static Caddy header, so inline scripts SvelteKit generates keep working.
 - **Done when:** `https://cfromthegroundup.com` serves the site with valid TLS,
   `www` redirects, `/healthz` is green, a redeploy is one command, and a
   database backup exists.
+- **Status (2026-11-20):** live. TLS, the `www` redirect, `/healthz` and a
+  backup are verified. A redeploy is two commands (prepare, then cutover). Open
+  items: CSP, the client-IP test, and the migrator.
 
 #### W6. Accounts and synced progress (needs D7)
 
@@ -376,7 +403,8 @@ runbook.
 - [ ] **D9. Analytics.**
   - Default: none until launch.
   - Options: self-hosted Umami or Plausible, sharing the PostgreSQL instance.
-- [ ] **D10. Cloudflare proxy and TLS.**
+- [x] **D10. Cloudflare proxy and TLS.** Settled 2026-11-20: the records are
+      DNS only, so Caddy's automatic HTTPS is used (see the Decision log).
   - If the DNS record is **DNS only**, Caddy's automatic HTTPS works
     unchanged.
   - If it is **proxied**, set Cloudflare SSL/TLS to **Full (strict)** and do
@@ -560,6 +588,14 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-20: production deploy follows the host's conventions.** The site
+  runs on `ubuntu-vm` like its other sites rather than as BUILD.md first
+  sketched: port 4317 (not 3000), `/srv/www/cfromthegroundup.com/releases`
+  with a `current` symlink, the shared Node 24 runtime at `/opt/astro-runtime`,
+  credentials in `/etc/astro-apps/cfromthegroundup/`, database roles
+  `_owner`/`_migration`/`_web`, and `prepare.sh` + `cutover.sh` under
+  `with-deploy-lock` instead of a `git pull` deploy script. D10: DNS only, so
+  Caddy's automatic HTTPS.
 - **2026-11-20: site scaffold choices (W1).**
   - Postgres client: **postgres.js** (`postgres`), the `sv add drizzle`
     option for PostgreSQL. It needs no native build and Drizzle supports it
@@ -594,6 +630,12 @@ pick them up.
 
 ## Done log
 
+- **2026-11-20:** first production deploy (most of W5). `site/deploy/` holds
+  the Caddy site, the hardened systemd unit, `provision.sh` (database, roles,
+  `pg_hba`, credentials, backup timer), `prepare.sh`, `cutover.sh`,
+  `rollback.sh` and the runbook. https://cfromthegroundup.com is live with a
+  Let's Encrypt certificate, the `www` redirect, a healthy `/healthz` and a
+  verified first backup; the other sites on the host were unaffected.
 - **2026-11-20:** lesson 32 compiles on Linux again. `M_PI` is not ISO C, and
   glibc hides it under `-std=c23`, so CI's smoke check had failed on both
   compilers since at least the relicense commit, although macOS passed. The

@@ -174,7 +174,7 @@ site/drizzle/                      generated migrations (committed; created by t
 site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
 site/.env.example                  copy to site/.env (git-ignored) for local development
 site/playwright.config.ts          e2e tests run against `node build`, not the dev server
-site/deploy/                       Caddy, systemd and deploy runbook (milestone W5)
+site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover/rollback, runbook
 ```
 
 Commands (run in `site/`):
@@ -222,6 +222,10 @@ Conventions:
   tested without a server or database.
 - **Secrets:** `site/.env` is git-ignored; only `site/.env.example` is
   committed. Production configuration lives on the server.
+- **Deploying:** production is `ubuntu-vm`, shared with other sites.
+  Follow `site/deploy/README.md` exactly (prepare as `sawyer`, then cutover as
+  root under `with-deploy-lock`). Deploy only when the maintainer asks, and
+  never edit another site's files or the shared Caddyfile.
 
 ## Lesson conventions
 
