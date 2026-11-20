@@ -59,7 +59,7 @@ first for conventions and the verification workflow.
   maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
   Graph images, the README link and the book banners (D6's default); open are
   the repo homepage setting and the launch check on the production URL.
-- **Live:** https://cfromthegroundup.com serves commit `9412c1b` (W2-W6, most
+- **Live:** https://cfromthegroundup.com serves commit `a14e994` (W2-W6, most
   of W7, and the lesson correctness fixes) from `ubuntu-vm`, deployed
   2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are
   off until the GitHub OAuth app exists (W0).
@@ -636,7 +636,11 @@ the lessons it serves.
 - [ ] **CI upkeep.** Review the action versions (`actions/checkout@v4`,
       `actions/setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`,
       `deploy-pages@v4`). Make
-      `deploy.yml` run the sync check before publishing.
+      `deploy.yml` run the sync check before publishing. Add
+      `workflow_dispatch` to it as well: when `deploy-pages` fails with "No
+      artifacts named github-pages" (GitHub's artifact listing lagging, seen
+      at `395b7b3` and `a14e994`), re-running the job then fails with
+      "Multiple artifacts", so today only a new push publishes the book.
 - [ ] **Book link checking.** Verify internal links and anchors. First check
       whether a link-check preprocessor supports mdBook 0.5.x; if not, write a
       small script.
@@ -780,6 +784,16 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** fifth production deploy, commit `a14e994` (chapter 6's
+  opening `printf` example in a code fence). Prepare and cutover passed on
+  the first try with the fixed checks (backup taken, no new migrations).
+  Checked from outside: `/version.txt`, `/healthz`, `/api/account` (off),
+  the spoofed `X-Forwarded-For`, the `www` redirect, every page type, the
+  search index, sitemap, zip, an Open Graph image, a runtime 404, chapter 6
+  rendering its example as a code block, and no console errors. The book's
+  Pages deploy for `a14e994` failed in GitHub (see CI upkeep); this record's
+  push publishes it.
 
 - **2026-11-20:** fourth production deploy, commit `9412c1b` (the lesson
   correctness fixes from `46208f2`). The first attempt, at `46208f2`, failed
