@@ -52,16 +52,16 @@ first for conventions and the verification workflow.
   pages, all prerendered. W4 is done: progress in the browser, search,
   "Try it online" through Compiler Explorer, keyboard shortcuts and zip
   downloads. W5 is done in code: CSP, the client-IP test and the bundled
-  migrator (its first production run is the next deploy). W6 is built with
+  migrator, both run in production since the `de586a7` deploy. W6 is built with
   D7's default (GitHub sign-in only): accounts, synced progress, rate limits,
   the account and privacy pages. Accounts stay off in production until the
   maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
   Graph images, the README link and the book banners (D6's default); open are
   the repo homepage setting and the launch check on the production URL.
-- **Live:** https://cfromthegroundup.com serves the full course (W2-W4, the
-  CSP and the SEO basics) from `ubuntu-vm`, commit `ae2d9cf`, deployed
-  2026-11-20 with `site/deploy/`. W5's migrator and client-IP check and W6 are
-  not deployed yet.
+- **Live:** https://cfromthegroundup.com serves commit `de586a7` (W2-W6 and
+  most of W7) from `ubuntu-vm`, deployed 2026-11-20 with `site/deploy/`. The
+  database has the W6 tables; accounts are off until the GitHub OAuth app
+  exists (W0).
 
 ---
 
@@ -409,8 +409,9 @@ runbook.
   database backup exists.
 - **Status (2026-11-20):** done. TLS, the `www` redirect, `/healthz` and a
   backup are verified live. A redeploy is two commands (prepare, then
-  cutover). The migrator and the client-IP check through the production Caddy
-  run for the first time at the next deploy.
+  cutover). The `de586a7` deploy ran the migrator for the first time (backup
+  first, then 1 migration applied, tables owned by `cfromthegroundup_owner`)
+  and the client-IP check through the production Caddy passed.
 
 #### W6. Accounts and synced progress (built with D7's default)
 
@@ -768,6 +769,18 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** third production deploy, commit `de586a7` (W5's migrator
+  and client-IP check, W6, W7's Open Graph images). `prepare.sh` passed,
+  including the migrator's `--check`; cutover took a backup, applied
+  `0000_accounts_and_progress`, and its checks passed (`/version.txt`,
+  `/healthz`, `/api/account`, `/healthz/address` with a spoofed
+  `X-Forwarded-For`, the `www` redirect). Checked from outside: a spoofed
+  `X-Forwarded-For` is ignored and the app sees the real client address;
+  `/account` and `/privacy` render; `/api/account` says accounts are off;
+  `/api/progress` is 401 without a session; the Open Graph images are served;
+  no console errors on a lesson or the account page. The book on GitHub Pages
+  shows the link to the site.
 
 - **2026-11-20:** most of W7: Open Graph images for every page and lesson,
   the site first in `README.md`, a banner in `src/index.md`, and a link on
