@@ -711,7 +711,7 @@ int ui_init(GameState *game)
     int height, width;
     getmaxyx(stdscr, height, width);
 
-    // The layout needs a few rows for the log plus 5 for the status and input
+    // The layout needs a few rows for the log plus 6 for the status and input
     // windows. On a tinier terminal the window sizes below would be zero or
     // negative, so we stop with a clear message instead.
     if (height < 10 || width < 40)
@@ -722,10 +722,12 @@ int ui_init(GameState *game)
     }
 
     // Create a main window for game text, a status window, and an input window.
+    // The status and input windows are 3 rows each: `box()` draws a border on
+    // the top and bottom rows, which leaves the middle row for text.
     // Like `malloc`, `newwin` returns NULL when it fails, so we check all three.
-    game->main_win = newwin(height - 5, width, 0, 0);
-    game->status_win = newwin(3, width, height - 5, 0);
-    game->input_win = newwin(2, width, height - 2, 0);
+    game->main_win = newwin(height - 6, width, 0, 0);
+    game->status_win = newwin(3, width, height - 6, 0);
+    game->input_win = newwin(3, width, height - 3, 0);
     if (!game->main_win || !game->status_win || !game->input_win)
     {
         ui_cleanup(game); // delwin() safely ignores the NULL ones.
@@ -734,9 +736,6 @@ int ui_init(GameState *game)
     }
 
     scrollok(game->main_win, TRUE); // Allow the main window to scroll.
-
-    wborder(game->status_win, 0, 0, 0, 0, 0, 0, 0, 0);
-    wborder(game->input_win, ' ', ' ', 0, 0, '>', '<', 0, 0);
 
     refresh();
     return 1;
@@ -748,7 +747,10 @@ void ui_draw(GameState *game)
     box(game->status_win, 0, 0);
     mvwprintw(game->status_win, 1, 2, "Location: Room %d", game->player.current_room->id);
 
-    // Draw input window
+    // Draw input window. `werase` first clears the last command; `box` only
+    // draws the border, so a long command would otherwise still show behind a
+    // shorter one.
+    werase(game->input_win);
     box(game->input_win, 0, 0);
     mvwprintw(game->input_win, 1, 2, "> ");
 
@@ -804,10 +806,17 @@ int ui_get_input(GameState *game, char *buffer)
     // Move cursor to input window and get string from user.
     wmove(game->input_win, 1, 4);
 
+    // `ui_init` called `noecho()` (Lesson 33), so keys are not printed as they
+    // are typed. That suits single-key input, but here the player types a whole
+    // command and needs to see it, so echo is on just while we read the line.
+    echo();
+
     // Like `scanf` and `fgets`, `wgetnstr` can fail, for example when the
     // terminal goes away. It then returns ERR and may not have written
     // anything into `buffer`, so we must not use the buffer's contents.
-    if (wgetnstr(game->input_win, buffer, INPUT_BUFFER_SIZE - 1) == ERR)
+    int result = wgetnstr(game->input_win, buffer, INPUT_BUFFER_SIZE - 1);
+    noecho();
+    if (result == ERR)
     {
         buffer[0] = '\0';
         return 0;

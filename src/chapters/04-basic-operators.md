@@ -9,37 +9,82 @@ We will explore three main categories of operators in this lesson:
 2. Relational Operators: For comparing two values.
 3. Logical Operators: For combining multiple comparisons.
 
-`/` (Division) - This one is tricky!
-When you divide two integers in C, the result is also an integer.
+## Arithmetic Operators
+
+The lesson works with two integers:
+
+```c
+int a = 10;
+int b = 3;
+```
+
+`+` (addition), `-` (subtraction) and `*` (multiplication) work just as they
+do in math: `a + b` is 13, `a - b` is 7 and `a * b` is 30.
+
+### `/` (Division)
+
+This one is tricky! When you divide two integers in C, the result is also an
+integer.
 The fractional part is simply thrown away (truncated). This is called
-INTEGER DIVISION.
+INTEGER DIVISION. So `a / b` is `3`, not `3.333`.
 
 To get a precise decimal result, at least one of the operands must be a
 floating-point type (like `double`). We can achieve this by "casting"
-one of the integers to a double.
+one of the integers to a double:
 
-`%` (Modulus)
-This operator gives you the REMAINDER of an integer division. It is
-incredibly useful in many programming scenarios.
+```c
+double precise_division = (double)a / b;
+```
+
+Now `precise_division` holds 3.333333.
+
+### `%` (Modulus)
+
+This operator gives you the REMAINDER of an integer division. `a % b` is `1`,
+because 10 divided by 3 is 3 with 1 left over. It is incredibly useful: for
+example, `n % 2` is 0 exactly when `n` is even. (To print a `%` sign with
+`printf`, write `%%`, because a single `%` starts a format specifier.)
+
+## Relational Operators
 
 RELATIONAL OPERATORS are used to compare two values. The result of a
 relational operation is a "truth" value, and in C that value is an `int`:
 - `0` represents FALSE.
 - Any non-zero integer represents TRUE. Comparisons always give `1`.
 
+The six relational operators are `==` (equal to; note the TWO equals signs),
+`!=` (not equal to), `>`, `<`, `>=` and `<=`. With `a` as 10 and `b` as 3,
+`a == 10` is 1 and `a == b` is 0.
+
 (Modern C does have a boolean type, `bool`, with the values `true` and
 `false`. You will meet it in a later lesson. Even so, comparisons and logical
 operators still produce the `int` values 1 and 0.)
 
-LOGICAL OPERATORS are used to combine or modify logical (true/false) expressions.
+## Logical Operators
+
+LOGICAL OPERATORS are used to combine or modify logical (true/false) expressions:
+
+- `&&` (AND) is true only if BOTH sides are true.
+- `||` (OR) is true if AT LEAST ONE side is true.
+- `!` (NOT) flips a value: `!0` is 1, and `!1` is 0.
+
+```c
+int is_player_alive = 1; // 1 for true
+int has_key = 0;         // 0 for false
+```
+
+Here `is_player_alive && has_key` is 0 (the player cannot open the door),
+`is_player_alive || has_key` is 1, and `!has_key` is 1.
+
+## Operator Precedence
 
 Just like in math (PEMDAS/BODMAS), operators in C have a default order
 of evaluation called OPERATOR PRECEDENCE. For example, `*` and `/` are
-evaluated before `+` and `-`.
+evaluated before `+` and `-`, so `5 + 2 * 10` is 25, not 70.
 
 You can use parentheses `()` to force a specific order of evaluation,
-just like in math. It's often a good idea to use parentheses to make
-your code clearer, even when not strictly necessary.
+just like in math: `(5 + 2) * 10` is 70. It's often a good idea to use
+parentheses to make your code clearer, even when not strictly necessary.
 
 ## Full Source
 

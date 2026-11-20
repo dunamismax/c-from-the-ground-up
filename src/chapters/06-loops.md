@@ -25,7 +25,8 @@ repeat a block of code. It has a very specific structure with three parts
 inside its parentheses, separated by semicolons.
 
 ```c
-for (INITIALIZATION; CONDITION; POST-ITERATION) {
+for (INITIALIZATION; CONDITION; POST-ITERATION)
+{
     // Code to be repeated
 }
 ```
@@ -36,19 +37,42 @@ for (INITIALIZATION; CONDITION; POST-ITERATION) {
    condition is true, the loop body runs. If it's false, the loop terminates.
 3. POST-ITERATION: A statement that runs AFTER each iteration. It's
    typically used to increment or decrement the counter variable. `i++` is
-   shorthand for `i = i + 1`.
+   shorthand for `i = i + 1`, and `i--` for `i = i - 1`.
+
+The lesson counts down from 5:
+
+```c
+for (int i = 5; i > 0; i--)
+{
+    printf("%d...\n", i);
+}
+```
+
+It prints 5, 4, 3, 2 and 1. When `i` reaches 0, the condition `i > 0` is false
+and the loop ends.
 
 The `while` loop is simpler. It repeats a block of code AS LONG AS its
 condition remains true. It's useful when you don't know the exact number
 of iterations beforehand.
 
 ```c
-while (condition) {
+while (condition)
+{
     // Code to be repeated
 }
 ```
 
-The condition is checked BEFORE each iteration.
+The condition is checked BEFORE each iteration. The lesson's menu keeps
+asking until the user chooses 4:
+
+```c
+int menu_choice = 0;
+while (menu_choice != 4)
+{
+    // print the menu and read a new menu_choice
+}
+```
+
 
 CRITICAL: You must ensure that something inside the loop's body will
 eventually make the condition false. Otherwise, you will create an
@@ -57,7 +81,15 @@ INFINITE LOOP, and your program will never end!
 The `do-while` loop is a variation of the `while` loop. The key difference
 is that the condition is checked AT THE END of the loop's body.
 
-This means a `do-while` loop is GUARANTEED to execute at least once.
+```c
+do
+{
+    // Code to be repeated
+} while (condition);
+```
+
+This means a `do-while` loop is GUARANTEED to execute at least once. Note the
+semicolon after the condition.
 
 This makes it perfect for situations like input validation, where you need
 to get the input first *before* you can check if it's valid.

@@ -9,7 +9,8 @@ Instead of holding a value (like 5, or 'c'), a POINTER holds a memory ADDRESS.
 It's like having a note that says "the data you want is over there" instead of
 holding the data itself.
 
-WHY ARE POINTERS IMPORTANT?
+## Why Are Pointers Important?
+
 Pointers allow for highly efficient code and are essential for many advanced
 topics, including dynamic memory allocation, building complex data structures
 (like the linked lists we'll see later), and allowing functions to modify

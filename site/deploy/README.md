@@ -125,5 +125,6 @@ Releases are never deleted, so the previous one is still on disk.
 curl -s https://cfromthegroundup.com/healthz       # {"status":"ok","database":"ok"}
 curl -s https://cfromthegroundup.com/healthz/address   # your own IP address
 curl -s https://cfromthegroundup.com/version.txt   # the live commit
+curl -sI https://cfromthegroundup.com/lessons/01-hello-world/files/1_hello_world.c | grep -i content-type   # text/plain; charset=utf-8
 systemctl status cfromthegroundup cfromthegroundup-backup.timer
 ```

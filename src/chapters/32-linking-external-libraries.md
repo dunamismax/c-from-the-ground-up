@@ -4,7 +4,8 @@ In our last lesson, we learned how to build a project from multiple source
 files that WE wrote. But what if we want to use code written by someone else?
 This is where LIBRARIES come in.
 
-WHAT IS AN EXTERNAL LIBRARY?
+## What Is an External Library?
+
 A LIBRARY is a collection of pre-written, pre-compiled code that provides
 specific functionality. For example, there are libraries for advanced math,
 graphics, networking, sound, and much more. Using a library saves you from
@@ -16,7 +17,8 @@ A library typically consists of two parts:
 2. A BINARY LIBRARY FILE (`.so` on Linux, `.dylib` on macOS, `.dll` on Windows):
    This is the pre-compiled code. It contains the actual function definitions.
 
-THE LINKER
+## The Linker
+
 The LINKER is a crucial part of the compilation process. After the compiler
 turns your source code into object files, the linker's job is to connect
 everything. It resolves the function calls in your code to the function

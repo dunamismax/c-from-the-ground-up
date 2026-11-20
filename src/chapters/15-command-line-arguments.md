@@ -2,7 +2,10 @@
 
 You've already been using command-line arguments without even realizing it!
 When you compile a program like this:
-`gcc -o my_program my_program.c`
+
+```sh
+gcc -o my_program my_program.c
+```
 
 The strings `-o`, `my_program`, and `my_program.c` are all command-line
 arguments passed to the `gcc` program. They tell `gcc` what to do.
@@ -13,11 +16,11 @@ have them provide the input when they run the program.
 
 To access these arguments, we must use a different signature for our `main` function.
 
-
 ## The `main` Function with Arguments
 
-
-`int main(int argc, char *argv[])`
+```c
+int main(int argc, char *argv[])
+```
 
 Let's break this down:
 

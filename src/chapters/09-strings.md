@@ -8,19 +8,35 @@ languages. Instead, a C STRING is simply an ARRAY of characters (`char`).
 
 But how does the computer know where the string ends in the array?
 
-THE NULL TERMINATOR
+## The Null Terminator
+
 C strings follow a crucial convention: they are "null-terminated". This means
 a special character, the NULL TERMINATOR `\0`, is placed after the last
 actual character in the array to mark the end of the string.
 
 So, the string "Hello" is stored in a `char` array as:
-['H', 'e', 'l', 'l', 'o', '\0']
+
+```text
+'H' 'e' 'l' 'l' 'o' '\0'
+```
+
 It requires 6 characters of storage, not 5! This is a very important concept.
 
 All standard C functions that work with strings rely on this `\0` character.
 
 The easiest way to declare and initialize a string is to use a string
-literal. The compiler automatically adds the null terminator `\0` for you.
+literal. The compiler automatically adds the null terminator `\0` for you:
+
+```c
+char greeting[] = "Hello, C programmer!";
+```
+
+You could also build a string one character at a time, but then you must add
+the `\0` yourself:
+
+```c
+char name[] = {'A', 'l', 'i', 'c', 'e', '\0'};
+```
 
 The `%s` format specifier in `printf` is used for strings. When `printf`
 receives a `char` array with `%s`, it prints characters one by one
@@ -29,7 +45,18 @@ until it finds the null terminator `\0`.
 Because strings are so common, C provides a standard library of functions
 to work with them. We included `<string.h>` at the top to get access.
 
-`strcpy()` - String Copy
+### `strlen()`: String Length
+
+`strlen(message)` counts the characters before the `\0` (the terminator is
+not counted). It returns a `size_t`, an unsigned type for sizes, so it is
+printed with `%zu`:
+
+```c
+printf("The length of the message (strlen) is: %zu\n", strlen(message));
+```
+
+### `strcpy()`: String Copy
+
 You CANNOT assign one string to another using `=`.
 `char another_string[20]; another_string = message;` <-- THIS IS WRONG!
 
@@ -37,12 +64,26 @@ You must copy the characters from the source to the destination.
 WARNING: The destination array must be large enough to hold the source
 string, including its null terminator!
 
-`strcat()` - String Concatenate (join)
+```c
+char destination[50];
+char source[] = "Some text to be copied.";
+strcpy(destination, source);
+```
+
+### `strcat()`: String Concatenate (Join)
+
 This function appends one string to the end of another.
 WARNING: Again, the destination string must have enough space for the
 combined result!
 
-`strcmp()` - String Compare
+```c
+char full_greeting[50] = "Welcome, ";
+char user[] = "dunamismax";
+strcat(full_greeting, user);
+```
+
+### `strcmp()`: String Compare
+
 You CANNOT compare strings using `==`.
 `if (str1 == str2)` <-- THIS IS WRONG! It compares memory locations, not content.
 
@@ -51,6 +92,14 @@ It returns:
   - 0 if the strings are identical.
   - A negative value if the first string comes before the second.
   - A positive value if the first string comes after the second.
+
+So the test for "the same string" is `== 0`:
+
+```c
+if (strcmp(pass1, pass2) == 0)
+```
+
+`"password123"` and `"Password123"` are different, because case matters.
 
 ## Full Source
 

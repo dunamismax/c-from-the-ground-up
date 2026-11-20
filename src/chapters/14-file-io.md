@@ -7,9 +7,7 @@ To make our programs truly useful, we need PERSISTENCE--the ability to save
 data to a storage device (like a hard drive) and load it back later. This is
 achieved through FILE I/O (Input/Output).
 
-
 ## The Core Concepts of File I/O
-
 
 1. The `FILE` Pointer:
    When you work with a file in C, you use a special pointer type called `FILE *`.

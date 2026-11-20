@@ -10,7 +10,8 @@ Today, we will learn how to parse a simple Comma-Separated Values (CSV) file.
 Each line in the file will represent a single record, with fields separated
 by commas.
 
-THE GOAL:
+## The Goal
+
 We will write a program that reads a file named `users.dat`. Each line of
 this file will contain a user's ID, username, level, and active status.
 Our program will parse each line and load the data into an array of `struct User`.
@@ -21,7 +22,19 @@ As you will see, `sscanf` is often safer and more robust.
 `sscanf` is often the best tool for this job. It's like `scanf`, but it reads
 from a string instead of the keyboard. It's powerful because it can parse
 complex patterns, and its return value tells you how many items were
-successfully assigned, which makes error checking very easy.
+successfully assigned, which makes error checking very easy:
+
+```c
+int items_scanned = sscanf(line, "%d,%49[^,],%d,%d",
+                           &current_user.id,
+                           current_user.username,
+                           &current_user.level,
+                           &current_user.is_active);
+```
+
+`%49[^,]` reads up to 49 characters that are not a comma, which leaves room
+for the `\0` in the 50-character `username`. A well-formed line gives 4, so
+any other result means the line is malformed and is skipped.
 
 ## For Reference: Parsing with strtok()
 
@@ -29,7 +42,8 @@ successfully assigned, which makes error checking very easy.
 delimiter, replacing it with a null terminator (`\0`), and returning a pointer
 to the start of the token.
 
-WHY IS IT NOT PREFERRED?
+### Why Is It Not Preferred?
+
 1. It MODIFIES the original string. This can be destructive and surprising.
 2. It is STATEFUL. You call it once with the string, then with NULL for
    subsequent tokens. This makes the code more complex and means you can't

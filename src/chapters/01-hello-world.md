@@ -3,23 +3,46 @@
 Welcome to your first lesson in C! The journey to mastering C is challenging
 but incredibly rewarding. It all begins with this single step.
 
-WHAT IS A COMPILER?
+## What Is a Compiler?
+
 A COMPILER is a special program that translates the human-readable C code you
-write into the machine code that your computer can execute. For this course,
-we will use GCC (GNU Compiler Collection).
+write into the machine code that your computer can execute. The commands in this
+course call it `cc`, the usual name for your system's C compiler: GCC (the GNU
+Compiler Collection) on most Linux systems, and Clang on macOS. Both work the
+same way for these lessons.
+
+## The Program, Line by Line
+
+The whole program is only a few lines long. It starts with this one:
+
+```c
+#include <stdio.h>
+```
+
 
 The `#include` is a PREPROCESSOR DIRECTIVE. It's a command that runs
 *before* the main compilation process starts. It tells the compiler to find
 the file specified in the angle brackets `< >` and copy its entire content
-into this file right here.
+into the program at that spot.
 
 We are including `stdio.h`, which stands for "Standard Input/Output Header".
 This header file contains declarations for essential functions used for
 input and output operations, including the `printf` function we will use below.
 
-This is the MAIN FUNCTION. Every complete C program MUST have exactly one
+Next comes the MAIN FUNCTION, which holds the rest of the program:
+
+```c
+int main(void)
+{
+    printf("Hello, World!\n");
+    return 0;
+}
+```
+
+Every complete C program MUST have exactly one
 function named `main`. The execution of the program officially begins at the
-top of the `main` function.
+top of the `main` function. The curly braces `{` and `}` mark where the
+function's BODY, its block of code, begins and ends.
 
 Let's break down its signature: `int main(void)`
 

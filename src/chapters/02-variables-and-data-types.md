@@ -4,13 +4,15 @@ In the last lesson, we printed a fixed message. To write useful programs,
 we need a way to store and manipulate data that can change. This is where
 variables come in.
 
-WHAT IS A VARIABLE?
+## What Is a Variable?
+
 A VARIABLE is a named storage location in the computer's memory. Think of it
 as a labeled box where you can store a piece of information. You give it a
 name, and you can change the contents of the box (the value) as your
 program runs.
 
-WHAT IS A DATA TYPE?
+## What Is a Data Type?
+
 A DATA TYPE specifies the type of data that a variable can hold. C is a
 "statically-typed" language, which means you must explicitly tell the
 compiler the data type of every variable you create. This helps the compiler
@@ -22,16 +24,36 @@ The process of giving a variable its first value is called INITIALIZATION.
 An INTEGER is a whole number (no decimal point). The `int` data type is
 used to store them.
 
-Below, we DECLARE a variable named `player_score` of type `int`.
+The lesson first DECLARES a variable named `player_score` of type `int`:
+
+```c
+int player_score;
+```
+
 This tells the compiler: "Reserve a spot in memory for an integer,
 and I will call it `player_score`."
 
-Now we INITIALIZE the variable by assigning it a value using the
-assignment operator `=`.
+Then it INITIALIZES the variable by assigning it a value using the
+assignment operator `=`:
+
+```c
+player_score = 1250;
+```
+
+You can also declare and initialize a variable in one step, which is what
+you will usually do:
+
+```c
+int number_of_lives = 3;
+```
 
 To print the value of a variable, we use `printf` with a FORMAT SPECIFIER.
 A FORMAT SPECIFIER is a placeholder in the string that tells `printf`
 what type of data to expect and how to format it.
+
+```c
+printf("Player score: %d\n", player_score);
+```
 
 `%d` is the format specifier for a signed decimal integer (`int`).
 The variable `player_score` is passed as a second argument to `printf`,
@@ -42,11 +64,22 @@ The most common one is `double`, which stands for "double-precision".
 It can store numbers with much greater precision than its counterpart, `float`.
 For this course, we will prefer `double` for all decimal numbers.
 
+```c
+double item_price = 19.99;
+```
+
 `%f` is the format specifier for a `double` (and `float`).
 
 By default, `%f` might print many extra zeros. You can control the
 number of decimal places by modifying the format specifier. For example,
-`%.2f` tells `printf` to print only 2 digits after the decimal point.
+`%.2f` tells `printf` to print only 2 digits after the decimal point:
+
+```c
+printf("The price, formatted neatly, is: $%.2f\n", item_price);
+```
+
+(The `$` here is just a character in the message; only the `%` starts a
+format specifier.)
 
 The `char` data type is used to store a single CHARACTER. This can be
 a letter, a number, or a symbol.
@@ -54,10 +87,22 @@ a letter, a number, or a symbol.
 A CHARACTER LITERAL is enclosed in SINGLE quotes (e.g., 'A'). This is
 different from a string literal, which uses double quotes.
 
+```c
+char player_grade = 'A';
+```
+
 `%c` is the format specifier for a `char`.
 
 You can print multiple variables in a single `printf` call. Just make
-sure the format specifiers and the variables are listed in the same order.
+sure the format specifiers and the variables are listed in the same order:
+
+```c
+printf("Summary: Player with %d lives and a grade of '%c' has a score of %d.\n",
+       number_of_lives, player_grade, player_score);
+```
+
+The first `%d` gets `number_of_lives`, the `%c` gets `player_grade` and the
+second `%d` gets `player_score`.
 
 ## Full Source
 

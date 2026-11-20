@@ -11,7 +11,6 @@ powerful for tasks like:
 - Writing highly efficient code for specific algorithms.
 - Storing multiple boolean (true/false) flags in a single byte.
 
-
 ## The Bitwise Operators
 
 - `&` (bitwise AND): sets a bit to 1 if BOTH corresponding bits are 1.

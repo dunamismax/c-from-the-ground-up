@@ -3,7 +3,8 @@
 So far, when you've needed to repeat a task, you've used a loop (`for` or `while`).
 Today, we're going to learn a powerful and elegant alternative: RECURSION.
 
-WHAT IS RECURSION?
+## What Is Recursion?
+
 RECURSION is the process of a function calling itself.
 
 Think of it like a set of Russian nesting dolls. You open a doll to find a

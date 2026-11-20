@@ -421,6 +421,16 @@ run_text_editor_check() {
     expect_status 0 "Lesson 25 did not exit cleanly after an overlong line."
     expect_contains "$RUN_OUTPUT" "Command too long." "Lesson 25 did not reject an overlong line."
     expect_not_contains "$RUN_OUTPUT" "Unknown command" "Lesson 25 ran the rest of an overlong line as a command."
+
+    # A line longer than any fixed buffer must load as one line, so opening
+    # and saving a file leaves it unchanged (the loader once split it).
+    awk 'BEGIN { printf "short\n"; for (i = 0; i < 3000; i++) printf "x"; printf "\nend\n" }' > "$document"
+    cp "$document" "$editor_dir/original.txt"
+    run_lesson_with_input "$editor_bin" 's\nq\n' "$document"
+    expect_status 0 "Lesson 25 did not exit cleanly after loading a long line."
+    if ! cmp -s "$document" "$editor_dir/original.txt"; then
+        fail_with_output "Lesson 25 changed a file with a long line just by loading and saving it." "$(wc -l < "$document") lines after saving, 3 before"
+    fi
 }
 
 run_hash_table_check() {

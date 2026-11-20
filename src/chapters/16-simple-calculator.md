@@ -3,12 +3,14 @@
 Welcome to Part 3! It's time to start building bigger things. This lesson is
 our first real PROJECT: a simple calculator that works from the command line.
 
-THE GOAL:
+## The Goal
+
 We want to be able to run our program like this:
 `./16_simple_calculator 10 + 22`
 And have it print the result: `10.00 + 22.00 = 32.00`
 
-SKILLS WE WILL USE:
+## Skills We Will Use
+
 1. Command-Line Arguments (`argc`, `argv`): To get the numbers and the
    operator from the user when they run the program.
 2. Data Conversion: The arguments in `argv` are STRINGS. We need to convert

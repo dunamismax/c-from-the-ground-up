@@ -11,7 +11,8 @@ then create an array of just the right size?
 This is where DYNAMIC MEMORY ALLOCATION comes in. It's the ability to request
 memory from the operating system at RUNTIME.
 
-THE STACK AND THE HEAP
+## The Stack and the Heap
+
 Local variables (like `int x;` inside `main`) are stored on a memory region
 called the STACK. The STACK is fast and memory is managed for you automatically.
 When a function ends, its variables on the stack are destroyed.

@@ -1,12 +1,13 @@
 # Hash Table Implementation
 
-PROJECT: IMPLEMENT A HASH TABLE
+This lesson is a project: a data structure you build from scratch.
 
 So far, we've seen arrays (fast access by index, slow search) and linked lists
 (slow search, flexible size). Now, we will build a data structure that offers
 the best of both worlds: the HASH TABLE (also known as a Hash Map).
 
-WHAT IS A HASH TABLE?
+## What Is a Hash Table?
+
 A Hash Table is a data structure that maps KEYS to VALUES. You give it a key
 (e.g., a person's name), and it can very quickly find the associated value
 (e.g., their phone number). The goal is to achieve an average time complexity
@@ -15,7 +16,8 @@ incredibly fast and is why hash tables are used everywhere, from databases to
 compiler symbol tables to the dictionaries/maps in modern languages like
 Python and JavaScript.
 
-HOW DOES IT WORK?
+## How Does It Work?
+
 1. THE HASH FUNCTION: The magic is in the HASH FUNCTION. This is a function
    that takes a key (which can be a string, number, etc.) and converts it
    into an integer index. This index tells us where to store the value in
@@ -33,7 +35,8 @@ HOW DOES IT WORK?
    to the HEAD of a LINKED LIST. If a collision occurs, we just add the new
    key-value pair as a new node in that linked list.
 
-OUR IMPLEMENTATION PLAN:
+## Our Implementation Plan
+
 1. Define an `Entry` struct (a node in our linked list for a key-value pair).
 2. Define a `HashTable` struct (which holds the main array of entry pointers).
 3. Write a `hash_function` to convert string keys to array indices.
@@ -42,6 +45,23 @@ OUR IMPLEMENTATION PLAN:
 6. Implement `ht_search` to retrieve a value by its key.
 7. Implement `ht_delete` to remove a key-value pair.
 8. Implement `ht_free` to clean up all allocated memory.
+
+## The Hash Function
+
+```c
+unsigned int hash_function(const char *key)
+{
+    unsigned long int value = 0;
+    size_t key_len = strlen(key);
+
+    for (size_t i = 0; i < key_len; ++i)
+    {
+        value = value * 37 + (unsigned char)key[i];
+    }
+
+    return (unsigned int)(value % TABLE_SIZE);
+}
+```
 
 This is a simple POLYNOMIAL hash function. For each character in the key, it
 multiplies the running value by 37 and adds the character's code. Then it uses

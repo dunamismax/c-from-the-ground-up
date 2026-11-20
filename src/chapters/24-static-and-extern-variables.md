@@ -8,11 +8,29 @@ to answer two key questions:
 
 The `static` and `extern` keywords are our tools for managing this.
 
-`static` - The "Private" Keyword
-The `static` keyword has two different meanings depending on where you use it,
-but both are related to making things more "private" or "persistent".
+## `static`: The "Private" Keyword
 
-`extern` - The "Public Declaration" Keyword
+The `static` keyword has two different meanings depending on where you use it,
+but both are related to making things more "private" or "persistent":
+
+- INSIDE A FUNCTION, it controls LIFETIME. A `static` local variable is
+  created only once and keeps its value between calls, instead of starting
+  over each time the function runs:
+
+  ```c
+  static int count = 0;
+  ```
+
+- AT FILE SCOPE (on a global variable or a function), it controls LINKAGE.
+  The name becomes private to its own `.c` file, so other files cannot see
+  it or clash with it:
+
+  ```c
+  static int g_private_variable = 42;
+  ```
+
+## `extern`: The "Public Declaration" Keyword
+
 The `extern` keyword is used to DECLARE a global variable that is DEFINED in
 another file. It tells the compiler, "Don't worry, this variable exists somewhere
 else. The linker will find it and connect everything."

@@ -7,7 +7,8 @@ creating a new, larger array and copying everything over.
 
 Welcome to the LINKED LIST, a data structure that solves this problem.
 
-WHAT IS A LINKED LIST?
+## What Is a Linked List?
+
 A LINKED LIST is a sequence of data elements, which are connected together via
 links. Each element, called a NODE, contains two things:
 1. The DATA itself (e.g., a number, a struct, etc.).

@@ -1,6 +1,6 @@
 # Build Your Own grep
 
-PROJECT: BUILD YOUR OWN `grep`
+This lesson is a project: your own version of a classic Unix tool.
 
 `grep` (which stands for Global Regular Expression Print) is one of the most
 famous and widely used command-line utilities in the Unix world. Its job is
@@ -17,7 +17,8 @@ print any matching lines. This is a fantastic project because it combines:
 4. ERROR HANDLING: To manage cases where the user provides wrong input or the
    file doesn't exist.
 
-THE PLAN:
+## The Plan
+
 1. Get two arguments from the command line: the search `pattern` and the `filename`.
 2. Open the `filename` for reading.
 3. Read the file one line at a time.

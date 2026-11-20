@@ -4,7 +4,8 @@ So far, our programs have been linear: we `printf` some text, `scanf` some
 input, and the text scrolls up and away forever. It's functional, but not
 very interactive. Today, we take control of the entire terminal screen.
 
-WHAT IS NCURSES?
+## What Is ncurses?
+
 NCURSES is a powerful external library that allows you to create complex
 Terminal User Interfaces (TUIs). It gives you precise control over:
  - Cursor position: Move the cursor anywhere on the screen.
@@ -19,11 +20,28 @@ will introduce you to the basic building blocks.
 IMPORTANT: This program will take over your terminal screen. It will look
 different from our previous programs!
 
-Every ncurses program needs a standard setup and cleanup routine.
+## Setup and Cleanup
+
+Every ncurses program needs a standard setup and cleanup routine. The
+lesson's setup turns on the features it uses:
+
+```c
+initscr();
+noecho();
+cbreak();
+keypad(stdscr, TRUE);
+```
+
+- `initscr()` starts ncurses and takes over the screen.
+- `noecho()` stops typed keys from being printed automatically.
+- `cbreak()` hands each key to the program at once, without waiting for Enter.
+- `keypad(stdscr, TRUE)` lets the program read special keys such as the arrows.
 
 The `endwin()` function is CRITICAL. It must be called before your program
 exits to restore the terminal to its normal, sane state. If you forget this,
 your terminal prompt might be broken!
+
+## The Virtual Screen
 
 NCURSES uses a VIRTUAL SCREEN. When you "print" something, it's drawn to an
 in-memory representation of the screen first. Nothing appears on the actual

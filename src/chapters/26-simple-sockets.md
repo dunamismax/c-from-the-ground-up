@@ -7,7 +7,8 @@ complete, working client-server application in two programs: a CLIENT and a
 SERVER. This is your gateway to understanding how programs communicate over
 the internet.
 
-THE CLIENT-SERVER MODEL
+## The Client-Server Model
+
 Most network communication follows a CLIENT-SERVER model.
 - A SERVER is a program that runs continuously, LISTENS for incoming
   connections on a specific port, and provides a service.
@@ -17,7 +18,8 @@ Most network communication follows a CLIENT-SERVER model.
 Think of a web browser (client) connecting to a web server (like google.com)
 to request a webpage. This file is the CLIENT.
 
-WHAT IS A SOCKET?
+## What Is a Socket?
+
 A SOCKET is an endpoint for communication between two programs over a network.
 You can think of it like a telephone for your program. You create a socket,
 'dial' the server's address and port, and then you can send and receive
@@ -27,7 +29,8 @@ We will be using TCP/IP sockets (specifically, AF_INET and SOCK_STREAM), which
 provide a reliable, connection-oriented communication channel. This means data
 arrives in order and without errors, like a phone call.
 
-THE CLIENT'S JOURNEY
+## The Client's Journey
+
 A typical client program follows these steps:
 1. Create a SOCKET.
 2. Specify the server's IP address and PORT number.
@@ -41,7 +44,8 @@ Let's build it!
 The `socket()` function creates a communication endpoint and returns a
 file descriptor for it.
 
-ARGUMENTS:
+**Arguments:**
+
 1. domain: AF_INET specifies the IPv4 protocol family.
 2. type:   SOCK_STREAM specifies a TCP socket (reliable, connection-oriented).
 3. protocol: 0 tells the OS to choose the proper protocol (TCP for SOCK_STREAM).
@@ -67,7 +71,8 @@ The `connect()` function establishes a connection to the server.
 It's a BLOCKING call; it will wait until the connection is made or an
 error occurs.
 
-ARGUMENTS:
+**Arguments:**
+
 1. The client's socket descriptor.
 2. A pointer to the server's address struct. Note the cast to
    `(struct sockaddr *)`. This is a C convention for generic socket functions.
@@ -362,7 +367,8 @@ While the client actively initiates contact, the server is passive. It sets
 up a 'shop' at a known address (IP and PORT) and waits for customers (clients)
 to arrive.
 
-THE SERVER'S JOURNEY
+## The Server's Journey
+
 A typical TCP server program follows these steps, which are different from
 the client's:
 

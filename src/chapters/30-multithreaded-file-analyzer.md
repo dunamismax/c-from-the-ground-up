@@ -1,13 +1,14 @@
 # Multithreaded File Analyzer
 
-PROJECT: HARNESS MULTI-CORE POWER WITH THREADS
+This lesson is a project: putting every core of your CPU to work.
 
 So far, all our programs have run in a single sequence of execution. They do
 one thing at a time. This is called single-threaded execution. But modern
 CPUs have multiple cores, each capable of running instructions independently.
 How can we take advantage of this power? The answer is MULTITHREADING.
 
-PROCESS vs. THREAD
+## Process vs. Thread
+
 - A PROCESS is a running instance of a program (like our `tiny_shell`). It has
   its own dedicated memory space, file descriptors, etc. `fork()` creates a new process.
 - A THREAD is a "lightweight" path of execution *within* a single process.
@@ -15,7 +16,8 @@ PROCESS vs. THREAD
   makes communication between them easy (they can just access the same variables),
   but it also introduces a huge challenge: managing that shared access safely.
 
-THE CHALLENGE: RACE CONDITIONS
+## The Challenge: Race Conditions
+
 Imagine two threads trying to increment the same global counter (`global_count++`).
 This operation is not ATOMIC (it's not one single instruction). It's really:
 1. Read the value of `global_count` from memory into a CPU register.
@@ -26,7 +28,8 @@ A RACE CONDITION occurs if Thread 1 reads the value (say, 5), but before it
 can write back 6, Thread 2 also reads the value (still 5). Both threads will
 compute 6 and write it back. The counter should be 7, but it's only 6! We lost an update.
 
-THE SOLUTION: MUTEXES
+## The Solution: Mutexes
+
 A MUTEX (MUTual EXclusion) is a lock. It's a programming primitive that ensures
 only one thread can access a "critical section" of code at a time. The workflow is:
 1. Thread A acquires the lock. No other thread can acquire it until A is done.
@@ -34,7 +37,8 @@ only one thread can access a "critical section" of code at a time. The workflow 
 3. Thread A releases the lock.
 4. Thread B, which was waiting, can now acquire the lock and do its work.
 
-OUR PLAN:
+## Our Plan
+
 We will write a program that counts the characters, words, and lines in a large
 file. To speed it up, we will:
 1. Read the entire file into one large memory buffer.

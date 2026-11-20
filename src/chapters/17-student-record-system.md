@@ -9,7 +9,8 @@ application that can:
 
 This is a foundational pattern for almost any data-management application.
 
-KEY ARCHITECTURE CONCEPTS:
+## Key Architecture Concepts
+
 - MODULARITY: We will break the program into small, single-purpose functions
   (e.g., `add_student`, `save_to_file`). This makes the code much easier to
   read, debug, and maintain. The `main` function will act as a control center.

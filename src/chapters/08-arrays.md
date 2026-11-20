@@ -14,13 +14,24 @@ of the array, and the number of elements it can hold (its size) in
 square brackets `[]`.
 
 The following line declares an array named `high_scores` that can hold
-exactly 5 integers.
+exactly 5 integers:
 
-ACCESSING ARRAY ELEMENTS:
+```c
+int high_scores[5];
+```
+
+## Accessing Array Elements
+
 You access individual elements of an array using an INDEX in square brackets.
 C uses ZERO-BASED INDEXING. This is a critical concept. It means the
 first element is at index 0, the second at index 1, and so on.
 For an array of size 5, the valid indices are 0, 1, 2, 3, and 4.
+
+```c
+high_scores[0] = 980; // the first element
+high_scores[4] = 799; // the fifth (and last) element
+printf("The highest score is: %d\n", high_scores[0]);
+```
 
 Accessing an index outside of this range (like `high_scores[5]`) leads to
 UNDEFINED BEHAVIOR, a common source of bugs and crashes in C programs.
@@ -29,11 +40,26 @@ Manually assigning each element is tedious. You can initialize an array
 when you declare it using an initializer list in curly braces `{}`.
 
 If you provide an initializer list, you can let the compiler figure out
-the size of the array by leaving the square brackets empty.
+the size of the array by leaving the square brackets empty:
+
+```c
+double temperatures[] = {72.5, 75.0, 69.8, 80.1, 85.3}; // Size is 5
+char grades[] = {'A', 'B', 'A', 'C', 'B', 'A'};         // Size is 6
+```
 
 The real power of arrays is realized when you combine them with loops.
 A `for` loop is perfect for iterating through an array, performing an
-action on each element.
+action on each element. The loop counter doubles as the index:
+
+```c
+for (int i = 0; i < 5; i++)
+{
+    printf("  Day %d: %.1f\n", i + 1, temperatures[i]);
+}
+```
+
+`i` runs from 0 to 4, exactly the valid indices. Writing `i <= 5` instead
+would read one element past the end.
 
 ## Full Source
 

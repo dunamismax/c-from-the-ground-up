@@ -6,7 +6,8 @@ together to build a substantial application: a command-line text editor.
 Our editor, which we'll call `sled` (Simple Line Editor), will be able to
 open a file, display its contents, add/delete lines, and save the changes.
 
-THE CORE DATA STRUCTURE:
+## The Core Data Structure
+
 The heart of our editor is a DOUBLY-LINKED LIST. This is an enhancement of the
 linked list from lesson 20. In a doubly-linked list, each node points not
 only to the NEXT node but also to the PREVIOUS one. This makes operations like
@@ -14,10 +15,13 @@ inserting and deleting in the middle of the list much more efficient.
 
 Each node in our list will represent one line of text in the file.
 
-SKILLS INTEGRATED:
+## Skills Integrated
+
 - Structs: To define the `Line` node for our list.
 - Pointers: Extensively used for linking nodes (`next`, `prev`) and managing data.
-- Dynamic Memory (`malloc`/`free`): To create and destroy lines as needed.
+- Dynamic Memory (`malloc`/`free`): To create and destroy lines as needed,
+  plus `realloc`, new in this lesson, to grow a buffer until a whole line of
+  the file fits.
 - File I/O (`fopen`, `fgets`, `fprintf`): To load and save the file.
 - Command-Line Arguments (`argc`, `argv`): To specify which file to edit.
 - Functions: To create a clean, modular, and readable program structure.
@@ -99,6 +103,7 @@ void print_help(void);
 bool parse_line_number(const char *text, int *line_number);
 void discard_rest_of_line(void);
 Line *create_line(const char *text);
+char *read_whole_line(FILE *file);
 
 // --- Main Function: The Editor's Control Loop ---
 
@@ -330,17 +335,77 @@ void load_file(const char *filename)
         return; // It's okay if the file doesn't exist yet
     }
 
-    // NOTE: a line longer than the buffer is read in pieces, and each piece
-    // becomes its own line. That is fine for a teaching editor; a real one
-    // would grow the buffer with `realloc` until the whole line fits.
-    char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), file))
+    // A line in a file can be any length, so a fixed `char buffer[1024]` and
+    // `fgets` would split a longer line into several pieces, and saving would
+    // then change the file. `read_whole_line` grows its buffer instead.
+    char *text = NULL;
+    while ((text = read_whole_line(file)) != NULL)
     {
-        buffer[strcspn(buffer, "\n")] = 0; // Remove trailing newline
-        append_line(buffer);
+        append_line(text);
+        free(text); // `append_line` stored its own copy.
+    }
+    if (ferror(file))
+    {
+        printf("Warning: could not read all of '%s'.\n", filename);
     }
     fclose(file);
     modified = false; // Freshly loaded, so not modified yet
+}
+
+/**
+ * @brief Reads one whole line from a file, however long it is.
+ *
+ * Returns the line without its newline, in memory from `malloc` that the
+ * caller must `free`, or NULL when there is nothing left to read.
+ */
+char *read_whole_line(FILE *file)
+{
+    size_t capacity = 128;
+    size_t length = 0;
+    char *line = malloc(capacity);
+    if (line == NULL)
+    {
+        perror("malloc failed while reading the file");
+        exit(1);
+    }
+
+    int c = fgetc(file);
+    if (c == EOF)
+    {
+        free(line);
+        return NULL; // No more lines.
+    }
+
+    while (c != EOF && c != '\n')
+    {
+        // Keep one byte free for the `\0`. When the buffer is full, double it.
+        //
+        // REALLOC asks for a bigger block and copies the old contents into it.
+        // The new block may be at a different address. If it fails, it returns
+        // NULL and leaves the old block alone, so we store its result in a
+        // separate pointer: writing `line = realloc(line, ...)` would lose our
+        // only pointer to the old block, and leak it, on failure.
+        if (length + 1 == capacity)
+        {
+            char *bigger = realloc(line, capacity * 2);
+            if (bigger == NULL)
+            {
+                free(line);
+                perror("realloc failed while reading the file");
+                exit(1);
+            }
+            line = bigger;
+            capacity *= 2;
+        }
+        // `c` is not EOF here, so it holds a character value that fits in a
+        // `char`; the cast says so.
+        line[length] = (char)c;
+        length++;
+        c = fgetc(file);
+    }
+
+    line[length] = '\0';
+    return line;
 }
 
 /**

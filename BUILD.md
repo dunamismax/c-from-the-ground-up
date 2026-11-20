@@ -585,30 +585,30 @@ the lessons it serves.
 - [x] **Uninitialized-read detection.** Done 2026-11-20: MemorySanitizer runs
       in `scripts/sanitizer_check.sh` (see the Done log).
 - [x] **Unsafe-API audit.** Done 2026-11-20; see the Done log.
-- [ ] **Chapter prose drift audit.** The prose above `## Full Source` was
-      converted from lesson comments once and is not synced. Compare each chapter
-      against its lesson for:
-  - mis-converted structure (chapter 7 had a bullet list turned into `##`
-    headings, now fixed; on 2026-11-20 chapters 5, 6 and 19 got code fences
-    for their syntax examples, 17, 20 and 35 lost stray half-sentences, and
-    34's banner line became a heading. A scan for unfenced code and fragment
-    paragraphs is clean now, but no chapter has been read side by side with
-    its lesson yet. The scan first missed chapter 6's opening `printf`
-    example, which is fenced now too; a second scan for bare statement lines
-    found nothing else.)
-  - stale claims
-  - explanations that no longer match the code
-  - 2026-11-20, automated cross-check of all 35 chapters: every inline code
-    span and fenced snippet in the prose appears in the chapter's lesson
-    sources (one generic `sizeof(buffer) - 1` in chapter 26 now names the
-    real buffers); the 64 prose sentences not found in the lesson comments
-    are text written during later fixes, and the factual ones were checked
-    against the code; every "Lesson N" cross-reference in lessons and
-    chapters names a lesson that teaches what it says (lesson 13's new
-    `size_t` note was corrected). Still open: a human read of each chapter
-    next to its lesson, for tone and order rather than facts.
-  - Then consider extending `sync_chapters.py` with a heuristic warning when a
-    lesson file changed more recently than its chapter's prose.
+- [x] **Chapter prose drift audit.** Done 2026-11-20. After the automated
+      cross-check (every inline code span and snippet appears in the lesson
+      sources; every "Lesson N" reference is right), each chapter's prose was
+      read beside its lesson for tone and order:
+  - 34 run-in UPPERCASE headings ("WHAT IS A COMPILER?") became real `##`
+    headings, so they show in the site's outline and the book's sidebar;
+    chapter 26's "ARGUMENTS:" labels became bold run-ins, and the
+    "PROJECT: ..." banners of 27-30 became an opening sentence.
+  - Prose that described code the reader could not see ("Below, we DECLARE
+    a variable named `player_score`") now shows it: snippets copied from the
+    lessons in chapters 1-9, 24, 28, 33 and 34. Chapter 5 ended mid-sentence
+    ("to check if a grade is a B (80-89):") and now shows the check; chapter 4
+    gained its missing arithmetic, relational and logical operator sections;
+    chapter 9 covers `strlen`; chapter 24 says what `static` means inside a
+    function and at file scope; chapter 33 explains the setup calls.
+  - The generic syntax blocks in chapters 5 and 6 use the course's Allman
+    braces, and chapter 6 gained the `do-while` form.
+  - A script checked that every line of every added C snippet appears in the
+    chapter's lesson sources (only the generic `} while (condition);` does
+    not).
+  - Not done: a warning in `sync_chapters.py` when a lesson changed after
+    its chapter's prose. File times are meaningless in a fresh clone, and
+    git history is shallow in CI, so it would warn at random; AGENTS.md's
+    "update that prose too" rule stays the safeguard.
 
 ### Next (P2): tooling and quality gates
 
@@ -692,26 +692,9 @@ Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
-  (`cg162` in `site/src/lib/compiler-explorer.ts`). Check once a year that the
-  id still exists on godbolt.org and move to a newer GCC.
-- **Content type for lesson downloads.** Prerendered files under
-  `/lessons/<slug>/files/` are served by adapter-node without a
-  `Content-Type` for `.c`, `.h` and `Makefile` (the download links still
-  work through the `download` attribute). Opening one directly downloads it
-  rather than showing it. Consider having Caddy serve `build/prerendered`
-  for those paths with `text/plain; charset=utf-8`.
-- **Chapter prose is all one style of paragraph.** The converted comments
-  keep their UPPERCASE run-in headings ("WHAT IS A COMPILER?") inside
-  paragraphs. On the site these could become real `###` headings, which
-  would also feed the table of contents; that is a chapter prose change, so
-  it belongs to the prose drift audit.
-- **Lesson 35's input window.** It is 2 rows high and `box()` draws both its
-  borders, so the prompt is printed on the bottom border. A 3-row window (or
-  no box) would give the input a real line; it needs a look in a terminal.
-- **Lesson 25 splits long lines on load.** `load_file` reads with a 1024-byte
-  `fgets` buffer, so a longer line becomes several lines and saving changes
-  the file. The lesson now says so; a `realloc`-based reader would fix it
-  but adds code to a Part 3 capstone.
+  (`cg162` in `site/src/lib/compiler-explorer.ts`). Checked 2026-11-20: it
+  is still the newest GCC there. Check once a year that the id still exists
+  on godbolt.org and move to a newer GCC.
 
 ---
 
@@ -790,6 +773,29 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** the chapter prose audit and three Ideas inbox fixes.
+  - Prose: every chapter read beside its lesson (see the ticked item in Now
+    (P1)).
+  - Lesson 25 split any line longer than its 1024-byte `fgets` buffer when it
+    loaded a file, so opening and saving changed the file. `read_whole_line`
+    grows its buffer with `realloc` (taught where it first appears). The smoke
+    check loads and saves a file with a 3000-character line and compares it;
+    that check failed against the old lesson (5 lines after saving, 3
+    before).
+  - Lesson 35 drew its prompt and the player's typing on the bottom border of
+    a 2-row input window, and read commands with echo off (`noecho()`), so
+    nothing the player typed was visible; a long command also stayed behind
+    a shorter one. The status and input windows are 3 rows, `ui_get_input`
+    turns echo on while it reads, and `ui_draw` erases the input window.
+    Checked by capturing the 80x24 screen in tmux before and after. The
+    sanitizer check types `xyzzy` and expects to see it, which fails against
+    the old lesson.
+  - Lesson files under `/lessons/<slug>/files/` had no `Content-Type`, so
+    opening one downloaded it. The Caddy site serves them from
+    `build/prerendered` as `text/plain; charset=utf-8` (tested with a local
+    Caddy: `.c`, `Makefile`, and a missing name falling through to Node),
+    and `cutover.sh` checks the header on every deploy.
 
 - **2026-11-20:** the maintainer settled D1-D9 and set the repo homepage.
   D1: 123 `-std=c11` commands became `-std=c17` (lessons, chapters, lesson

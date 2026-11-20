@@ -17,10 +17,22 @@ We DECLARE an integer variable `user_age` and INITIALIZE it to 0. The user
 will provide the real value, but if reading fails, the variable still holds a
 known value instead of leftover garbage from memory.
 
-It's good practice to print a "prompt" to the user, so they know
-what you're asking for.
+```c
+int user_age = 0;
+```
 
-Now, we call `scanf`. This is the most important part of the lesson.
+It's good practice to print a "prompt" to the user, so they know
+what you're asking for:
+
+```c
+printf("Please enter your age (as a whole number): ");
+```
+
+Now, we call `scanf`. This is the most important part of the lesson:
+
+```c
+scanf("%d", &user_age)
+```
 
 - `"%d"`: This is the format specifier. It tells `scanf` to look for
   and read an integer from the keyboard input.
@@ -28,7 +40,8 @@ Now, we call `scanf`. This is the most important part of the lesson.
 - `&user_age`: This is new! The `&` symbol is the ADDRESS-OF OPERATOR.
   It gets the memory address of the `user_age` variable.
 
-WHY DO WE NEED `&`?
+## Why Do We Need `&`?
+
 You must tell `scanf` *where* in memory to store the data it reads.
 Simply providing `user_age` would only give `scanf` the variable's
 *current value* (which is just 0 at this point). By providing `&user_age`,
@@ -64,12 +77,27 @@ the program." You will learn exactly how `if` and `!=` work in Lessons 4 and 5.
 For now, recognize the pattern, because you should use it every time you call
 `scanf`. `return 1;` ends `main` early with an exit code that signals an error.
 
+## Reading Other Types
+
 The pattern is the same for other data types. We just need to change
-the variable type and the format specifier.
+the variable type and the format specifier:
+
+```c
+double user_gpa = 0.0;
+printf("Please enter your GPA (e.g., 3.8): ");
+if (scanf("%lf", &user_gpa) != 1)
+{
+    printf("Could not read a number. Exiting.\n");
+    return 1;
+}
+printf("Your GPA is %.2f.\n", user_gpa);
+```
 
 IMPORTANT: For `scanf`, the format specifier for a `double` is `%lf`
 (which stands for "long float"). This is DIFFERENT from `printf`,
 which uses `%f` for a `double`. This is a common point of confusion!
+
+## The Leftover Newline
 
 `scanf` can sometimes behave in unexpected ways because of how it handles
 whitespace (like spaces, tabs, and newlines).
@@ -81,7 +109,12 @@ you to type a new character!
 
 THE FIX: To fix this, we put a single space before the `%c` in the format
 string: `" %c"`. That leading space tells `scanf` to "skip any and all
-leading whitespace characters before reading the character". It's a crucial trick.
+leading whitespace characters before reading the character". It's a crucial trick:
+
+```c
+if (scanf(" %c", &favorite_letter) != 1)
+```
+
 
 ## Full Source
 

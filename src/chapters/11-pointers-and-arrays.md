@@ -4,7 +4,8 @@ In the previous lesson, you learned what a POINTER is: a variable that stores
 a memory address. Now, we will explore one of the most important relationships
 in C: the connection between pointers and arrays.
 
-THE BIG REVEAL:
+## The Big Reveal
+
 The name of an array, by itself, acts as a CONSTANT POINTER to the first
 element of that array.
 

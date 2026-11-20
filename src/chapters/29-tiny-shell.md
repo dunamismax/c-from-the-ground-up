@@ -1,6 +1,6 @@
 # Tiny Shell
 
-PROJECT: BUILD A TINY SHELL
+This lesson is a project: a working command-line shell.
 
 A SHELL is a command-line interpreter. It's the program that gives you a
 prompt (like `$` or `> `), reads your input (like `ls -l`), and tells the
@@ -16,21 +16,22 @@ shell revolves around a simple, powerful loop:
 4. EXEC: The new process REPLACES itself with the command to be run.
 5. WAIT: The original shell process waits for the command to finish.
 
-THE KEY SYSTEM CALLS
+## The Key System Calls
+
 To accomplish this, we will use three of the most important functions in
 Unix/Linux programming:
 
-- fork(): This creates a new child process, which is an exact duplicate of
+- `fork()`: This creates a new child process, which is an exact duplicate of
   the parent process (our shell). It's like cloning our program. The parent
   gets the child's process ID, and the child gets 0.
 
-- execvp(): (The "exec" family of functions). This function REPLACES the
+- `execvp()`: (The "exec" family of functions). This function REPLACES the
   current process's memory space with a new program. When the child process
   calls `execvp`, it ceases to be a copy of our shell and BECOMES the `ls`
   program (or whatever was requested). `execvp` is special because it
   searches the system's PATH for the executable, just like a real shell.
 
-- waitpid(): This tells the parent process (our shell) to pause and wait
+- `waitpid()`: This tells the parent process (our shell) to pause and wait
   until a specific child process has finished executing. This ensures our
   shell prompt doesn't reappear until the command's output is complete.
 

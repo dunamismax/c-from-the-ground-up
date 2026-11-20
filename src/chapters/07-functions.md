@@ -31,8 +31,23 @@ A prototype consists of:
 - The data types of the parameters it accepts, in order.
 - A semicolon at the end.
 
+The lesson's three prototypes sit above `main`:
+
+```c
+void print_welcome_message(void);
+void display_character_level(int character_level);
+int calculate_damage(int strength, int weapon_power);
+```
+
 The `main` function will now act as a manager, calling our other functions
-to perform their specific tasks.
+to perform their specific tasks:
+
+```c
+print_welcome_message();
+int player_level = 15;
+display_character_level(player_level);
+int total_damage = calculate_damage(20, 8);
+```
 
 Below `main`, we provide the full DEFINITIONS for our functions. A definition
 includes the function's header (which looks like the prototype, but without
@@ -42,14 +57,44 @@ This is an example of a function that takes no arguments and returns no value.
 `void` as a return type means it doesn't send any value back.
 `(void)` as the parameter list means it doesn't accept any input.
 
+```c
+void print_welcome_message(void)
+{
+    printf("--- Welcome to the Function Demo! ---\n\n");
+}
+```
+
+
 This function accepts one piece of data: an integer. Inside this function,
 that integer is known by the PARAMETER name `character_level`. A PARAMETER is a
 special local variable that holds the value of the ARGUMENT passed during the call.
+
+```c
+void display_character_level(int character_level)
+{
+    printf("Your character is level %d.\n\n", character_level);
+}
+```
+
+When `main` calls `display_character_level(player_level)`, the ARGUMENT is
+`player_level` (15), and inside the function the PARAMETER `character_level`
+starts out holding a copy of that value.
 
 This function takes two integers as input and, importantly, it has a
 RETURN VALUE. The `return` keyword does two things:
 1. It immediately ends the execution of this function.
 2. It sends the value that follows it back to wherever the function was called.
+
+```c
+int calculate_damage(int strength, int weapon_power)
+{
+    int calculated_value = strength + (weapon_power * 2);
+    return calculated_value;
+}
+```
+
+So `calculate_damage(20, 8)` returns 20 + (8 * 2), which is 36, and `main`
+stores it in `total_damage`.
 
 ## Full Source
 

@@ -18,10 +18,21 @@ block of code ONLY if its condition is true.
 Syntax:
 
 ```c
-if (condition) {
+if (condition)
+{
     // Code to execute if 'condition' is true
 }
 ```
+
+For example:
+
+```c
+if (score == 100)
+{
+    printf("Congratulations on a perfect score!\n");
+}
+```
+
 
 The `else` statement provides an alternative block of code to execute
 when the `if` condition is false.
@@ -29,12 +40,30 @@ when the `if` condition is false.
 Syntax:
 
 ```c
-if (condition) {
+if (condition)
+{
     // Code to execute if 'condition' is true
-} else {
+}
+else
+{
     // Code to execute if 'condition' is false
 }
 ```
+
+The lesson uses it to tell even numbers from odd ones (remember `%` from
+Lesson 4):
+
+```c
+if (number_to_check % 2 == 0)
+{
+    printf("%d is an even number.\n", number_to_check);
+}
+else
+{
+    printf("%d is an odd number.\n", number_to_check);
+}
+```
+
 
 To check for multiple, mutually exclusive conditions, you can chain
 `else if` statements. The program will check each condition in order.
@@ -42,9 +71,44 @@ As soon as it finds a true condition, it runs that block and skips the
 rest of the entire chain. The final `else` is optional and acts as a
 "catch-all" if none of the preceding conditions were true.
 
-Note on logical combinations:
+```c
+if (user_grade >= 90)
+{
+    printf("Your letter grade is A.\n");
+}
+else if (user_grade >= 80)
+{
+    printf("Your letter grade is B.\n");
+}
+else if (user_grade >= 70)
+{
+    printf("Your letter grade is C.\n");
+}
+else if (user_grade >= 60)
+{
+    printf("Your letter grade is D.\n");
+}
+else
+{
+    printf("Your letter grade is F.\n");
+}
+```
+
+A grade of 85 fails the first test, passes `user_grade >= 80`, prints "B" and
+skips everything after it, which is why the `>= 70` test never sees it.
+
+## Combining Conditions
+
 We can use logical operators (`&&`, `||`) to create more complex conditions.
 For example, to check if a grade is a B (80-89):
+
+```c
+if (user_grade >= 80 && user_grade < 90)
+{
+    printf("This is a solid B.\n");
+}
+```
+
 
 ## Full Source
 

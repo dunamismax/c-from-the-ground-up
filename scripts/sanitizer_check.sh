@@ -285,6 +285,9 @@ run_terminal_lessons() {
     run_pty_case 33_advanced_terminal_ui 'x' ""
     run_pty_case 35_capstone_awesome_text_adventure \
         'help\nlook\ngo north\ngo up\ngo east\nnonsense\ngo south\nquit\n' "Thank you for playing!" world.map
+    # The player must see what they type: the game once read commands with
+    # echo off, so "xyzzy" never appeared on the screen.
+    run_pty_case 35_capstone_awesome_text_adventure 'xyzzy\nquit\n' "xyzzy" world.map
 }
 
 # run_pty_case <lesson> <keys> <expected text, or ""> [args...]

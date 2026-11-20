@@ -86,6 +86,9 @@ account=$(local_get /api/account) || die '/api/account failed through Caddy'
 seen=$(curl -fsS --max-time 10 --resolve "$HOST:443:127.0.0.1" -H 'X-Forwarded-For: 203.0.113.9' "https://$HOST/healthz/address") || die '/healthz/address failed through Caddy'
 [[ $seen == '{"address":"127.0.0.1"}' ]] || die "client address through Caddy is $seen, expected 127.0.0.1"
 [[ $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --resolve "www.$HOST:443:127.0.0.1" "https://www.$HOST/") == 301 ]] || die 'www does not redirect to the apex'
+# Lesson files open as text in the browser (Caddy serves them from disk).
+lesson_type=$(curl -fsS -o /dev/null -w '%{content_type}' --max-time 10 --resolve "$HOST:443:127.0.0.1" "https://$HOST/lessons/01-hello-world/files/1_hello_world.c") || die 'lesson file download failed through Caddy'
+[[ $lesson_type == 'text/plain; charset=utf-8' ]] || die "lesson file through Caddy has Content-Type $lesson_type"
 
 preserved > "$backup/preserved-after"
 cmp -s "$backup/preserved-before" "$backup/preserved-after" || die 'another site or shared Caddy file changed during cutover'

@@ -38,6 +38,24 @@ cfromthegroundup.com {
 	}
 	header @fresh ?Cache-Control "public, max-age=0, must-revalidate"
 
+	# Lesson files (/lessons/<slug>/files/<name>: the .c, .h and Makefile
+	# downloads) are prerendered, but adapter-node serves them with no
+	# Content-Type, so opening one in the browser downloads it. Serve them from
+	# disk as plain text instead; a name that is not on disk falls through to
+	# Node and its 404 page.
+	@lesson_file {
+		path_regexp ^/lessons/[^/]+/files/[^/]+$
+		file {
+			root /srv/www/cfromthegroundup.com/current/build/prerendered
+			try_files {path}
+		}
+	}
+	handle @lesson_file {
+		root * /srv/www/cfromthegroundup.com/current/build/prerendered
+		header Content-Type "text/plain; charset=utf-8"
+		file_server
+	}
+
 	# Client assets: static/ files, the Vite bundles and version.txt. Paths
 	# ending in / are pages, which Node renders.
 	@asset {
