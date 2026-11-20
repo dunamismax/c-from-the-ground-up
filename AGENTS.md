@@ -6,10 +6,12 @@ open decisions, and backlog.
 
 ## What this project is
 
-A free, progressive C workbook for beginners, published as an mdBook at
-<https://dunamismax.github.io/c-from-the-ground-up/>. It has 35 lessons in five
-parts, running from Hello World to sockets, threads, ncurses and a capstone text
-adventure. The project is popular, and real learners follow it in order.
+A free, progressive C course for beginners. Learners take it at
+<https://cfromthegroundup.com>, and the same lessons are published as an mdBook
+mirror at <https://dunamismax.github.io/c-from-the-ground-up/>. It has 35
+lessons in five parts, running from Hello World to sockets, threads, ncurses and
+a capstone text adventure. The project is popular, and real learners follow it
+in order.
 
 Core idea: **every lesson is a small, readable, runnable C program, and the
 comments are the lesson.** The book chapters add a prose overview and embed the
@@ -23,14 +25,15 @@ SvelteKit 3, Svelte 5, TypeScript, Tailwind CSS 4, PostgreSQL 18 with Drizzle,
 adapter-node and Caddy.
 
 - The full plan, architecture defaults and milestones (W0-W8) are in
-  **[BUILD.md](BUILD.md), "Phase W"**. Unless the user asks for something
-  else, continue at the first unchecked item of the earliest unfinished
-  milestone.
+  **[BUILD.md](BUILD.md), "Phase W"**. BUILD.md's **Now** section names the
+  next step and what is waiting on the maintainer.
 - The site lives in `site/` (see **The website** below). It reads lesson
   content from `Part */` and `src/chapters/` at build time and never keeps its
   own copy.
-- SvelteKit 3, Svelte 5 and Tailwind 4 differ a lot from older tutorials.
-  Check current docs before writing framework code.
+- SvelteKit 3, Svelte 5, Tailwind 4, Drizzle and Better Auth change quickly
+  and differ a lot from older tutorials. Look up current documentation
+  (Context7 or the official docs) before writing framework code, rather than
+  relying on memory.
 
 Priorities, in order:
 
@@ -44,6 +47,66 @@ Priorities, in order:
    the comments must say why it is risky and what to use instead.
 4. **Stable.** People link to lesson files and book pages. Do not rename or move
    files or directories without an explicit decision recorded in BUILD.md.
+
+## Start and finish a session
+
+BUILD.md's **How to work this file** section is the full procedure. In short:
+
+1. **Orient.** Read **Now** in BUILD.md, then run `git status --short` and
+   `git log -5 --oneline`. Other sessions may work in this checkout at the
+   same time and leave uncommitted changes. Leave changes you did not make
+   alone.
+2. **Choose.** The maintainer's request in chat comes first. Otherwise take
+   BUILD.md's **Next step**. When sessions run in parallel, claim the item
+   under **In progress** before you start.
+3. **Build and verify.** Check the change through its real entry point, not
+   only the tests:
+   - a lesson: compile it with the smoke-check flags and run it, with valid
+     input, garbage and EOF if it reads input
+   - a chapter: `make sync`, then read the page in `make serve` or on the site
+   - the site: open the page in a browser against `node build`, in both themes
+     and at phone width when the layout changes
+   - a deploy: the live URL, with the checks under "Checks" in
+     `site/deploy/README.md`
+   When you fix a bug, first add a check that fails without the fix (the smoke
+   check's regressions were each shown to fail against the old lesson). Then
+   run `make verify`.
+4. **Record.** Tick the BUILD.md item in the same commit, with a sentence on
+   how it was verified, or leave it unchecked with a `Remaining:` line. Update
+   **Now**, and add a Done log entry.
+5. **Finish.** Review `git diff` and `git status`, new files included. Commit
+   only your own paths (`git commit -- <paths>`, never `git add -A` when
+   another session's work is in the tree), then push `main`. If another
+   session's half-finished change breaks `make verify`, check yours in a
+   scratch clone of `main` with your changes applied instead.
+
+## What you decide, and what needs the maintainer
+
+Decide it yourself, then record anything a later session would wonder about
+in BUILD.md's Decision log:
+
+- code structure, scripts, tests, CI and tooling, within the dependencies
+  already in use
+- fixes to lessons and chapter prose that follow the lesson conventions below
+- splitting, adding or rewording unchecked BUILD.md items when real work calls
+  for it
+- an open decision that has a stated default: build with the default and say so
+
+Ask the maintainer in chat, and do not act until they answer:
+
+- the open decisions themselves (D1-D10 in BUILD.md)
+- renaming or moving lesson files, `Part */` directories, chapter files or
+  published URLs
+- a new lesson dependency, or a change to the site's stack
+- deploying to production, changing GitHub repository settings, creating
+  accounts or OAuth apps, and anything that costs money
+- deleting unfinished BUILD.md items, lowering a "Done when", or weakening a
+  check (smoke-check flags, behavioural checks, `.clang-tidy`, sanitizers)
+
+An item that needs a person, such as the OAuth app or a screen-reader pass,
+never blocks other work. Do everything up to that step, write the exact
+remaining instruction under **Waiting on the maintainer** in BUILD.md's Now,
+and move on. Never tick a box that is not really done.
 
 ## Repository rules
 
@@ -76,13 +139,14 @@ scripts/sync_chapters.py                            copies lesson sources into c
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
 scripts/check_book_links.py                         checks internal links and anchors in the built book/
 scripts/sanitizer_check.sh                          runs the lessons under ASan/UBSan/LSan, MSan and TSan
+scripts/pty_run.py                                  runs an ncurses lesson in a pseudo-terminal with scripted keys
 Makefile                                            maintainer entry points (not a lesson)
 .clang-format                                       lesson code style; `make format`, checked in CI
 .clangd                                             editor flags for the lessons (the smoke check's warnings)
 .clang-tidy                                         static-analysis checks, and why some are off; `make tidy`
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
-.github/workflows/verify.yml                        CI: listing check, mdbook build, link check, smoke check (clang + gcc), site
+.github/workflows/verify.yml                        CI: listing and format checks, mdbook build and link check, smoke check (clang + gcc), sanitizers, clang-tidy and GCC analyzer, site
 .github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main (or run by hand)
 assets/images/                                      images (not yet used in the book)
 site/                                               the course website, cfromthegroundup.com (see below)
@@ -167,15 +231,17 @@ What `scripts/smoke_check.sh` does:
 What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
 `SANITIZERS_REQUIRED=1`, so nothing may be skipped there):
 
-- Builds every lesson except 33 with ASan + UBSan (+ LeakSanitizer where the
-  platform has it) and runs each one in a fresh directory with a canned input
-  from the `case` table in `run_lessons()`: valid input, and bad input for the
+- Builds every lesson with ASan + UBSan (+ LeakSanitizer where the platform
+  has it) and runs each one in a fresh directory with a canned input from the
+  `case` table in `run_lessons()`: valid input, and bad input for the
   interactive and argument-parsing lessons. Lesson 26's server and client run
-  as a pair over a local port (`run_socket_pair`). Lesson 35's game needs a
-  terminal, so a harness runs its `load_world()` and `cleanup()` on a good map,
-  two bad ones and a missing file.
-- Repeats those runs under MemorySanitizer (Clang on Linux only) to catch reads
-  of uninitialized memory, and runs lesson 30 under ThreadSanitizer.
+  as a pair over a local port (`run_socket_pair`). Lessons 33 and 35 run in an
+  80x24 pseudo-terminal through `scripts/pty_run.py`, which types their keys
+  (`run_terminal_lessons`); a harness also runs 35's `load_world()` and
+  `cleanup()` on bad maps and a missing file.
+- Repeats the non-terminal runs under MemorySanitizer (Clang on Linux only;
+  ncurses is not instrumented) to catch reads of uninitialized memory, and runs
+  lesson 30 under ThreadSanitizer.
 - Fails on any sanitizer report; every sanitizer exits with status 86, so a
   lesson's own exit status for bad input is not mistaken for a finding.
 - **A new lesson that needs input, arguments or files needs a case there**
@@ -330,7 +396,9 @@ Conventions:
 - **Deploying:** production is `ubuntu-vm`, shared with other sites.
   Follow `site/deploy/README.md` exactly (prepare as `sawyer`, then cutover as
   root under `with-deploy-lock`). Deploy only when the maintainer asks, and
-  never edit another site's files or the shared Caddyfile.
+  never edit another site's files or the shared Caddyfile. Never change SSH,
+  firewall or DNS settings on the host. If a deploy breaks the site, roll it
+  back first (`rollback.sh`, see the runbook), then fix it.
 
 ## Lesson conventions
 
@@ -419,3 +487,28 @@ Each `src/chapters/NN-slug.md` contains:
   change pass. The same goes for `.clang-tidy`: turn a check off only with a
   comment there saying why it does not fit teaching code, never with NOLINT
   comments in a lesson.
+
+## Pitfalls
+
+Mistakes that have cost real time here:
+
+- **Green on macOS, red on Linux.** glibc hides names that are not ISO C, such
+  as `M_PI`, under `-std=c23`, and macOS's `gcc` is Clang under another name.
+  Lesson 32 failed CI this way while every Mac run passed. After changing a
+  lesson's includes or library calls, run `make smoke-linux`.
+- **MemorySanitizer does not run on macOS,** but CI's `sanitizers` job
+  requires it. After changing how a lesson allocates, reads or initializes
+  memory, run `make sanitize-linux`.
+- **`curl | grep -q` under `pipefail`.** `grep -q` exits at the first match,
+  curl then fails writing (error 23), and the pipeline fails although the page
+  was fine. This rolled back the `46208f2` deploy. Fetch the page in full,
+  then match.
+- **Paths with spaces.** Quote every `Part */` path, in scripts and in the
+  commands you run.
+
+## Keeping this file current
+
+When a change makes something here wrong (a path, a command, a check, a
+convention), fix this file in the same commit. Add to it when you find a
+durable convention, a verified command or a recurring pitfall that will help
+the next session. Status, results and plan changes go in BUILD.md, not here.

@@ -4,14 +4,16 @@
 # assertions cannot see:
 #
 #   address  AddressSanitizer + UndefinedBehaviorSanitizer + LeakSanitizer on
-#            every lesson that runs without a terminal, each fed a canned input
-#            (valid input, and bad input for the interactive lessons). Lesson
-#            35's loader runs through a harness, since the game itself needs a
-#            terminal.
+#            every lesson, each fed a canned input (valid input, and bad input
+#            for the interactive lessons). Lesson 35's loader also runs through
+#            a harness on bad maps. The ncurses lessons, 33 and 35, run in a
+#            pseudo-terminal with scripted keys (scripts/pty_run.py).
 #   memory   MemorySanitizer (Clang on Linux) on the same runs: reads of
 #            uninitialized memory. A garbage value can happen to print the
 #            right answer, which is how the old lesson 13 passed the smoke
-#            check.
+#            check. Lessons 33 and 35 are left out: ncurses is not built
+#            with MemorySanitizer, so everything it returns would look
+#            uninitialized.
 #   thread   ThreadSanitizer on lesson 30, the only multithreaded lesson.
 #
 # A sanitizer the compiler or platform does not support is skipped with a
@@ -23,8 +25,7 @@
 #   SANITIZERS=thread sh scripts/sanitizer_check.sh
 #   CC=clang-20 SANITIZERS_REQUIRED=1 sh scripts/sanitizer_check.sh
 #
-# Lesson 26's server and client run as a pair over a local port. Lesson 33
-# (ncurses) is not run here: it needs a terminal.
+# Lesson 26's server and client run as a pair over a local port.
 
 set -eu
 
@@ -112,7 +113,7 @@ link_flags() {
     case "$1" in
         *30_multithreaded_file_analyzer.c) printf '%s' -pthread ;;
         *32_linking_external_libraries.c) printf '%s' -lm ;;
-        *35_*|*capstone_loader.c) printf '%s' "$NCURSES_FLAG" ;;
+        *33_*|*35_*|*capstone_loader.c) printf '%s' "$NCURSES_FLAG" ;;
     esac
 }
 
@@ -270,6 +271,51 @@ run_socket_pair() {
     printf 'Skipping lesson 26 (could not start the server on a local port).\n'
 }
 
+# Lessons 33 and 35 need a terminal: run them in a pseudo-terminal, typing
+# their input, and check for sanitizer reports in what they drew.
+run_terminal_lessons() {
+    if [ -z "$NCURSES_FLAG" ] || ! command -v python3 >/dev/null 2>&1; then
+        skip_or_fail "lessons 33 and 35 need ncurses and python3 to run in a pseudo-terminal"
+        return 0
+    fi
+    for name in 33_advanced_terminal_ui 35_capstone_awesome_text_adventure; do
+        build "$P5/$name.c" "$BUILD_DIR/bin/$name" "$@"
+    done
+    run_pty_case 33_advanced_terminal_ui 'x' ""
+    run_pty_case 35_capstone_awesome_text_adventure \
+        'help\nlook\ngo north\ngo up\ngo east\nnonsense\ngo south\nquit\n' "Thank you for playing!" world.map
+}
+
+# run_pty_case <lesson> <keys> <expected text, or ""> [args...]
+run_pty_case() {
+    name=$1
+    keys=$2
+    expected=$3
+    shift 3
+    work=$BUILD_DIR/work.$$.$RUNS
+    RUNS=$((RUNS + 1))
+    mkdir -p "$work"
+    cp "$BUILD_DIR"/fixtures/* "$work"/
+    status=0
+    (cd "$work" && python3 "$ROOT_DIR/scripts/pty_run.py" --keys "$keys" --log screen.txt -- "$BUILD_DIR/bin/$name" "$@") || status=$?
+    output=$(LC_ALL=C tr -d '\000' < "$work/screen.txt")
+    case "$output" in
+        *"Sanitizer"*|*"runtime error:"*)
+            fail "$name (terminal): sanitizer report." "$output"
+            ;;
+    esac
+    if [ "$status" != 0 ]; then
+        fail "$name (terminal): exited with status $status." "$output"
+    fi
+    if [ -n "$expected" ]; then
+        case "$output" in
+            *"$expected"*) ;;
+            *) fail "$name (terminal): did not print \"$expected\"." "$output" ;;
+        esac
+    fi
+    rm -rf "$work"
+}
+
 # run_lessons <sanitizer flags...>: build and run every case.
 run_lessons() {
     bin=$BUILD_DIR/bin
@@ -372,6 +418,7 @@ for sanitizer in $SANITIZERS; do
                 ASAN_OPTIONS="exitcode=$FOUND:detect_leaks=0"
             fi
             run_lessons $flags
+            run_terminal_lessons $flags
             ASAN_OPTIONS="exitcode=$FOUND:detect_leaks=1:abort_on_error=0"
             ;;
         memory)

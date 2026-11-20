@@ -1,75 +1,71 @@
 # BUILD.md
 
-The roadmap and work tracker for `c-from-the-ground-up`. Read [AGENTS.md](AGENTS.md)
-first for conventions and the verification workflow.
+The roadmap and work tracker for `c-from-the-ground-up`. Start with **Now**.
+Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 
-## How to use this file
+## Now
 
-- **Current focus: the website.** The active phase is **Phase W:
-  cfromthegroundup.com** below. Unless the user asks for something else, take
-  the first unchecked item in the lowest-numbered unfinished milestone (W1,
-  then W2, and so on). Work the milestones in order. Each one lists what "done"
-  means.
-- **Course content track:** the lesson and tooling backlog further down (Now,
-  Next, Later) is still valid, but it is secondary to the website. Work it when
-  the user asks, or when a website milestone needs it.
-- Skip anything that depends on an unresolved item in **Open decisions**. Those
-  need the maintainer. Where a decision has a stated **default**, proceed with
-  the default and note that you did.
-- **Finishing work:** tick the box (`- [x]`) in the same commit as the change. If
-  the item is fully done, move it to the **Done log** with the date.
-- **New ideas:** when you spot something worth doing but out of scope, add it to
-  **Ideas inbox** with one line of context (what, where, why). Do not leave it
-  only in chat or a commit message.
-- **Decisions:** when the maintainer settles an open decision, move it to the
-  **Decision log** with the date and outcome, then turn its consequences into
-  backlog items.
-- Keep items concrete: name the files, the lessons, and what "done" looks like.
+| | |
+| --- | --- |
+| **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus), milestone W7 (launch). W1-W6 are done; what is left of W0 and W7 needs the maintainer. |
+| **Next step** | Until the maintainer clears W7, work the [course content track](#course-content-track) in order: finish the **chapter prose drift audit** (read each chapter beside its lesson for tone and order), then make the **GCC `-fanalyzer`** CI step blocking once it has stayed clean, then the [Ideas inbox](#ideas-inbox). Triage W8+ into milestones once W7 is done. |
+| **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) The go-ahead to set the repo homepage (W7): `gh repo edit dunamismax/c-from-the-ground-up --homepage https://cfromthegroundup.com`. (3) A manual screen-reader pass (W7). (4) Decisions D1-D9; each has a default. (5) A redeploy: the site is behind `main` (see **Live**). |
+| **Live** | https://cfromthegroundup.com serves `a14e994`, deployed 2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are off until the OAuth app exists. `main` has lesson and chapter changes since then (the stricter-warning fixes, lesson 21's integer promotion, lesson 35's checked `fseek`, chapter prose fixes), so the site lags the book, which GitHub Pages publishes on every push. |
+| **`main`** | `make verify` and CI are green at `e43e11c`. |
+| **Last updated** | 2026-11-20 |
 
-## Current state (2026-11-20)
+### Milestones at a glance
 
-- 35 lessons in 5 parts (lesson 26 has a server and a client; lesson 31 is
-  multi-file). Book published with mdBook 0.5.4 to GitHub Pages.
-- `make verify` is green locally (Clang 23, Apple `gcc`) and in CI (Ubuntu Clang
-  and GCC). It covers:
-  - the listing sync check
-  - `mdbook build`, then a check of every internal link and anchor in the
-    built book (`scripts/check_book_links.py`)
-  - a compile of every lesson with `-Wall -Wextra -Wpedantic -Wstrict-prototypes
-    -Wshadow -Wconversion -Wsign-conversion -Wmissing-prototypes -Werror
-    -std=c23` (`make smoke-linux` runs it under glibc from a Mac)
-  - behavioural checks for lessons 3, 5, 6, 13, 15, 16, 17, 25, 26, 28, 29
-    and 30. The interactive lessons are fed valid input, garbage and EOF under
-    a 5-second timeout and a 1 MiB output cap; the argument-parsing lessons
-    are given bad numbers.
-  - ASan/UBSan regressions for lessons 30 and 35
-  - `scripts/sanitizer_check.sh`: every lesson that runs without a terminal
-    under ASan, UBSan and LeakSanitizer, then MemorySanitizer, and lesson 30
-    under ThreadSanitizer (a `sanitizers` CI job on Linux, where nothing may
-    be skipped)
-- Code listings in the book are generated from the `.c` files by
-  `scripts/sync_chapters.py`. Chapter prose is still hand-maintained and can drift.
-- **Website:** the domain `cfromthegroundup.com` is registered, and its DNS in
-  Cloudflare points at the maintainer's self-hosted Ubuntu server. W1 is done:
-  `site/` holds a SvelteKit 3 scaffold with a placeholder home page and
-  `/healthz`, wired into `make verify` and CI. W2 is done: the content loader
-  in `site/src/lib/server/content/` turns the chapters and lesson files into
-  typed, highlighted `Lesson` objects. W3 is done except a Lighthouse run: the
-  design system, landing, course overview, part, lesson, setup, about and 404
-  pages, all prerendered. W4 is done: progress in the browser, search,
-  "Try it online" through Compiler Explorer, keyboard shortcuts and zip
-  downloads. W5 is done in code: CSP, the client-IP test and the bundled
-  migrator, both run in production since the `de586a7` deploy. W6 is built with
-  D7's default (GitHub sign-in only): accounts, synced progress, rate limits,
-  the account and privacy pages. Accounts stay off in production until the
-  maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
-  Graph images, the README link, the book banners (D6's default) and an
-  automated launch check of the production URL (links, axe, Lighthouse);
-  open are the repo homepage setting and a manual screen-reader pass.
-- **Live:** https://cfromthegroundup.com serves commit `a14e994` (W2-W6, most
-  of W7, and the lesson correctness fixes) from `ubuntu-vm`, deployed
-  2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are
-  off until the GitHub OAuth app exists (W0).
+| Milestone | Status |
+| --- | --- |
+| [W0. Inputs from the maintainer](#w0-inputs-from-the-maintainer-agents-ask-do-not-block-on-these) | Server facts and DNS done; the OAuth app and decisions D6-D10 are open |
+| [W1. Scaffold the app](#w1-scaffold-the-app) | Done |
+| [W2. Course content pipeline](#w2-course-content-pipeline) | Done |
+| [W3. Design system and core pages](#w3-design-system-and-core-pages) | Done |
+| [W4. Learner experience](#w4-learner-experience-no-accounts-yet) | Done |
+| [W5. Production deployment](#w5-production-deployment) | Done |
+| [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production until the OAuth app exists |
+| [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer steps left: repo homepage, screen-reader pass |
+| [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Ideas, to triage when W7 is done |
+
+## How to work this file
+
+1. **Orient.** Read **Now**, then run `git status --short` and
+   `git log -5 --oneline`. Leave alone any changes in the tree that you did
+   not make: another session may be working in this checkout.
+2. **Choose.** The maintainer's request in chat comes first. Otherwise take
+   **Next step**. Work Phase W's milestones in order, then the course content
+   track (Now, then Next, then Later). Skip anything that waits on an open
+   decision; where the decision has a stated **default**, build with the
+   default and say so.
+3. **Claim.** When sessions run in parallel, claim the item under
+   **In progress** first, and stay out of the files another claim covers.
+4. **Build and verify.** Each milestone lists what "done" means. Check it
+   through the real entry point as well as the tests (see "Start and finish a
+   session" in AGENTS.md), then run `make verify`.
+5. **Record.** Tick the box (`- [x]`) in the same commit as the change, with a
+   sentence on how it was verified. If you only partly finish, leave the box
+   unchecked and add a `Remaining:` line saying exactly what is left. Add a
+   short entry to the top of the **Done log**; the details belong in the
+   commit body.
+6. **Advance.** Update **Now**: next step, in progress, waiting on the
+   maintainer, live, and the date. When a milestone's "Done when" holds, set
+   its **Status** line and its row in **Milestones at a glance**.
+
+**Changing the plan.** You may split, add or reword unchecked items when real
+work calls for it; say why in the commit body. Keep items concrete: name the
+files, the lessons and what "done" looks like. Never delete a checked item; if
+a regression undoes one, uncheck it and say why. Deleting unfinished work,
+lowering a "Done when" or changing a settled decision needs the maintainer.
+
+**New ideas** you are not doing now go in the **Ideas inbox** with one line of
+context (what, where, why), never only in chat or a commit message.
+
+**Decisions.** When the maintainer settles an open decision, move it to the
+**Decision log** with the date and outcome, then turn its consequences into
+backlog items. Decisions are numbered D1-D10: D1-D5 cover course content and
+D6-D10 the website.
 
 ---
 
@@ -607,7 +603,8 @@ the lessons it serves.
       the parent. It now calls `_exit(127)` and explains why, chapter 29 says
       so, and the smoke check feeds it unknown commands from a file (that
       check fails against the old lesson). Lessons that need arguments print
-      usage and exit non-zero. Not covered: 33 and 35 under a pseudo-terminal.
+      usage and exit non-zero. 33 and 35 have run in a pseudo-terminal in the
+      sanitizer check since 2026-11-20.
 - [x] **Uninitialized-read detection.** Done 2026-11-20: MemorySanitizer runs
       in `scripts/sanitizer_check.sh` (see the Done log).
 - [x] **Unsafe-API audit.** Done 2026-11-20; see the Done log.
@@ -645,8 +642,8 @@ the lessons it serves.
       tuned for teaching code. Done 2026-11-20 (see the Done log). It is
       blocking from the start, since it is clean and pinned.
 - [x] **Sanitizers for every lesson.** Done 2026-11-20 (see the Done log).
-      Not covered: 33 and 35's game loop, which need a terminal; see the
-      Ideas inbox.
+      Lessons 33 and 35 run in a pseudo-terminal (`scripts/pty_run.py`);
+      MemorySanitizer skips them, since ncurses is not instrumented.
 - [x] **ThreadSanitizer** run for `30_multithreaded_file_analyzer.c`. Done
       2026-11-20.
 - [x] **Leak checking** with LeakSanitizer for every lesson it can run,
@@ -672,10 +669,10 @@ the lessons it serves.
 - [ ] **Per-chapter "What you'll learn / prerequisites"** box at the top of each
       chapter.
 - [ ] **Glossary page** for the UPPERCASE terms the lessons introduce.
-- [ ] **Setup chapter** ("Chapter 0"). The site's `/setup` page exists now (W3). Cover installing a compiler on
-      macOS, Linux and Windows (WSL), using a terminal, and running a lesson. This
-      depends on D1 and D3. It is now planned as the site's `/setup` page in W3;
-      add it to the book too if the mdBook is kept (D6).
+- [ ] **Setup chapter** ("Chapter 0") for the book. The site's `/setup` page
+      (W3) already covers this. If the mdBook is kept (D6), add a matching
+      chapter: installing a compiler on macOS, Linux and Windows (WSL), using a
+      terminal, and running a lesson. Depends on D1 and D3.
 
 ### Content expansion (pending D4)
 
@@ -713,11 +710,6 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
-- **Sanitize the terminal lessons.** Lessons 33 and 35's game loop (ncurses)
-  are not in `scripts/sanitizer_check.sh`. They could run under a
-  pseudo-terminal (`script -q -c` on Linux, with `stty rows 24 cols 80`)
-  with scripted keys.
-
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
   (`cg162` in `site/src/lib/compiler-explorer.ts`). Check once a year that the
   id still exists on godbolt.org and move to a newer GCC.
@@ -732,7 +724,6 @@ pick them up.
   paragraphs. On the site these could become real `###` headings, which
   would also feed the table of contents; that is a chapter prose change, so
   it belongs to the prose drift audit.
-
 - **Lesson 35's input window.** It is 2 rows high and `box()` draws both its
   borders, so the prompt is printed on the bottom border. A 3-row window (or
   no box) would give the input a real line; it needs a look in a terminal.
@@ -740,7 +731,6 @@ pick them up.
   `fgets` buffer, so a longer line becomes several lines and saving changes
   the file. The lesson now says so; a `realloc`-based reader would fix it
   but adds code to a Part 3 capstone.
-
 
 ---
 
@@ -797,6 +787,9 @@ pick them up.
 
 ## Done log
 
+Newest first. One short entry per piece of work: what changed, why, and how it
+was checked. The full detail belongs in the commit body.
+
 - **2026-11-20:** static analysis. `.clang-tidy` turns on `bugprone-*`,
   `clang-analyzer-*` and `cert-*`; of 147 findings, all but one came from
   seven checks that flag what the course teaches on purpose or a safe idiom
@@ -822,11 +815,13 @@ pick them up.
   `scripts/sanitizer_check.sh` (`make sanitize`, part of `make verify`, and a
   `sanitizers` CI job with `SANITIZERS_REQUIRED=1`) builds every lesson but
   33 with ASan, UBSan and LeakSanitizer and runs each with canned valid and
-  bad input (lesson 26 as a server and client pair), repeats them under
-  MemorySanitizer, and runs lesson 30 under ThreadSanitizer. Lesson 35 runs
-  through a harness that loads a good map, two bad ones and a missing file
-  and frees them. Every lesson is clean (88 runs on Linux with Clang 19;
-  macOS skips MSan). Checked that it fails on
+  bad input (lesson 26 as a server and client pair; 33 and 35 in an 80x24
+  pseudo-terminal through `scripts/pty_run.py`, which types their keys),
+  repeats the non-terminal runs under MemorySanitizer, and runs lesson 30
+  under ThreadSanitizer. A harness also loads lesson 35's world from a good
+  map, two bad ones and a missing file and frees it. Every lesson is clean
+  (90 runs on Linux with Clang 19; macOS skips MSan). The terminal run was
+  checked to catch an injected heap overflow in lesson 35's `look`. Checked that it fails on
   an injected leak (LeakSanitizer names `create_node` in lesson 20) and on an
   injected uninitialized read (MemorySanitizer names the line and the
   allocation). `make sanitize-linux` runs it in Docker; MSan needs

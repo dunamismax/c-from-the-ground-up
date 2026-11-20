@@ -152,12 +152,20 @@ One command runs the full local gate, the same checks CI runs:
 make verify
 ```
 
-It checks that the book's listings match the `.c` files, builds the book,
+It checks that the book's listings match the `.c` files and that the lessons
+are formatted, runs clang-tidy over them, builds the book and checks its links,
 compiles every lesson with warnings as errors under Clang and GCC (and runs
-behavioural checks on the interactive ones), and type-checks, lints, tests and
-builds the website. If your local GCC is versioned, point at it with
-`make verify GCC=gcc-15`; on macOS, plain `gcc` is usually Clang under another
-name. The website's end-to-end tests run with `make site-e2e`.
+behavioural checks on the interactive ones), runs the lessons under
+AddressSanitizer, UndefinedBehaviorSanitizer and LeakSanitizer, and
+type-checks, lints, tests and builds the website. If your local GCC is
+versioned, point at it with `make verify GCC=gcc-15`; on macOS, plain `gcc` is
+usually Clang under another name. The website's end-to-end tests run with
+`make site-e2e`.
+
+You need a C compiler, `make`, Python 3, mdBook 0.5.4, clang-format and
+clang-tidy 23, the ncurses headers, and Node 24 with npm.
+[AGENTS.md](AGENTS.md#verification) lists the exact versions and how to install
+them.
 
 The `.c` files are the single source of truth for code. Each chapter in
 `src/chapters/` embeds its lesson's source through a `<!-- source: ... -->`
@@ -167,7 +175,8 @@ the `.c` file, run `make sync`, then `make verify`.
 - [AGENTS.md](AGENTS.md) -- repository layout, conventions, and the workflow
   for changing or adding lessons and working on the site (written for AI
   agents, useful for humans too)
-- [BUILD.md](BUILD.md) -- roadmap, open decisions, and the improvement backlog
+- [BUILD.md](BUILD.md) -- what is being worked on now, the roadmap, open
+  decisions, and the improvement backlog
 
 Found a mistake, or a comment that confused you? A wrong comment is a bug:
 please [open an issue](https://github.com/dunamismax/c-from-the-ground-up/issues).
