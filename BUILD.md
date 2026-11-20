@@ -55,8 +55,9 @@ first for conventions and the verification workflow.
   migrator (its first production run is the next deploy). W6 is built with
   D7's default (GitHub sign-in only): accounts, synced progress, rate limits,
   the account and privacy pages. Accounts stay off in production until the
-  maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics; the
-  rest of W7 is open.
+  maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
+  Graph images, the README link and the book banners (D6's default); open are
+  the repo homepage setting and the launch check on the production URL.
 - **Live:** https://cfromthegroundup.com serves the full course (W2-W4, the
   CSP and the SEO basics) from `ubuntu-vm`, commit `ae2d9cf`, deployed
   2026-11-20 with `site/deploy/`. W5's migrator and client-IP check and W6 are
@@ -455,14 +456,26 @@ runbook.
       `robots.txt` pointing at it; `Course` JSON-LD on the landing page and
       `LearningResource` plus `BreadcrumbList` on lesson pages
       (`site/src/lib/structured-data.ts`).
-- [ ] Open Graph images, generated per lesson at build time (for example
-      with satori and resvg, which need a font file committed under `site/`).
+- [x] Open Graph images, generated at build time: `/og/site.png` and one per
+      lesson (`/og/<slug>.png`, 36 in all, 1.5 MB), prerendered by
+      `src/routes/og/[name].png/` with satori and `@resvg/resvg-wasm`
+      (`src/lib/server/og.ts`). Fonts come from the `@fontsource` packages
+      (Inter, JetBrains Mono; OFL), so no font file is committed. `PageMeta`
+      sets `og:image` and `twitter:card`.
 - [ ] Point everything at the site:
-  - set the repo homepage to `https://cfromthegroundup.com`
-  - make the site the first link in `README.md`
-  - add a banner to `src/index.md`, and apply D6 to the mdBook
-- [ ] Map old mdBook URLs (`/c-from-the-ground-up/chapters/NN-slug.html`) to
-      the new lesson URLs, with redirects or links depending on D6.
+  - [ ] set the repo homepage to `https://cfromthegroundup.com` (a GitHub
+        setting: `gh repo edit dunamismax/c-from-the-ground-up --homepage
+        https://cfromthegroundup.com`; waiting for the maintainer's go-ahead)
+  - [x] the site is the first link in `README.md`
+  - [x] a banner in `src/index.md`, and D6's default applied to the mdBook:
+        every book page has a link to the same lesson on the site
+        (`book-theme/site-link.js` and `.css`, through `additional-js` in
+        `book.toml`)
+- [x] Map old mdBook URLs (`/c-from-the-ground-up/chapters/NN-slug.html`) to
+      the new lesson URLs: with D6's default (keep the book), each chapter
+      page links to `/lessons/NN-slug`. Chapter file names are the lesson
+      slugs, which the site's content tests enforce. If D6 becomes "redirect",
+      the same mapping can redirect instead.
 - [ ] Final launch check: accessibility, performance and broken-link passes on
       the production URL.
 - **Done when:** the site is the documented primary way to take the course.
@@ -481,7 +494,8 @@ runbook.
 
 ### Website decisions (maintainer)
 
-- [ ] **D6. Future of the mdBook on GitHub Pages.**
+- [ ] **D6. Future of the mdBook on GitHub Pages.** The default's banner is in
+      place (W7, 2026-11-20); a redirect or retirement is still open.
   - Default: keep publishing it until W7, then add a banner on every page
     pointing to the matching lesson on the site.
   - Alternatives: full redirect, or retire it.
@@ -754,6 +768,10 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** most of W7: Open Graph images for every page and lesson,
+  the site first in `README.md`, a banner in `src/index.md`, and a link on
+  every book page to the same lesson on the site (D6's default).
 
 - **2026-11-20:** W5 finished in code and W6 built.
   - W5: `/healthz/address` and its tests (adapter-node behind the unit's proxy

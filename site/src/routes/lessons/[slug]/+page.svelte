@@ -39,6 +39,7 @@
 <PageMeta
 	title="Lesson {lesson.number}: {lesson.title}"
 	description={data.summary}
+	image="/og/{lesson.slug}.png"
 	jsonLd={lessonJsonLd({ ...lesson, description: data.summary })}
 />
 

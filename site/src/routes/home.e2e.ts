@@ -92,3 +92,25 @@ test('pages carry structured data', async ({ page }) => {
 		'https://cfromthegroundup.com/lessons/10-pointers'
 	);
 });
+
+test('pages have Open Graph images, and lessons have their own', async ({ page, request }) => {
+	const image = async (path: string) => {
+		await page.goto(path);
+		return page.locator('meta[property="og:image"]').getAttribute('content');
+	};
+	expect(await image('/')).toBe('https://cfromthegroundup.com/og/site.png');
+	expect(await image('/about')).toBe('https://cfromthegroundup.com/og/site.png');
+	expect(await image('/lessons/07-functions')).toBe(
+		'https://cfromthegroundup.com/og/07-functions.png'
+	);
+	await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+		'content',
+		'summary_large_image'
+	);
+	for (const name of ['site', '07-functions', '35-capstone-text-adventure']) {
+		const response = await request.get(`/og/${name}.png`);
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('image/png');
+	}
+	expect((await request.get('/og/99-no-such-lesson.png')).status()).toBe(404);
+});

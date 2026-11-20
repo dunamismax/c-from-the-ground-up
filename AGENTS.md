@@ -76,6 +76,7 @@ scripts/sync_chapters.py                            copies lesson sources into c
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
 Makefile                                            maintainer entry points (not a lesson)
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
+book-theme/                                         book-only script and style: a link on every page to the lesson on the site
 .github/workflows/verify.yml                        CI: listing check, mdbook build, smoke check (clang + gcc), site
 .github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main
 assets/images/                                      images (not yet used in the book)
@@ -175,6 +176,7 @@ site/src/lib/account/              account.svelte.ts: the browser's account stat
 site/src/lib/search.ts             search index options shared by /search-index.json and SearchDialog.svelte
 site/src/lib/compiler-explorer.ts  "Try it online" (Compiler Explorer client state and shortener call)
 site/src/routes/downloads/         prerendered zip downloads (per lesson and the whole course)
+site/src/routes/og/                prerendered Open Graph images (/og/site.png, /og/<slug>.png; renderer in lib/server/og.ts)
 site/src/routes/healthz/+server.ts health probe: 200 when the database answers `select 1`, else 503
 site/src/routes/healthz/address/   the client address the app sees (getClientAddress); cutover checks it through Caddy
 site/src/routes/api/               dynamic JSON endpoints: account (state, export, delete) and progress

@@ -14,3 +14,6 @@ default-theme = "ayu"
 git-repository-url = "https://github.com/dunamismax/c-from-the-ground-up"
 edit-url-template = "https://github.com/dunamismax/c-from-the-ground-up/edit/main/{path}"
 site-url = "/c-from-the-ground-up/"
+# A link on every page to the same lesson on cfromthegroundup.com (BUILD.md, D6).
+additional-js = ["book-theme/site-link.js"]
+additional-css = ["book-theme/site-link.css"]

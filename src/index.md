@@ -1,5 +1,9 @@
 # C From The Ground Up
 
+> **The course has a new home: [cfromthegroundup.com](https://cfromthegroundup.com).**
+> It has the same lessons, plus progress tracking, search, and a "Try it online"
+> button for most lessons. This book edition stays here as a mirror.
+
 A progressive C learning workbook from basics to systems programming.
 
 Each lesson is a small, readable program with the explanation in the comments

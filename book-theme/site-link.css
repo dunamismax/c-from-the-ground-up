@@ -1,0 +1,14 @@
+/* The banner book-theme/site-link.js adds to every page of the book edition. */
+.site-link {
+    margin: 0 0 1.5em;
+    padding: 0.75em 1em;
+    border-inline-start: 4px solid var(--links);
+    border-radius: 4px;
+    background: var(--quote-bg);
+}
+
+@media print {
+    .site-link {
+        display: none;
+    }
+}

@@ -1,6 +1,9 @@
 # C From The Ground Up
 
-> **[Read it online](https://dunamismax.github.io/c-from-the-ground-up/)**
+> **[Take the course at cfromthegroundup.com](https://cfromthegroundup.com)**,
+> with progress tracking, search, and a "Try it online" button for most lessons.
+> The same lessons are also published as a
+> [book](https://dunamismax.github.io/c-from-the-ground-up/).
 
 A progressive C learning workbook from basics to systems programming. Each lesson
 is a small, readable program with the explanation in the comments and the code
