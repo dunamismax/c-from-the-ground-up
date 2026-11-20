@@ -82,4 +82,3 @@ systemctl status cfromthegroundup cfromthegroundup-backup.timer
   bundled migrator to the build and have `cutover.sh` run it as the migration
   role before the switch. Until then, cutover refuses a release that has a
   `drizzle/` directory.
-- Content Security Policy through SvelteKit's `csp` config (BUILD.md W5).

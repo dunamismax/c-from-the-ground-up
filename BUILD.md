@@ -53,9 +53,9 @@ first for conventions and the verification workflow.
   "Try it online" through Compiler Explorer, keyboard shortcuts and zip
   downloads. W5 has CSP now; W7 has its SEO basics. Open: the W5 client-IP
   test and migrator, W6 (needs decision D7), and the rest of W7.
-- **Live:** https://cfromthegroundup.com serves the W1 placeholder from
-  `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
-  remaining items are listed there.
+- **Live:** https://cfromthegroundup.com serves the full course (W2-W4, the
+  CSP and the SEO basics) from `ubuntu-vm`, commit `ae2d9cf`, deployed
+  2026-11-20 with `site/deploy/`. W5's remaining items are listed there.
 
 ---
 
@@ -383,7 +383,8 @@ runbook.
   database backup exists.
 - **Status (2026-11-20):** live. TLS, the `www` redirect, `/healthz` and a
   backup are verified. A redeploy is two commands (prepare, then cutover). Open
-  items: the client-IP test and the migrator (CSP is done, not yet deployed).
+  items: the client-IP test and the migrator. The CSP is live since the
+  `ae2d9cf` deploy.
 
 #### W6. Accounts and synced progress (needs D7)
 
@@ -697,6 +698,13 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** second production deploy, commit `ae2d9cf` (the course site:
+  W2-W4, CSP, sitemap and structured data, lesson 29 fix). Prepare and cutover
+  ran cleanly. Checked live: `/version.txt`, `/healthz` (database ok), every
+  page type, the search index, sitemap, robots.txt, zip and file downloads,
+  Brotli on pages, the CSP `<meta>`, runtime 404s, the `www` redirect, and no
+  console errors on a lesson page.
 
 - **2026-11-20:** EOF and hang sweep of the lessons (see Now). Fixed lesson
   29's infinite loop on file input (`_exit` after a failed `execvp`) and
