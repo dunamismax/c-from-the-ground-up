@@ -54,6 +54,7 @@ It returns:
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/9_strings.c -->
 ```c
 /**
  * @file 9_strings.c

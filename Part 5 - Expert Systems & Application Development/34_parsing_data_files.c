@@ -17,7 +17,7 @@
  *
  * So far, our programs have either been non-persistent or have saved data in a
  * simple, unstructured way. Real-world applications, however, almost always
- * need to read structured data—user profiles, game levels, configuration
+ * need to read structured data--user profiles, game levels, configuration
  * settings, etc. The process of reading this data and converting it into a
  * useful format (like a `struct`) is called PARSING.
  *

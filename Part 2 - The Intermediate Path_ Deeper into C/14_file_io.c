@@ -17,7 +17,7 @@
  * All our programs so far have had a temporary existence. When the program ends,
  * any data it was holding in variables, arrays, or structs is lost forever.
  *
- * To make our programs truly useful, we need PERSISTENCE—the ability to save
+ * To make our programs truly useful, we need PERSISTENCE--the ability to save
  * data to a storage device (like a hard drive) and load it back later. This is
  * achieved through FILE I/O (Input/Output).
  *

@@ -25,6 +25,7 @@ or in an external library file (like in this lesson).
 
 ## Full Source
 
+<!-- source: Part 5 - Expert Systems & Application Development/32_linking_external_libraries.c -->
 ```c
 /**
  * @file 32_linking_external_libraries.c
@@ -104,7 +105,7 @@ int main(void)
 
     // --- Using sin() ---
     // Let's try a trigonometric function. `sin()` takes an angle in RADIANS.
-    // M_PI is a constant defined in <math.h> for the value of Pi (π).
+    // M_PI is a constant defined in <math.h> for the value of Pi.
     double angle_radians = M_PI / 2.0; // 90 degrees
     double sin_result = sin(angle_radians);
 

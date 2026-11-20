@@ -5,8 +5,8 @@
  * @date 06-15-2025
  *
  * This file is our first full PROJECT. It combines several concepts we've
- * learned—command-line arguments, data type conversion, and conditional
- * logic—to build a complete, useful command-line tool.
+ * learned--command-line arguments, data type conversion, and conditional
+ * logic--to build a complete, useful command-line tool.
  */
 
 /*

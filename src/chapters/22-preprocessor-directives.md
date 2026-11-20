@@ -10,6 +10,7 @@ Let's explore the most important ones.
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/22_preprocessor_directives.c -->
 ```c
 /**
  * @file 22_preprocessor_directives.c

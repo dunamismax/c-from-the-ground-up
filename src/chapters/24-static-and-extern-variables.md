@@ -19,6 +19,7 @@ else. The linker will find it and connect everything."
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/24_static_and_extern_variables.c -->
 ```c
 /**
  * @file 24_static_and_extern_variables.c

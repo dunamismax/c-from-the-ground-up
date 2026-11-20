@@ -44,6 +44,7 @@ achieved through FILE I/O (Input/Output).
 
 ## Full Source
 
+<!-- source: Part 2 - The Intermediate Path_ Deeper into C/14_file_io.c -->
 ```c
 /**
  * @file 14_file_io.c

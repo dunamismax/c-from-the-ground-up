@@ -38,6 +38,7 @@ Let's build our own `bash`!
 
 ## Full Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/29_tiny_shell.c -->
 ```c
 /**
  * @file 29_tiny_shell.c

@@ -26,14 +26,9 @@ compiler hasn't seen yet, it will generate an error. Prototypes solve this.
 
 A prototype consists of:
 
-## The return type of the function.
-
-
-## The name of the function.
-
-
-## The data types of the parameters it accepts, in order.
-
+- The return type of the function.
+- The name of the function.
+- The data types of the parameters it accepts, in order.
 - A semicolon at the end.
 
 The `main` function will now act as a manager, calling our other functions
@@ -58,6 +53,7 @@ RETURN VALUE. The `return` keyword does two things:
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/7_functions.c -->
 ```c
 /**
  * @file 7_functions.c

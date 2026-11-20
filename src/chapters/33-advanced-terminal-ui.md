@@ -31,6 +31,7 @@ terminal until you call `refresh()`.
 
 ## Full Source
 
+<!-- source: Part 5 - Expert Systems & Application Development/33_advanced_terminal_ui.c -->
 ```c
 /**
  * @file 33_advanced_terminal_ui.c

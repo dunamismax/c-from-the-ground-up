@@ -19,7 +19,7 @@
  * the same block of code over and over.
  *
  * A FUNCTION is a named, self-contained block of code that performs a specific
- * task. Think of `printf` and `scanf`—they are functions that someone else wrote
+ * task. Think of `printf` and `scanf`--they are functions that someone else wrote
  * to perform the tasks of printing and scanning. Now, you will learn to write
  * your own.
  *

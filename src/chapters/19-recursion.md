@@ -31,6 +31,7 @@ infinite_recursion(); // No base case, no modification. Uh oh.
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/19_recursion.c -->
 ```c
 /**
  * @file 19_recursion.c

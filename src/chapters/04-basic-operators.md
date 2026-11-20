@@ -40,6 +40,7 @@ your code clearer, even when not strictly necessary.
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/4_basic_operators.c -->
 ```c
 /**
  * @file 4_basic_operators.c

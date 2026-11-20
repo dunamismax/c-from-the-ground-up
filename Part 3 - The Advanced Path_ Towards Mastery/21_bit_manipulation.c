@@ -15,7 +15,7 @@
  * =====================================================================================
  *
  * C is a language that operates very close to the hardware. All data in your
- * computer—integers, characters, etc.—is ultimately stored as a sequence of
+ * computer--integers, characters, etc.--is ultimately stored as a sequence of
  * BITS (binary digits), which are either 0 or 1.
  *
  * C provides a special set of BITWISE OPERATORS that allow you to manipulate

@@ -61,6 +61,7 @@ sure the format specifiers and the variables are listed in the same order.
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/2_variables_and_data_types.c -->
 ```c
 /**
  * @file 2_variables_and_data_types.c

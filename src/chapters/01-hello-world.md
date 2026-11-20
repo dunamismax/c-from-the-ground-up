@@ -53,6 +53,7 @@ that the program executed successfully without any errors.
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/1_hello_world.c -->
 ```c
 /**
  * @file 1_hello_world.c
@@ -159,10 +160,10 @@ int main(void)
  *    - `gcc`: Invokes the compiler.
  *    - `-Wall -Wextra`: Enables all and extra warning flags to catch potential errors.
  *    - `-std=c11`: Specifies that we are using the C11 standard of the language.
- *    - `-o 1_hello_world`: Specifies the output file name should be `HelloWorld`.
+ *    - `-o 1_hello_world`: Specifies the output file name should be `1_hello_world`.
  *    - `1_hello_world.c`: Specifies the input source file to compile.
  *
- *    `gcc -Wall -Wextra -std=c11 -o HelloWorld HelloWorld.c`
+ *    `gcc -Wall -Wextra -std=c11 -o 1_hello_world 1_hello_world.c`
  *
  * 4. Run the newly created executable:
  *    - On Linux/macOS:   `./1_hello_world`

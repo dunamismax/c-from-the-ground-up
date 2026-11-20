@@ -55,6 +55,7 @@ leading whitespace characters before reading the character". It's a crucial tric
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/3_user_input.c -->
 ```c
 /**
  * @file 3_user_input.c

@@ -24,6 +24,7 @@ SKILLS INTEGRATED:
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/25_simple_text_editor.c -->
 ```c
 /**
  * @file 25_simple_text_editor.c

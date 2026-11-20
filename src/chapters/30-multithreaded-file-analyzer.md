@@ -49,6 +49,7 @@ We will use the POSIX Threads (pthreads) library, the standard for C.
 
 ## Full Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/30_multithreaded_file_analyzer.c -->
 ```c
 /**
  * @file 30_multithreaded_file_analyzer.c

@@ -23,6 +23,7 @@ HEAP, you MUST give it back to the system yourself.
 
 ## Full Source
 
+<!-- source: Part 2 - The Intermediate Path_ Deeper into C/13_dynamic_memory_allocation.c -->
 ```c
 /**
  * @file 13_dynamic_memory_allocation.c

@@ -51,6 +51,7 @@ A good hash function is crucial for performance, but this is fine for learning.
 
 ## Full Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/28_hash_table_implementation.c -->
 ```c
 /**
  * @file 28_hash_table_implementation.c

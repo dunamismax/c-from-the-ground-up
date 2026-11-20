@@ -36,6 +36,7 @@ how different C files work together:
 
 ## helper.h
 
+<!-- source: Part 5 - Expert Systems & Application Development/31_make_files_for_multi_file_projects/helper.h -->
 ```c
 /**
  * @file helper.h
@@ -100,6 +101,7 @@ void say_hello_from_helper(void);
 
 ## helper.c
 
+<!-- source: Part 5 - Expert Systems & Application Development/31_make_files_for_multi_file_projects/helper.c -->
 ```c
 /**
  * @file helper.c
@@ -151,6 +153,7 @@ void say_hello_from_helper(void)
 
 ## main.c
 
+<!-- source: Part 5 - Expert Systems & Application Development/31_make_files_for_multi_file_projects/main.c -->
 ```c
 /**
  * @file main.c
@@ -241,6 +244,7 @@ int main(void)
 The Makefile ties it all together. It uses variables, rules, and phony targets
 to automate the build process.
 
+<!-- source: Part 5 - Expert Systems & Application Development/31_make_files_for_multi_file_projects/Makefile -->
 ```makefile
 # Makefile
 # @brief Part 5, Lesson 31: Makefiles for Multi-File Projects

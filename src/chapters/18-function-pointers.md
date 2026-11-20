@@ -17,6 +17,7 @@ function with a specific "helper" function for it to call back to complete its t
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/18_function_pointers.c -->
 ```c
 /**
  * @file 18_function_pointers.c

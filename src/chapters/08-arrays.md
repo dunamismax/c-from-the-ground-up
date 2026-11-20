@@ -37,6 +37,7 @@ action on each element.
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/8_arrays.c -->
 ```c
 /**
  * @file 8_arrays.c

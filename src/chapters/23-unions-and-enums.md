@@ -17,6 +17,7 @@ While they look a bit like `structs`, they solve very different problems.
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/23_unions_and_enums.c -->
 ```c
 /**
  * @file 23_unions_and_enums.c

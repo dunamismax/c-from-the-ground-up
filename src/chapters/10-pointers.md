@@ -17,6 +17,7 @@ the original variables you pass to them. Mastering pointers is mastering C.
 
 ## Full Source
 
+<!-- source: Part 2 - The Intermediate Path_ Deeper into C/10_pointers.c -->
 ```c
 /**
  * @file 10_pointers.c

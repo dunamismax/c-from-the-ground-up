@@ -14,6 +14,7 @@ different types into a single unit.
 
 ## Full Source
 
+<!-- source: Part 2 - The Intermediate Path_ Deeper into C/12_structs.c -->
 ```c
 /**
  * @file 12_structs.c

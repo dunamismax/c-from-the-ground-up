@@ -22,6 +22,7 @@ so we can modify the `head` pointer in the main function.
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/20_linked_lists.c -->
 ```c
 /**
  * @file 20_linked_lists.c

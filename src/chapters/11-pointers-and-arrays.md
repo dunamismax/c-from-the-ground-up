@@ -17,6 +17,7 @@ allows us to move between elements of an array using a pointer.
 
 ## Full Source
 
+<!-- source: Part 2 - The Intermediate Path_ Deeper into C/11_pointers_and_arrays.c -->
 ```c
 /**
  * @file 11_pointers_and_arrays.c

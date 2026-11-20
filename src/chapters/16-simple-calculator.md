@@ -21,6 +21,7 @@ SKILLS WE WILL USE:
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/16_simple_calculator.c -->
 ```c
 /**
  * @file 16_simple_calculator.c

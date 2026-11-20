@@ -74,6 +74,7 @@ or -1 on error.
 
 ### Client Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/26_simple_socket_client.c -->
 ```c
 /**
  * @file 26_simple_socket_client.c
@@ -347,6 +348,7 @@ It also fills the `client_addr` struct with the client's information.
 
 ### Server Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/26_simple_socket_server.c -->
 ```c
 /**
  * @file 26_simple_socket_server.c

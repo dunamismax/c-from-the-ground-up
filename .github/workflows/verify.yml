@@ -17,7 +17,10 @@ jobs:
       - name: Install mdBook
         uses: taiki-e/install-action@v2
         with:
-          tool: mdbook
+          tool: mdbook@0.5.4
+
+      - name: Check chapter listings match lesson sources
+        run: python3 scripts/sync_chapters.py --check
 
       - name: Build book
         run: mdbook build

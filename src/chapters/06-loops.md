@@ -57,6 +57,7 @@ to get the input first *before* you can check if it's valid.
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/6_loops.c -->
 ```c
 /**
  * @file 6_loops.c

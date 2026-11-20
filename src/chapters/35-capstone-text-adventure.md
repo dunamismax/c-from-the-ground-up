@@ -33,6 +33,7 @@ clean up their own mess.
 
 ## Full Source
 
+<!-- source: Part 5 - Expert Systems & Application Development/35_capstone_awesome_text_adventure.c -->
 ```c
 /**
  * @file 35_capstone_awesome_text_adventure.c

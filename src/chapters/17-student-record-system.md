@@ -25,6 +25,7 @@ so we can modify the original `student_count` in `main`.
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/17_student_record_system.c -->
 ```c
 /**
  * @file 17_student_record_system.c

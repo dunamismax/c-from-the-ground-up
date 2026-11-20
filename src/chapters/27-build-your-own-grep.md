@@ -29,6 +29,7 @@ Let's get started!
 
 ## Full Source
 
+<!-- source: Part 4 - The Expert Path_ Systems and Concurrency/27_build_your_own_grep.c -->
 ```c
 /**
  * @file 27_build_your_own_grep.c

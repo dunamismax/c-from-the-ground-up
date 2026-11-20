@@ -24,6 +24,7 @@ powerful for tasks like:
 
 ## Full Source
 
+<!-- source: Part 3 - The Advanced Path_ Towards Mastery/21_bit_manipulation.c -->
 ```c
 /**
  * @file 21_bit_manipulation.c

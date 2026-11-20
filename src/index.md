@@ -63,16 +63,12 @@ If your compiler does not support `-std=c23` yet, use `-std=c17`.
 The supported verification flow is:
 
 ```sh
-mdbook build
-CC=clang sh scripts/smoke_check.sh
-CC=gcc sh scripts/smoke_check.sh
+make verify
 ```
 
-If your local GCC is versioned, use that compiler name instead, for example
-`CC=gcc-15 sh scripts/smoke_check.sh`.
-
-GitHub Actions mirrors that verification path with `mdbook build` plus the
-smoke check under both Clang and GCC.
+That checks that every listing in this book matches its `.c` file, builds the
+book, and runs the smoke check under both Clang and GCC. GitHub Actions runs
+the same checks on every push and pull request.
 
 ## License
 

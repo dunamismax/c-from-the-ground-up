@@ -121,7 +121,7 @@ int main(void)
  *     way of writing the pointer arithmetic expression `*(array + i)`. They are
  *     functionally identical.
  * 5.  This deep relationship is what makes passing arrays to functions so efficient
- *     in C—you're just passing a single address, not copying the whole array.
+ *     in C--you're just passing a single address, not copying the whole array.
  *
  * HOW TO COMPILE AND RUN THIS CODE:
  *

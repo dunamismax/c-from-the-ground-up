@@ -42,6 +42,7 @@ For example, to check if a grade is a B (80-89):
 
 ## Full Source
 
+<!-- source: Part 1 - The Beginner Path_ Core Concepts/5_conditional_statements.c -->
 ```c
 /**
  * @file 5_conditional_statements.c

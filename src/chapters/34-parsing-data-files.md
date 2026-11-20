@@ -54,6 +54,7 @@ Example `strtok` loop:
 
 ## Full Source
 
+<!-- source: Part 5 - Expert Systems & Application Development/34_parsing_data_files.c -->
 ```c
 /**
  * @file 34_parsing_data_files.c

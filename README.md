@@ -56,20 +56,39 @@ mdbook serve --open
 
 ## Verification
 
-The supported verification flow is:
+One command runs the full local gate (the same checks CI runs):
 
 ```sh
+make verify
+```
+
+That expands to:
+
+```sh
+python3 scripts/sync_chapters.py --check   # book listings match the .c files
 mdbook build
 CC=clang sh scripts/smoke_check.sh
 CC=gcc sh scripts/smoke_check.sh
 ```
 
-If your local GCC is versioned, use that compiler name instead, for example
-`CC=gcc-15 sh scripts/smoke_check.sh`.
+If your local GCC is versioned, point at it with `make verify GCC=gcc-15`.
+On macOS, plain `gcc` is usually Clang under another name.
 
 GitHub Actions mirrors that verification path: `.github/workflows/verify.yml`
-runs `mdbook build` plus the smoke check under both Clang and GCC on pushes and
-pull requests.
+runs the listing check, `mdbook build`, and the smoke check under both Clang
+and GCC on pushes and pull requests.
+
+## Contributing
+
+The `.c` files are the single source of truth for code. Each chapter in
+`src/chapters/` embeds its lesson's source through a
+`<!-- source: ... -->` marker, and `make sync` copies the current file
+contents into the book. Edit the `.c` file, run `make sync`, then
+`make verify`.
+
+- [AGENTS.md](AGENTS.md) -- repository layout, conventions, and the workflow
+  for changing or adding lessons (written for AI agents, useful for humans too)
+- [BUILD.md](BUILD.md) -- roadmap, open decisions, and the improvement backlog
 
 ## License
 
