@@ -368,14 +368,20 @@ runbook.
   - a dedicated database and role, local-only connections
   - a nightly `pg_dump` systemd timer with rotation
     (`cfromthegroundup-backup.timer`, 30 days in `/var/backups/cfromthegroundup`)
-- [ ] Use CSP in SvelteKit's `csp` config (nonce- or hash-based) rather than a
+- [x] Use CSP in SvelteKit's `csp` config (nonce- or hash-based) rather than a
       static Caddy header, so inline scripts SvelteKit generates keep working.
+      Done: `mode: 'hash'` in `vite.config.ts` (a `<meta>` tag on prerendered
+      pages, a header on dynamic ones). The hash of the theme script in
+      `app.html` is computed from the file at build time. `style-src` allows
+      inline styles (Shiki token colors); `connect-src` allows
+      `https://godbolt.org` for "Try it online". `csp.e2e.ts` fails on any
+      violation.
 - **Done when:** `https://cfromthegroundup.com` serves the site with valid TLS,
   `www` redirects, `/healthz` is green, a redeploy is one command, and a
   database backup exists.
 - **Status (2026-11-20):** live. TLS, the `www` redirect, `/healthz` and a
   backup are verified. A redeploy is two commands (prepare, then cutover). Open
-  items: CSP, the client-IP test, and the migrator.
+  items: the client-IP test and the migrator (CSP is done, not yet deployed).
 
 #### W6. Accounts and synced progress (needs D7)
 

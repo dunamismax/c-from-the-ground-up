@@ -161,7 +161,7 @@ Phase W; `site/README.md` has the developer quick start.
 ```text
 site/package.json                  scripts, engines (Node >= 24), `imports` for the #lib alias
 site/.nvmrc                        Node 24 (the production and CI version)
-site/vite.config.ts                ALL SvelteKit config: the sveltekit({...}) plugin call, plus Vitest projects
+site/vite.config.ts                ALL SvelteKit config: the sveltekit({...}) plugin call (incl. the CSP), plus Vitest projects
 site/src/env.ts                    environment variables (defineEnvVars), validated at build and start
 site/src/app.css                   Tailwind 4 entry: @import "tailwindcss", @plugin typography, @theme tokens
 site/src/app.html                  page shell
@@ -228,6 +228,10 @@ Conventions:
   `progress.ready`. Inside an `$effect`, wrap progress writes in `untrack`.
   Tests that press keys right after loading must wait for
   `html[data-hydrated]`.
+- **Content Security Policy** lives in `csp` in `vite.config.ts`
+  (`csp.e2e.ts` fails on violations). A new third-party origin the browser
+  talks to needs a directive there; an inline `<script>` in `app.html` is
+  hashed automatically.
 - **Accessibility is tested.** `a11y.e2e.ts` fails on any axe-core WCAG 2.2 AA
   violation. Keep text at AA contrast (do not dim text with `opacity`), give
   every scrollable `pre` `tabindex="0"`, and keep focus rings visible.
