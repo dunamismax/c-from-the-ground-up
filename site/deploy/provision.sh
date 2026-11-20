@@ -98,6 +98,8 @@ for env_file in "$WEB_ENV" "$MIGRATION_ENV"; do
 done
 
 # --- Nightly backup. ----------------------------------------------------------
+# The service's ReadWritePaths sandbox needs the destination to exist already.
+install -d -o root -g sawyer -m 0750 /var/backups/cfromthegroundup
 install -m 0755 -o root -g root "$here/cfromthegroundup-backup" /usr/local/sbin/cfromthegroundup-backup
 install -m 0644 -o root -g root "$here/cfromthegroundup-backup.service" "$here/cfromthegroundup-backup.timer" /etc/systemd/system/
 systemctl daemon-reload
