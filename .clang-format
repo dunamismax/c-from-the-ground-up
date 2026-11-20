@@ -1,0 +1,23 @@
+# The lessons' house style (AGENTS.md, "Lesson conventions"): 4-space indents,
+# Allman braces, right-hand pointer stars and aligned trailing comments.
+# `make format` applies it to the lesson sources; `make check-format` (CI)
+# fails if a lesson differs. CI pins clang-format 23 from PyPI, since other
+# major versions can format a few constructs differently.
+#
+# ColumnLimit 0 keeps the lessons' own line breaks, and ReflowComments false
+# leaves the long explanatory comments exactly as written: the comments are
+# the lesson.
+BasedOnStyle: LLVM
+IndentWidth: 4
+BreakBeforeBraces: Allman
+ColumnLimit: 0
+AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+IndentCaseLabels: false
+PointerAlignment: Right
+SortIncludes: Never
+ReflowComments: false
+SpaceBeforeParens: ControlStatements

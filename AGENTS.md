@@ -75,7 +75,10 @@ src/chapters/NN-slug.md                             one chapter per lesson (26 c
 scripts/sync_chapters.py                            copies lesson sources into chapters; --check for CI
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
 scripts/check_book_links.py                         checks internal links and anchors in the built book/
+scripts/sanitizer_check.sh                          runs the lessons under ASan/UBSan/LSan, MSan and TSan
 Makefile                                            maintainer entry points (not a lesson)
+.clang-format                                       lesson code style; `make format`, checked in CI
+.clangd                                             editor flags for the lessons (the smoke check's warnings)
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
 .github/workflows/verify.yml                        CI: listing check, mdbook build, link check, smoke check (clang + gcc), site
@@ -117,12 +120,15 @@ block:
 ## Verification
 
 ```sh
-make verify              # check-sync + mdbook build + book link check + smoke check under clang and $(GCC) + site-verify
+make verify              # check-sync + check-format + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + site-verify
+make format              # apply .clang-format to the lessons, then run make sync
 make site-verify         # website only: npm ci, check, lint, test, build
 make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
 make smoke CC=clang      # one compiler only
 make smoke-linux         # smoke check under glibc in Docker (GCC and Clang)
+make sanitize            # sanitizer check with clang (MSan is skipped on macOS)
+make sanitize-linux      # sanitizer check in Docker, MSan included
 make serve               # live preview at http://localhost:3000
 ```
 
@@ -155,9 +161,27 @@ What `scripts/smoke_check.sh` does:
   calls `parse_room()` / `parse_link()` directly. Renaming or changing the
   signatures of those functions, or of `GameState` / `Room`, breaks the harness.
 
-Requirements: a C compiler (Clang and GCC in CI), ncurses headers
-(`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+, mdBook **0.5.4**,
-and Node 24+ with npm for `site-verify`. The site's e2e tests also need Docker
+What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
+`SANITIZERS_REQUIRED=1`, so nothing may be skipped there):
+
+- Builds every lesson except 26 and 33 with ASan + UBSan (+ LeakSanitizer where
+  the platform has it) and runs each one in a fresh directory with a canned
+  input from the `case` table in `run_lessons()`: valid input, and bad input
+  for the interactive and argument-parsing lessons. Lesson 35's game needs a
+  terminal, so a harness runs its `load_world()` and `cleanup()` on a good map,
+  two bad ones and a missing file.
+- Repeats those runs under MemorySanitizer (Clang on Linux only) to catch reads
+  of uninitialized memory, and runs lesson 30 under ThreadSanitizer.
+- Fails on any sanitizer report; every sanitizer exits with status 86, so a
+  lesson's own exit status for bad input is not mistaken for a finding.
+- **A new lesson that needs input, arguments or files needs a case there**
+  (the default runs it with empty stdin and no arguments). A lesson that
+  leaks, reads uninitialized memory or races fails this check.
+
+Requirements: a C compiler (Clang and GCC in CI; Clang for `make sanitize`),
+clang-format 23 (`pipx install clang-format==23.1.5`, or Homebrew's LLVM),
+ncurses headers (`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+,
+mdBook **0.5.4**, and Node 24+ with npm for `site-verify`. The site's e2e tests also need Docker
 (or any PostgreSQL 18) and a Playwright Chromium (`npx playwright install
 chromium` in `site/`).
 CI pins mdBook in both workflows. Bump the pin deliberately, in both files, after
@@ -322,7 +346,9 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
   block comments interleaved with code), and a `- LESSON END -` banner. After that
   come key takeaways and a `HOW TO COMPILE AND RUN THIS CODE:` section.
 - Style: 4-space indentation, Allman braces (opening brace on its own line), and
-  `int main(void)` or `int main(int argc, char *argv[])`. Use `snake_case`
+  `int main(void)` or `int main(int argc, char *argv[])`. `.clang-format`
+  encodes the layout: run `make format` then `make sync` after editing a
+  lesson; `make check-format` fails otherwise. CI pins clang-format 23. Use `snake_case`
   functions and `PascalCase` typedef'd structs. Comments use UPPERCASE for the key
   term being introduced.
 - Source files are **ASCII only**: write `--`, not em-dashes, and spell out

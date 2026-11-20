@@ -1,0 +1,17 @@
+# Editor support (clangd, used by VS Code, Neovim, Zed and others) for the
+# lesson files: each lesson is one translation unit, so a compile database is
+# not needed. These are the smoke check's flags (scripts/smoke_check.sh),
+# minus -Werror, so the editor shows exactly the warnings CI rejects.
+# Lesson 31's headers are found next to its sources. -std=c23 needs clangd 18
+# or newer; older ones can use -std=c2x.
+CompileFlags:
+  Add:
+    - -std=c23
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+    - -Wstrict-prototypes
+    - -Wshadow
+    - -Wconversion
+    - -Wsign-conversion
+    - -Wmissing-prototypes

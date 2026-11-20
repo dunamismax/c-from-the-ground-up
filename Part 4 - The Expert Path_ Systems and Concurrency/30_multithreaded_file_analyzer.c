@@ -86,8 +86,8 @@ pthread_mutex_t g_mutex;           // The global MUTEX to protect g_counts
 // This struct holds the information we need to pass to each thread.
 typedef struct
 {
-    char *data_chunk; // Pointer to the start of this thread's data
-    long chunk_size;  // How many bytes this thread should process
+    char *data_chunk;       // Pointer to the start of this thread's data
+    long chunk_size;        // How many bytes this thread should process
     int starts_inside_word; // True when this chunk begins in the middle of a word
 } ThreadData;
 

@@ -42,9 +42,9 @@
  */
 
 // --- Standard and External Library Includes ---
-#include <ctype.h>  // For tolower()
-#include <errno.h>  // For robust numeric parsing
-#include <limits.h> // For INT_MIN and INT_MAX
+#include <ctype.h>   // For tolower()
+#include <errno.h>   // For robust numeric parsing
+#include <limits.h>  // For INT_MIN and INT_MAX
 #include <ncurses.h> // For the advanced Terminal User Interface (TUI)
 #include <stdio.h>
 #include <stdlib.h> // For malloc, free, exit

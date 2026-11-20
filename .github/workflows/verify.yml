@@ -22,6 +22,13 @@ jobs:
       - name: Check chapter listings match lesson sources
         run: python3 scripts/sync_chapters.py --check
 
+      # Pinned: other clang-format majors can format a few constructs
+      # differently from the version the lessons were formatted with.
+      - name: Check lesson formatting
+        run: |
+          pipx install clang-format==23.1.5
+          make check-format
+
       - name: Build book
         run: mdbook build
 
@@ -48,6 +55,28 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
         run: sh scripts/smoke_check.sh
+
+  # Every lesson under ASan/UBSan/LeakSanitizer and MemorySanitizer, and the
+  # threaded lesson under ThreadSanitizer. Nothing may be skipped here.
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install Clang and ncurses headers
+        run: sudo apt-get update && sudo apt-get install --yes clang libncurses-dev
+
+      # MemorySanitizer and ThreadSanitizer cannot map their shadow memory
+      # with the runner's high-entropy ASLR.
+      - name: Lower ASLR entropy for the sanitizers
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Run sanitizer check
+        env:
+          CC: clang
+          SANITIZERS_REQUIRED: '1'
+        run: sh scripts/sanitizer_check.sh
 
   site:
     runs-on: ubuntu-latest

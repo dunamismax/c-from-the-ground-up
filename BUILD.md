@@ -43,6 +43,10 @@ first for conventions and the verification workflow.
     a 5-second timeout and a 1 MiB output cap; the argument-parsing lessons
     are given bad numbers.
   - ASan/UBSan regressions for lessons 30 and 35
+  - `scripts/sanitizer_check.sh`: every lesson that runs without a terminal
+    under ASan, UBSan and LeakSanitizer, then MemorySanitizer, and lesson 30
+    under ThreadSanitizer (a `sanitizers` CI job on Linux, where nothing may
+    be skipped)
 - Code listings in the book are generated from the `.c` files by
   `scripts/sync_chapters.py`. Chapter prose is still hand-maintained and can drift.
 - **Website:** the domain `cfromthegroundup.com` is registered, and its DNS in
@@ -604,11 +608,8 @@ the lessons it serves.
       so, and the smoke check feeds it unknown commands from a file (that
       check fails against the old lesson). Lessons that need arguments print
       usage and exit non-zero. Not covered: 33 and 35 under a pseudo-terminal.
-- [ ] **Uninitialized-read detection.** The behavioural checks cannot see a
-      read of an uninitialized variable when the garbage value happens to
-      produce the right output. The old lesson 13 passed them for exactly that
-      reason. Consider a Linux CI job that builds the interactive lessons with
-      Clang `-fsanitize=memory` and replays the `run_input_checks` inputs.
+- [x] **Uninitialized-read detection.** Done 2026-11-20: MemorySanitizer runs
+      in `scripts/sanitizer_check.sh` (see the Done log).
 - [x] **Unsafe-API audit.** Done 2026-11-20; see the Done log.
 - [ ] **Chapter prose drift audit.** The prose above `## Full Source` was
       converted from lesson comments once and is not synced. Compare each chapter
@@ -629,21 +630,21 @@ the lessons it serves.
 ### Next (P2): tooling and quality gates
 
 - [x] **Stricter warnings.** Done 2026-11-20; see the Done log.
-- [ ] **`.clang-format`** that reproduces the existing style: 4 spaces, Allman
-      braces, and aligned trailing comments. Adopt it only if
-      `clang-format --dry-run` produces a small diff. Then add a `make format` and
-      a CI check.
+- [x] **`.clang-format`** that reproduces the existing style. Done
+      2026-11-20 (see the Done log).
 - [ ] **`.clang-tidy`** with `bugprone-*`, `clang-analyzer-*` and `cert-*`,
       tuned for teaching code. Run it in CI as non-blocking at first.
-- [ ] **Sanitizers for every lesson.** Compile all lessons with
-      `-fsanitize=address,undefined` and run each one through a canned input path.
-      Make the sanitizer block fail rather than skip on Linux CI.
-- [ ] **ThreadSanitizer** run for `30_multithreaded_file_analyzer.c`.
-- [ ] **Leak checking** with Valgrind or LeakSanitizer on Linux CI for the heap
-      lessons: 13, 17, 20, 25, 28, 35.
+- [x] **Sanitizers for every lesson.** Done 2026-11-20 (see the Done log).
+      Not covered: 26 (its exchange runs in the smoke check, unsanitized) and
+      33 and 35's game loop, which need a terminal; see the Ideas inbox.
+- [x] **ThreadSanitizer** run for `30_multithreaded_file_analyzer.c`. Done
+      2026-11-20.
+- [x] **Leak checking** with LeakSanitizer for every lesson it can run,
+      including the heap lessons 13, 17, 20, 25, 28 and 35's loader. Done
+      2026-11-20.
 - [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first.
-- [ ] **`compile_commands.json`** or a `.clangd` file, so editors understand the
-      lesson files out of the box.
+- [x] **`compile_commands.json`** or a `.clangd` file. Done 2026-11-20: a
+      root `.clangd` adds the smoke check's flags (without `-Werror`).
 - [x] **CI upkeep.** Done 2026-11-20; see the Done log. Review the action
       versions again once a year.
 - [x] **Book link checking.** Done 2026-11-20; see the Done log.
@@ -698,6 +699,12 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
+
+- **Sanitize the terminal lessons.** Lessons 33 and 35 (ncurses) and the
+  lesson 26 exchange are not in `scripts/sanitizer_check.sh`. 33 and 35 could
+  run under a pseudo-terminal (`script -q -c` on Linux) with scripted keys;
+  26 could reuse the smoke check's server and client exchange with sanitized
+  builds.
 
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
   (`cg162` in `site/src/lib/compiler-explorer.ts`). Check once a year that the
@@ -777,6 +784,28 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** `.clang-format` and `.clangd`. The format (LLVM base,
+  4-space indents, Allman braces, right-hand pointers, no column limit, no
+  comment reflow, includes left in order) differed from the lessons in only
+  12 lines, all trailing-comment alignment in lessons 25, 30 and 35, which
+  were reformatted. `make format` applies it, `make check-format` is part of
+  `make verify`, and the mdbook CI job checks it with clang-format 23.1.5
+  from PyPI. `.clangd` gives editors the smoke check's warning flags.
+
+- **2026-11-20:** sanitizer coverage for the lessons.
+  `scripts/sanitizer_check.sh` (`make sanitize`, part of `make verify`, and a
+  `sanitizers` CI job with `SANITIZERS_REQUIRED=1`) builds every lesson but
+  26 and 33 with ASan, UBSan and LeakSanitizer and runs each with canned valid
+  and bad input (44 runs), repeats them under MemorySanitizer, and runs lesson
+  30 under ThreadSanitizer. Lesson 35 runs through a harness that loads a good
+  map, two bad ones and a missing file and frees them. Every lesson is clean
+  (86 runs on Linux with Clang 19; macOS skips MSan). Checked that it fails on
+  an injected leak (LeakSanitizer names `create_node` in lesson 20) and on an
+  injected uninitialized read (MemorySanitizer names the line and the
+  allocation). `make sanitize-linux` runs it in Docker; MSan needs
+  `--security-opt seccomp=unconfined` there, and the CI job lowers
+  `vm.mmap_rnd_bits` so MSan and TSan can map their shadow memory.
 
 - **2026-11-20:** stricter warnings, CI upkeep, book link checking, a Linux
   smoke target, and the automated part of the W7 launch check.

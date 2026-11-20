@@ -37,7 +37,7 @@
  * - Functions: To create a clean, modular, and readable program structure.
  */
 
-#include <limits.h>  // For INT_MAX
+#include <limits.h> // For INT_MAX
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
