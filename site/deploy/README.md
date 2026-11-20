@@ -2,7 +2,7 @@
 
 The site runs on `ubuntu-vm` alongside the host's other sites and follows the
 same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
-(`/opt/astro-runtime`), the shared PostgreSQL 18, and the host-wide deploy lock
+(`/opt/node-runtime`), the shared PostgreSQL 18, and the host-wide deploy lock
 (`/usr/local/sbin/with-deploy-lock`).
 
 | What            | Where                                                                       |
@@ -11,7 +11,7 @@ same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
 | App server      | `cfromthegroundup.service`, `node build` on `127.0.0.1:4317`, `DynamicUser` |
 | Caddy site      | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)             |
 | Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`     |
-| Credentials     | `/etc/astro-apps/cfromthegroundup/{web,migration}.env` (root only)          |
+| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration}.env` (root only)          |
 | Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer` |
 | Cutover backups | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (each has a rollback)     |
 | Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`   |
@@ -49,7 +49,7 @@ idempotent and keeps existing passwords:
 3. As root, run the cutover command that `prepare.sh` prints:
 
    ```sh
-   /usr/local/sbin/with-deploy-lock /home/sawyer/astro-work/cfromthegroundup-<commit>/site/deploy/cutover.sh /home/sawyer/astro-work/cfromthegroundup-<commit>
+   /usr/local/sbin/with-deploy-lock /home/sawyer/web-work/cfromthegroundup-<commit>/site/deploy/cutover.sh /home/sawyer/web-work/cfromthegroundup-<commit>
    ```
 
 Cutover stages the release next to the live one, validates Caddy, switches the

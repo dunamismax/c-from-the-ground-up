@@ -15,11 +15,11 @@ UNIT=/etc/systemd/system/cfromthegroundup.service
 SERVICE=cfromthegroundup.service
 # Root-only database credentials: web.env (DATABASE_URL for the app) and
 # migration.env (DATABASE_URL and DB_OWNER_ROLE for migrations).
-ENV_DIR=/etc/astro-apps/cfromthegroundup
+ENV_DIR=/etc/web-apps/cfromthegroundup
 WEB_ENV=$ENV_DIR/web.env
 MIGRATION_ENV=$ENV_DIR/migration.env
 # The host's shared runtime (Node 24) and custom Caddy build.
-NODE=/opt/astro-runtime/bin/node
+NODE=/opt/node-runtime/bin/node
 CADDY=/usr/local/lib/caddy/caddy
 BACKUP_PREFIX=/root/cfromthegroundup-backup-
 
@@ -28,7 +28,7 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 # Privileged steps run only inside the host-wide lock, as descriptor 9.
 require_lock() {
   [[ $EUID == 0 ]] || die 'run as root through /usr/local/sbin/with-deploy-lock'
-  [[ $(readlink /proc/$$/fd/9) == /run/astro-deploy/lock ]] || die 'shared deployment lock descriptor 9 is required'
+  [[ $(readlink /proc/$$/fd/9) == /run/web-deploy/lock ]] || die 'shared deployment lock descriptor 9 is required'
   flock -n 9 || die 'shared deployment lock is not held'
 }
 

@@ -23,8 +23,8 @@ User=cfromthegroundup
 WorkingDirectory=/srv/www/cfromthegroundup.com/current
 Environment=NODE_ENV=production HOST=127.0.0.1 PORT=4317 ORIGIN=https://cfromthegroundup.com
 Environment=ADDRESS_HEADER=X-Forwarded-For XFF_DEPTH=1
-EnvironmentFile=/etc/astro-apps/cfromthegroundup/web.env
-ExecStart=/opt/astro-runtime/bin/node /srv/www/cfromthegroundup.com/current/build
+EnvironmentFile=/etc/web-apps/cfromthegroundup/web.env
+ExecStart=/opt/node-runtime/bin/node /srv/www/cfromthegroundup.com/current/build
 Restart=always
 RestartSec=5
 TimeoutStopSec=35

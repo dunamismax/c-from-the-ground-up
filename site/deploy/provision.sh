@@ -9,7 +9,7 @@
 #   cfromthegroundup_migration (login; member of the owner, runs migrations),
 #   cfromthegroundup_web (login; may only use schema `app` and read/write rows)
 # - pg_hba.conf lines letting the two login roles connect over 127.0.0.1 only
-# - root-only credentials in /etc/astro-apps/cfromthegroundup/{web,migration}.env
+# - root-only credentials in /etc/web-apps/cfromthegroundup/{web,migration}.env
 # - the nightly backup script, service and timer
 # Existing passwords and files are left alone; nothing else on the host changes.
 set -Eeuo pipefail

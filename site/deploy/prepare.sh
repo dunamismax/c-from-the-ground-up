@@ -15,7 +15,7 @@ source "$repo/site/deploy/common.sh"
 git -C "$repo" fetch --quiet origin
 commit=$(git -C "$repo" rev-parse HEAD)
 git -C "$repo" merge-base --is-ancestor "$commit" origin/main || die "$commit is not on origin/main; push it first"
-candidate=${1:-$HOME/astro-work/$NAME-$commit}
+candidate=${1:-$HOME/web-work/$NAME-$commit}
 [[ ! -e $candidate ]] || die "$candidate exists; choose a new candidate directory"
 mkdir -p "$candidate"
 
@@ -23,11 +23,11 @@ mkdir -p "$candidate"
 # at build time.
 git -C "$repo" archive "$commit" | tar -x -C "$candidate"
 cd "$candidate/site"
-astro-runtime npm ci --no-audit --no-fund
-astro-runtime npm run check
-astro-runtime npm run lint
-astro-runtime npm test
-astro-runtime npm run build
+node-runtime npm ci --no-audit --no-fund
+node-runtime npm run check
+node-runtime npm run lint
+node-runtime npm test
+node-runtime npm run build
 # Caddy serves this file; cutover checks the live site reports the new commit.
 printf '%s\n' "$commit" > build/client/version.txt
 

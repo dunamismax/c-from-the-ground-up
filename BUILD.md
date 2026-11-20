@@ -294,7 +294,7 @@ runbook.
   - TLS according to D10 (automatic HTTPS, Let's Encrypt)
 - [x] `cfromthegroundup.service`: a systemd unit that runs `node build` as a
       dedicated unprivileged user (`DynamicUser`), with
-      `EnvironmentFile=/etc/astro-apps/cfromthegroundup/web.env` (host convention),
+      `EnvironmentFile=/etc/web-apps/cfromthegroundup/web.env` (host convention),
       `Restart=on-failure` and systemd hardening (`NoNewPrivileges`,
       `ProtectSystem=strict` and so on).
 - [ ] Production environment template. Done: `DATABASE_URL` in `web.env`
@@ -591,8 +591,8 @@ pick them up.
 - **2026-11-20: production deploy follows the host's conventions.** The site
   runs on `ubuntu-vm` like its other sites rather than as BUILD.md first
   sketched: port 4317 (not 3000), `/srv/www/cfromthegroundup.com/releases`
-  with a `current` symlink, the shared Node 24 runtime at `/opt/astro-runtime`,
-  credentials in `/etc/astro-apps/cfromthegroundup/`, database roles
+  with a `current` symlink, the shared Node 24 runtime at `/opt/node-runtime`,
+  credentials in `/etc/web-apps/cfromthegroundup/`, database roles
   `_owner`/`_migration`/`_web`, and `prepare.sh` + `cutover.sh` under
   `with-deploy-lock` instead of a `git pull` deploy script. D10: DNS only, so
   Caddy's automatic HTTPS.

@@ -5,7 +5,7 @@
 # cfromthegroundup-backup.timer. Root-only: archives contain credentials.
 set -euo pipefail
 umask 077
-if ! test -e /proc/$$/fd/9 || test "$(readlink /proc/$$/fd/9)" != /run/astro-deploy/lock; then
+if ! test -e /proc/$$/fd/9 || test "$(readlink /proc/$$/fd/9)" != /run/web-deploy/lock; then
     exec /usr/local/sbin/with-deploy-lock "$0" "$@"
 fi
 flock -n 9
@@ -19,7 +19,7 @@ runuser -u postgres -- /usr/lib/postgresql/18/bin/pg_dump -Fc cfromthegroundup >
 /usr/lib/postgresql/18/bin/pg_restore --list "$work/database.dump" > "$work/database.contents"
 cp /usr/local/sbin/cfromthegroundup-backup "$work/backup.sh"
 cp /etc/systemd/system/cfromthegroundup-backup.{service,timer} "$work/"
-tar -czf "$work/credentials.tar.gz" -C / etc/astro-apps/cfromthegroundup
+tar -czf "$work/credentials.tar.gz" -C / etc/web-apps/cfromthegroundup
 if [[ -L $base/current ]]; then
     cp /etc/caddy/sites/cfromthegroundup.com.caddy /etc/systemd/system/cfromthegroundup.service "$work/"
     readlink -f "$base/current" > "$work/release.txt"
