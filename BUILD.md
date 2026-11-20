@@ -5,9 +5,17 @@ first for conventions and the verification workflow.
 
 ## How to use this file
 
-- **Picking work:** take the first unchecked item in **Now**, then **Next**. Skip
-  anything that depends on an unresolved item in **Open decisions**. Those need
-  the maintainer.
+- **Current focus: the website.** The active phase is **Phase W:
+  cfromthegroundup.com** below. Unless the user asks for something else, take
+  the first unchecked item in the lowest-numbered unfinished milestone (W1,
+  then W2, and so on). Work the milestones in order. Each one lists what "done"
+  means.
+- **Course content track:** the lesson and tooling backlog further down (Now,
+  Next, Later) is still valid, but it is secondary to the website. Work it when
+  the user asks, or when a website milestone needs it.
+- Skip anything that depends on an unresolved item in **Open decisions**. Those
+  need the maintainer. Where a decision has a stated **default**, proceed with
+  the default and note that you did.
 - **Finishing work:** tick the box (`- [x]`) in the same commit as the change. If
   the item is fully done, move it to the **Done log** with the date.
 - **New ideas:** when you spot something worth doing but out of scope, add it to
@@ -28,16 +36,362 @@ first for conventions and the verification workflow.
   - `mdbook build`
   - a compile of every lesson with `-Wall -Wextra -Wpedantic -Wstrict-prototypes
     -Werror -std=c23`
-  - behavioural checks for lessons 17, 26, 29 and 30
+  - behavioural checks for lessons 3, 5, 6, 13, 17, 26, 29 and 30. The
+    interactive lessons are fed valid input, garbage and EOF under a 5-second
+    timeout and a 1 MiB output cap.
   - ASan/UBSan regressions for lessons 30 and 35
 - Code listings in the book are generated from the `.c` files by
   `scripts/sync_chapters.py`. Chapter prose is still hand-maintained and can drift.
+- **Website:** the domain `cfromthegroundup.com` is registered, and its DNS in
+  Cloudflare points at the maintainer's self-hosted Ubuntu server. No site code
+  exists yet. Start at milestone W1.
 
 ---
 
-## Open decisions (maintainer)
+## Phase W: cfromthegroundup.com (CURRENT FOCUS)
 
-These block related backlog items. Agents: do not act on them; ask the user, or
+### Vision
+
+`https://cfromthegroundup.com` becomes **the** place to take this course. It
+should be fast and beautiful, and it should feel like a real course rather than
+a code dump. A learner lands on it, sees the path from Hello World to systems
+programming, starts lesson 1, and comes back days later to the exact place they
+left off.
+
+The site is the pinnacle of the project. The GitHub repo becomes "the source
+code of the course", and the mdBook on GitHub Pages becomes a mirror until the
+site reaches parity (see D6).
+
+### Tech stack (fixed by the maintainer)
+
+| Layer | Choice |
+| --- | --- |
+| Framework | SvelteKit **3** with Svelte **5** (runes) |
+| Language | TypeScript (strict) |
+| Styling | Tailwind CSS **4** (CSS-first config) |
+| Database | PostgreSQL **18** + Drizzle ORM / drizzle-kit |
+| Runtime | Node (LTS, 24.x) via `@sveltejs/adapter-node` |
+| Edge / TLS | Caddy reverse proxy on the same Ubuntu server, behind Cloudflare DNS |
+
+Do not swap any of these without the maintainer's approval. These tools change
+quickly, so **check current documentation** (Context7 or the official docs)
+before relying on memory. In particular:
+
+- **SvelteKit 3 is not SvelteKit 2.** Configuration lives in the `sveltekit({...})`
+  plugin call in `vite.config.ts`. SvelteKit 3 does not read `svelte.config.js`,
+  and options are no longer nested under `kit`.
+- SvelteKit 3 needs Node >= 22.17, TypeScript 6, Vite 8, Svelte >= 5.57 and
+  `@sveltejs/vite-plugin-svelte` 7.
+- CSRF protection is always on. Use `csrf.trustedOrigins` if you need
+  cross-origin posts.
+- Remote functions (`query` / `form` / `command` / `prerender` in `*.remote.ts`
+  files) are available for client-server calls.
+- Most tutorials online still show the 2.x layout.
+
+### Architecture (decided defaults: follow them unless the maintainer says otherwise)
+
+- **One repo.** The site lives in `site/` in this repository. The lessons stay in
+  `Part */`, and their chapters stay in `src/chapters/`.
+- **Content stays in git, not in the database.** The site reads course content
+  at build time from:
+  - `src/SUMMARY.md` for order, parts and titles
+  - `src/chapters/*.md` for prose
+  - the lesson source files, through the existing `<!-- source: ... -->` markers
+  Never copy lesson text or code into `site/`. The single-source-of-truth rule
+  in AGENTS.md applies to the site too.
+- **Lesson pages are prerendered.** Course pages are static HTML generated at
+  build time (`export const prerender = true`), which keeps them fast and
+  cacheable. Only learner-specific features (progress, accounts) hit the Node
+  server and the database.
+- **Markdown pipeline:** unified (`remark-parse`, `remark-gfm`, `remark-rehype`,
+  `rehype-slug`, `rehype-autolink-headings`), with Shiki for syntax highlighting
+  (`c`, `makefile`, `sh`) at build time. Ship zero highlighting JavaScript to the
+  browser.
+- **Stable URLs:**
+  - lessons at `/lessons/<chapter-slug>` (for example `/lessons/01-hello-world`,
+    matching the chapter file names)
+  - parts at `/parts/<n>`
+  Once published, URLs never change; add redirects instead.
+- **The database holds learner state only:** users, sessions, lesson progress
+  and, later, notes and exercise results. Schema in
+  `site/src/lib/server/db/schema.ts`. Migrations are generated with
+  `drizzle-kit generate`, committed under `site/drizzle/`, and applied at deploy
+  time before the new build starts.
+- **Svelte 5 only:**
+  - runes (`$state`, `$derived`, `$props`, `$effect`) and snippets
+  - no `export let`, no `$:` and no legacy stores in new code
+- **Tailwind 4 is configured in CSS:** `@import "tailwindcss";` plus `@theme`
+  tokens in `site/src/app.css`. Add `@tailwindcss/typography` through `@plugin`
+  for prose. There is no `tailwind.config.js`.
+- **Package manager:** npm, with a committed `package-lock.json`. Pin the Node
+  version in `site/.nvmrc` and in `engines`.
+- **Secrets stay out of git.** Commit `site/.env.example`; `site/.env` is ignored.
+  Production configuration lives in an environment file on the server (see W5).
+- **Agents cannot reach the server.** They write configs, scripts and a runbook
+  in `site/deploy/`, and the maintainer runs the server-side steps.
+
+### Milestones
+
+#### W0. Inputs from the maintainer (agents: ask, do not block on these)
+
+- [ ] Server facts:
+  - Ubuntu version
+  - whether Caddy and PostgreSQL are already installed, and whether other
+    sites run on the box
+  - SSH user and app directory to deploy to (default `/srv/cfromthegroundup`)
+- [ ] Cloudflare setup for `cfromthegroundup.com` and `www`: is the record
+      proxied (orange cloud) or DNS only? Determines the TLS setup (D10).
+- [ ] Decisions D6-D10 below. Every one has a default, so W1-W5 can proceed
+      without them.
+
+#### W1. Scaffold the app
+
+- [ ] Create `site/` with `npx sv create site`: SvelteKit minimal template with
+      TypeScript.
+- [ ] Add the add-ons with `npx sv add`:
+  - tailwindcss
+  - drizzle (PostgreSQL)
+  - eslint
+  - prettier
+  - vitest
+  - playwright
+  - the node adapter
+  Confirm that the result has the SvelteKit 3 layout described above. Record
+  the Postgres client choice (`postgres` / postgres.js or `pg` /
+  node-postgres) in the Decision log.
+- [ ] Add a local development database: `site/compose.yaml` running `postgres:18`
+      on localhost, with a `DATABASE_URL` example in `site/.env.example`.
+- [ ] Add npm scripts:
+  - `dev`, `build`, `preview`
+  - `check` (svelte-check), `lint`, `format`
+  - `test` (vitest), `test:e2e` (playwright)
+  - `db:generate`, `db:migrate`, `db:studio`
+- [ ] Add a `/healthz` endpoint that returns 200 when the app is up and can run
+      `select 1` against the database. Caddy and the deploy script will use it.
+- [ ] Update the root `.gitignore`: `site/node_modules/`, `site/.svelte-kit/`,
+      `site/build/`, `site/.env`, `site/test-results/`, `site/playwright-report/`.
+- [ ] Wire the site into the repo gates:
+  - a `make site-verify` target that runs `npm ci`, `check`, `lint`, `test` and
+    `build` in `site/`
+  - `make verify` runs `site-verify` too
+  - a `site` job in `.github/workflows/verify.yml` on Node 24, with a
+    `postgres:18` service container for tests that need a database
+- [ ] Update AGENTS.md:
+  - the `site/` layout
+  - the site commands
+  - Svelte, Tailwind and Drizzle conventions
+- **Done when:**
+  - `make verify` and CI are green
+  - `npm run build && node build` serves a placeholder page
+  - `/healthz` returns 200 against the local database
+
+#### W2. Course content pipeline
+
+- [ ] Write a content loader in `site/src/lib/server/content/`. It parses
+      `src/SUMMARY.md` into parts and lessons, loads each chapter, resolves the
+      source markers and returns typed `Lesson` objects with these fields:
+  - number, slug, title and part
+  - prose HTML and a table of contents
+  - source files, each with path, language and contents
+  - compile and run instructions
+  - previous and next lesson
+- [ ] Render the markdown to HTML at build time with the unified and Shiki
+      pipeline. Give headings anchors, and render the "Full Source" listings with
+      file names.
+- [ ] Add a small per-lesson metadata table in code covering:
+  - required link flags (`-pthread`, `-lm`, ncurses)
+  - whether the lesson needs command-line arguments or stdin
+  - platform: portable C, POSIX, or ncurses
+  The UI uses it for compile commands and badges. A test must assert that the
+  flags agree with `compile_lesson()` in `scripts/smoke_check.sh`.
+- [ ] Generate compile commands from that metadata rather than copying them
+      from prose, so resolving D1 later is a one-line change.
+- [ ] Add Vitest tests that check:
+  - every chapter in `SUMMARY.md` yields a lesson
+  - slugs are unique and match the chapter file names
+  - every embedded source equals the file on disk
+  - no lesson has empty prose
+- **Done when:** all 35 chapters (36 source pages, counting both files of
+  lesson 26) load through the loader with passing tests, and the content changes
+  automatically when a `.c` file changes and `make sync` runs.
+
+#### W3. Design system and core pages
+
+- [ ] Visual identity: a logo or wordmark, a color palette and a type scale.
+  - a readable serif or sans for long-form prose, plus a monospace for code
+  - light and dark themes, with dark preferred for code
+  - define everything as Tailwind `@theme` tokens
+- [ ] Layout: a header and footer, plus a course sidebar that lists the parts
+      and lessons. The sidebar collapses on mobile. Add skip links.
+- [ ] Pages:
+  - landing (`/`): pitch, curriculum overview, "Start lesson 1" call to action
+  - course overview (`/lessons`): all parts, lesson cards, what each part
+    covers
+  - lesson pages (`/lessons/[slug]`)
+  - Setup guide (`/setup`): installing a compiler on macOS, Linux and Windows
+    (WSL), and running your first program. This absorbs the "Setup chapter"
+    item from the Later backlog.
+  - about (`/about`), with a GitHub link and the license
+  - a custom 404 page
+- [ ] Lesson page components:
+  - code block with copy button, line numbers, file name, download link and a
+    "View on GitHub" link
+  - compile and run panel with macOS / Linux / Windows (WSL) tabs
+  - an "on this page" table of contents
+  - previous and next navigation
+  - part and lesson breadcrumbs
+  - platform badges (POSIX, ncurses)
+- [ ] Accessibility target: WCAG 2.2 AA. Pages must be fully keyboard navigable,
+      use visible focus rings, and respect `prefers-reduced-motion`.
+- [ ] Performance target: Lighthouse 95+ on mobile for lesson pages.
+- **Done when:** every lesson is readable on the site at parity with the mdBook,
+  on desktop and mobile, in both themes, and Playwright e2e tests cover the
+  landing page, a lesson page and navigation.
+
+#### W4. Learner experience (no accounts yet)
+
+- [ ] Progress tracking in `localStorage`, behind a small progress-store
+      interface so W6 can swap in the database:
+  - mark a lesson complete
+  - per-part progress bars
+  - "Continue where you left off" on the landing page and the course overview
+- [ ] Site search over lesson titles, headings and prose, using a client-side
+      index generated at build time (MiniSearch or FlexSearch).
+- [ ] "Try it online" button for portable lessons. It opens the lesson in
+      Compiler Explorer (godbolt.org) with the source and flags preloaded and
+      execution enabled. POSIX and ncurses lessons instead say to run locally,
+      with a link to `/setup`. Native in-browser execution is D8.
+- [ ] Keyboard shortcuts: `j` / `k` or arrow keys for previous and next lesson,
+      and `/` for search.
+- [ ] Downloads: each lesson's source files, and a zip of the whole course.
+- **Done when:** a learner can work through the course from start to finish
+  with persistent progress in one browser, find any topic by search, and run
+  portable lessons without installing anything.
+
+#### W5. Production deployment (agents write it, the maintainer runs it)
+
+Everything goes in `site/deploy/`, with a step-by-step `site/deploy/README.md`
+runbook.
+
+- [ ] `Caddyfile`:
+  - `cfromthegroundup.com` reverse-proxies to `127.0.0.1:3000`, and `www`
+    redirects to the apex
+  - `encode zstd gzip`
+  - long-lived `Cache-Control` for `/_app/immutable/*`
+  - security headers: HSTS, `X-Content-Type-Options`, `Referrer-Policy`
+  - a `/healthz` health check
+  - TLS according to D10
+- [ ] `cfromthegroundup.service`: a systemd unit that runs `node build` as a
+      dedicated unprivileged user, with `EnvironmentFile=/etc/cfromthegroundup/site.env`,
+      `Restart=on-failure` and systemd hardening (`NoNewPrivileges`,
+      `ProtectSystem=strict` and so on).
+- [ ] Production environment template:
+  - `DATABASE_URL`, `ORIGIN=https://cfromthegroundup.com`, `PORT`, `HOST`
+  - the adapter-node proxy settings (`PROTOCOL_HEADER`, `HOST_HEADER`,
+    `ADDRESS_HEADER`, `XFF_DEPTH`)
+  Choose the proxy settings so that `event.getClientAddress()` returns the
+  visitor's real IP through Cloudflare and Caddy (Caddy `trusted_proxies`), and
+  test it.
+- [ ] `deploy.sh`, run on the server, which:
+  - updates the code (`git pull` on `main`)
+  - runs `npm ci` and `npm run build`
+  - applies migrations
+  - restarts the service and waits for `/healthz`
+  - keeps the previous build directory for a quick rollback
+- [ ] PostgreSQL 18 setup steps:
+  - install from Ubuntu's archive if it ships 18, otherwise from the PGDG apt
+    repository
+  - a dedicated database and role, local-only connections
+  - a nightly `pg_dump` systemd timer with rotation
+- [ ] Use CSP in SvelteKit's `csp` config (nonce- or hash-based) rather than a
+      static Caddy header, so inline scripts SvelteKit generates keep working.
+- **Done when:** `https://cfromthegroundup.com` serves the site with valid TLS,
+  `www` redirects, `/healthz` is green, a redeploy is one command, and a
+  database backup exists.
+
+#### W6. Accounts and synced progress (needs D7)
+
+- [ ] Authentication with Better Auth (`npx sv add better-auth`) and its Drizzle
+      adapter, using the sign-in methods chosen in D7.
+- [ ] Add a `lesson_progress` table (user, lesson slug, `completed_at`,
+      `last_viewed_at`, unique on user and slug), and have the progress store
+      talk to it through remote functions.
+- [ ] On first sign-in, merge the progress already in `localStorage` into the
+      account.
+- [ ] Rate-limit sign-in and other write endpoints.
+- [ ] Account page with data export and account deletion.
+- [ ] Privacy policy page covering what is stored and why.
+- **Done when:** progress follows a signed-in learner across devices, and
+  signed-out learning still works exactly as in W4.
+
+#### W7. Launch and make the site the front door
+
+- [ ] SEO:
+  - per-page `<title>`, description and canonical URL
+  - Open Graph images, generated per lesson at build time
+  - `sitemap.xml` and `robots.txt`
+  - `Course` / `LearningResource` structured data
+- [ ] Point everything at the site:
+  - set the repo homepage to `https://cfromthegroundup.com`
+  - make the site the first link in `README.md`
+  - add a banner to `src/index.md`, and apply D6 to the mdBook
+- [ ] Map old mdBook URLs (`/c-from-the-ground-up/chapters/NN-slug.html`) to
+      the new lesson URLs, with redirects or links depending on D6.
+- [ ] Final launch check: accessibility, performance and broken-link passes on
+      the production URL.
+- **Done when:** the site is the documented primary way to take the course.
+
+#### W8+. Beyond parity (triage into milestones when W7 is done)
+
+- Exercises per lesson with automated checking (see "Exercises" in Later), and
+  short end-of-lesson quizzes.
+- In-browser compile and run (D8).
+- Completion certificates per part and for the whole course.
+- Notes and bookmarks per lesson (needs W6).
+- Self-hosted, privacy-friendly analytics (D9).
+- Offline support (PWA), and a printable or PDF edition generated from the same
+  content.
+- Translations, if the audience asks for them.
+
+### Website decisions (maintainer)
+
+- [ ] **D6. Future of the mdBook on GitHub Pages.**
+  - Default: keep publishing it until W7, then add a banner on every page
+    pointing to the matching lesson on the site.
+  - Alternatives: full redirect, or retire it.
+- [ ] **D7. Sign-in methods.**
+  - Default: GitHub OAuth only. It fits the audience and needs no email service.
+  - Options: add email magic links (requires an SMTP or email API provider),
+    and/or email + password.
+- [ ] **D8. Running C in the browser.**
+  - Default: link out to Compiler Explorer (W4).
+  - Options:
+    - Compiler Explorer's API from our backend
+    - a WebAssembly toolchain in the browser (heavy download, sandboxed)
+    - our own sandboxed compile server, using nsjail or Firecracker on the
+      server. This has a real security cost and must not be built without
+      explicit approval.
+- [ ] **D9. Analytics.**
+  - Default: none until launch.
+  - Options: self-hosted Umami or Plausible, sharing the PostgreSQL instance.
+- [ ] **D10. Cloudflare proxy and TLS.**
+  - If the DNS record is **DNS only**, Caddy's automatic HTTPS works
+    unchanged.
+  - If it is **proxied**, set Cloudflare SSL/TLS to **Full (strict)** and do
+    one of the following:
+    - (a) Default: install a Cloudflare Origin CA certificate in Caddy with the
+      `tls` directive.
+    - (b) Build Caddy with the `caddy-dns/cloudflare` module and use the ACME
+      DNS challenge, which needs a scoped API token on the server.
+  - Either way, configure Caddy `trusted_proxies` with Cloudflare's IP ranges
+    so client IPs are correct.
+
+---
+
+## Open decisions: course content (maintainer)
+
+Website decisions D6-D10 are listed under Phase W. These block related backlog
+items. Agents: do not act on them; ask the user, or
 leave them alone.
 
 - [ ] **D1. Which C standard do the lessons teach?** CI compiles with `-std=c23`
@@ -72,24 +426,27 @@ leave them alone.
 
 ---
 
-## Now (P1): correctness for learners
+## Course content track
 
-- [ ] **Unchecked `scanf` makes interactive lessons misbehave.** In
-      `6_loops.c`, a closed stdin or a non-numeric entry such as `abc` causes an
-      infinite loop: the bad input stays in the buffer and the loop variable never
-      changes. The same unchecked pattern is in `3_user_input.c` (lines 64, 82,
-      104), `5_conditional_statements.c` (79, 106), and
-      `13_dynamic_memory_allocation.c` (78). In lesson 13 a failed read leaves
-      `num_students` uninitialized, and it is then used as a `malloc` size.
-  - Fix: teach "`scanf` returns the number of items it read" in lesson 3,
-    including the EOF case and clearing the rest of the line. Use that check
-    consistently in 5, 6 and 13, and update the matching chapter prose.
-  - Add a smoke check that runs each interactive lesson with `</dev/null` and
-    with garbage input under a timeout, and asserts that it exits.
-- [ ] **EOF and hang sweep.** Run every lesson with `</dev/null` under a 3 s
-      timeout and record any that hang or crash. Lessons that need arguments
-      (16, 25, 34, ...) should print usage and exit non-zero, which is fine.
-      Fix the hangs.
+Secondary to Phase W. These items still matter: the website is only as good as
+the lessons it serves.
+
+### Now (P1): correctness for learners
+
+- [x] **Unchecked `scanf` made interactive lessons misbehave.** Done
+      2026-11-20; see the Done log.
+- [ ] **EOF and hang sweep for the remaining lessons.** Lessons 3, 5, 6 and 13
+      are covered by `run_input_checks` in `scripts/smoke_check.sh`. A manual
+      `</dev/null` run of lessons 9, 12, 17, 18 and 29 found no hangs. Sweep
+      every other lesson that reads stdin the same way. Lessons that need
+      arguments (16, 25, 34, ...) should print usage and exit non-zero, which is
+      fine. Add any interactive lesson to `run_input_checks` with
+      valid, garbage and EOF cases.
+- [ ] **Uninitialized-read detection.** The behavioural checks cannot see a
+      read of an uninitialized variable when the garbage value happens to
+      produce the right output. The old lesson 13 passed them for exactly that
+      reason. Consider a Linux CI job that builds the interactive lessons with
+      Clang `-fsanitize=memory` and replays the `run_input_checks` inputs.
 - [ ] **Unsafe-API audit.** Check every use of `strcpy`, `atoi`, `sprintf` and
       unbounded `%s`:
   - `strcpy`: `9_strings.c`, `17_student_record_system.c`,
@@ -110,7 +467,7 @@ leave them alone.
   - Then consider extending `sync_chapters.py` with a heuristic warning when a
     lesson file changed more recently than its chapter's prose.
 
-## Next (P2): tooling and quality gates
+### Next (P2): tooling and quality gates
 
 - [ ] **Stricter warnings.** `-Wshadow -Wconversion -Wsign-conversion
       -Wmissing-prototypes` currently produce 35 Clang warnings across 15 lessons.
@@ -139,7 +496,7 @@ leave them alone.
       whether a link-check preprocessor supports mdBook 0.5.x; if not, write a
       small script.
 
-## Later (P3): book and reader experience
+### Later (P3): book and reader experience
 
 - [ ] **Exercises.** Add a "Try it yourself" section to each chapter with 2-3
       exercises. Optionally add hidden solutions in an `exercises/` directory
@@ -151,9 +508,10 @@ leave them alone.
 - [ ] **Glossary page** for the UPPERCASE terms the lessons introduce.
 - [ ] **Setup chapter** ("Chapter 0"). Cover installing a compiler on
       macOS, Linux and Windows (WSL), using a terminal, and running a lesson. This
-      depends on D1 and D3.
+      depends on D1 and D3. It is now planned as the site's `/setup` page in W3;
+      add it to the book too if the mdBook is kept (D6).
 
-## Content expansion (pending D4)
+### Content expansion (pending D4)
 
 Carried over from the original Phase 6 plan, plus new ideas. Each new lesson
 follows the "Adding a new lesson" checklist in AGENTS.md.
@@ -195,6 +553,11 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-20: the website is the primary focus.** `cfromthegroundup.com`,
+  self-hosted on the maintainer's Ubuntu server. The stack is SvelteKit 3,
+  Svelte 5, TypeScript, Tailwind CSS 4, PostgreSQL 18 + Drizzle,
+  adapter-node and Caddy. The site lives in `site/` in this repo and reads
+  course content from the existing lesson and chapter files at build time.
 - **2026-11-20: book listings are generated, not hand-copied.** The `.c` files
   are the single source of truth, and chapters embed them through
   `<!-- source: ... -->` markers synced by `scripts/sync_chapters.py`. CI fails on
@@ -212,6 +575,18 @@ pick them up.
 
 ## Done log
 
+- **2026-11-20:** input robustness.
+  - Lesson 3 now teaches that `scanf` returns the number of items read,
+    covering `1`, `0` and `EOF`, and it checks every read. Variables are
+    initialized.
+  - Lesson 5 explains that check now that `if` has been taught.
+  - Lesson 6 recovers from non-numeric input by discarding the line with
+    `getchar`, and stops on EOF instead of looping forever.
+  - Lesson 13 no longer passes an uninitialized count toward `malloc`.
+  - Chapters 3 and 6 gained matching prose sections.
+  - `run_input_checks` in the smoke check feeds those lessons valid input,
+    garbage and EOF under a timeout and an output cap. Verified that it fails
+    against the old lessons 3 and 6.
 - **2026-11-20:** maintainability pass.
   - Added `AGENTS.md`, this roadmap, a root `Makefile` (`make verify` / `sync` /
     `serve`), `scripts/sync_chapters.py` and `.editorconfig`.

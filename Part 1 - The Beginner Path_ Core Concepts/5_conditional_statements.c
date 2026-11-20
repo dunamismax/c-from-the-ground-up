@@ -72,11 +72,22 @@ int main(void)
      *     // Code to execute if 'condition' is false
      * }
      */
-    int number_to_check;
+    int number_to_check = 0;
 
     printf("--- Part 2: The 'if-else' Statement ---\n");
     printf("Enter a whole number: ");
-    scanf("%d", &number_to_check);
+
+    /*
+     * Remember the input check from Lesson 3? Now you can read it fully.
+     * `scanf` returns how many items it read. The condition
+     * `scanf(...) != 1` is TRUE when reading failed, so the `if` block runs
+     * and the program stops before it can use a number it never received.
+     */
+    if (scanf("%d", &number_to_check) != 1)
+    {
+        printf("That was not a whole number. Exiting.\n");
+        return 1;
+    }
 
     // We use the modulus operator `%` to check for an even number.
     // If a number divided by 2 has a remainder of 0, it's even.
@@ -99,11 +110,15 @@ int main(void)
      * rest of the entire chain. The final `else` is optional and acts as a
      * "catch-all" if none of the preceding conditions were true.
      */
-    int user_grade;
+    int user_grade = 0;
 
     printf("--- Part 3: The 'if-else if-else' Chain ---\n");
     printf("Enter your numerical grade (0-100): ");
-    scanf("%d", &user_grade);
+    if (scanf("%d", &user_grade) != 1)
+    {
+        printf("That was not a whole number. Exiting.\n");
+        return 1;
+    }
 
     if (user_grade >= 90)
     {

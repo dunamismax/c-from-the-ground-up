@@ -97,9 +97,49 @@ int main(void)
         printf("4. Quit\n");
         printf("Enter your choice: ");
 
-        scanf("%d", &menu_choice); // Get user input. This updates the loop variable.
+        /*
+         * Reading input inside a loop needs extra care. As you saw in Lesson 3,
+         * `scanf` returns how many items it read. We save that in a variable so
+         * we can handle each of its three possible outcomes.
+         */
+        int items_read = scanf("%d", &menu_choice); // This updates the loop variable.
 
-        printf("You chose: %d\n\n", menu_choice);
+        if (items_read == 1)
+        {
+            printf("You chose: %d\n\n", menu_choice);
+        }
+        else if (items_read == EOF)
+        {
+            /*
+             * The input has ended (for example, the user pressed Ctrl+D), so no
+             * more choices will ever arrive. If we did nothing, `menu_choice`
+             * would never become 4 and this would be an INFINITE LOOP. Setting
+             * it to 4 makes the loop condition false, so the loop ends.
+             */
+            printf("\nNo more input. Quitting.\n");
+            menu_choice = 4;
+        }
+        else
+        {
+            /*
+             * The user typed something that is not a number, like `abc`.
+             * `scanf` refuses to read it and leaves it waiting in the INPUT
+             * BUFFER. If we just looped back, the next `scanf` would see the
+             * same `abc`, fail again, and loop forever!
+             *
+             * To fix this, we throw away everything up to the end of the line.
+             * `getchar()` reads ONE character from the input and returns it. We
+             * keep reading until we reach the newline `'\n'` (the user pressed
+             * Enter) or `EOF` (the input ended). `getchar` returns an `int`, not
+             * a `char`, so that it can also return `EOF`.
+             */
+            printf("That was not a number. Please try again.\n\n");
+            int leftover = getchar();
+            while (leftover != '\n' && leftover != EOF)
+            {
+                leftover = getchar();
+            }
+        }
     }
     printf("Thanks for playing!\n\n");
 
@@ -115,12 +155,30 @@ int main(void)
      * to get the input first *before* you can check if it's valid.
      */
     printf("--- Part 3: The 'do-while' Loop (Input Validation) ---\n");
-    int secret_number;
+    int secret_number = 0;
 
     do
     {
         printf("Please enter a number between 1 and 10: ");
-        scanf("%d", &secret_number);
+        int items_read = scanf("%d", &secret_number);
+
+        if (items_read == EOF)
+        {
+            // No input left, so we can never get a valid number. Stop here.
+            printf("\nNo more input. Exiting.\n");
+            return 1;
+        }
+        if (items_read == 0)
+        {
+            // Not a number. Throw away the rest of the line, just like above,
+            // and set an invalid value so the loop asks again.
+            int leftover = getchar();
+            while (leftover != '\n' && leftover != EOF)
+            {
+                leftover = getchar();
+            }
+            secret_number = 0;
+        }
 
         // This check happens AFTER the user has already entered a number.
         if (secret_number < 1 || secret_number > 10)
@@ -150,6 +208,9 @@ int main(void)
  *   true, and the number of iterations isn't fixed.
  * - The `do-while` loop is similar to `while`, but it always executes its body at
  *   least once because the condition is checked at the end.
+ * - When a loop reads input, handle every result `scanf` can return. Bad input
+ *   stays in the input buffer until you discard it, and `EOF` means no more input
+ *   will ever arrive. Ignoring either one is a classic cause of infinite loops.
  *
  * Mastering loops is a massive step towards writing complex and useful programs.
  *

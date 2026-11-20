@@ -255,6 +255,94 @@ run_tiny_shell_check() {
     expect_not_contains "$shell_output" "execvp failed" "TinyShell split an overlong command into a second command."
 }
 
+# Run a lesson binary with the given stdin text, failing if it does not exit
+# within 5 seconds. Interactive lessons must never hang on bad input or EOF.
+# Output is capped at 1 MiB (ulimit -f counts 512-byte blocks) so a runaway
+# printing loop dies with SIGXFSZ instead of filling the disk.
+# Sets RUN_OUTPUT and RUN_STATUS.
+run_lesson_with_input() {
+    lesson_bin=$1
+    input_text=$2
+    input_file=$BUILD_DIR/stdin.txt
+    output_file=$BUILD_DIR/stdout.txt
+
+    printf '%b' "$input_text" > "$input_file"
+    (ulimit -f 2048 && exec "$lesson_bin" < "$input_file" > "$output_file" 2>&1) &
+    lesson_pid=$!
+
+    ticks=0
+    while kill -0 "$lesson_pid" 2>/dev/null; do
+        if [ "$ticks" -ge 50 ]; then
+            kill "$lesson_pid" 2>/dev/null || true
+            wait "$lesson_pid" 2>/dev/null || true
+            fail_with_output "$(basename "$lesson_bin") did not exit within 5 seconds for input: $input_text" "$(tail -c 2000 "$output_file")"
+        fi
+        sleep 0.1
+        ticks=$((ticks + 1))
+    done
+
+    RUN_STATUS=0
+    wait "$lesson_pid" || RUN_STATUS=$?
+    if [ "$RUN_STATUS" -eq 153 ]; then
+        fail_with_output "$(basename "$lesson_bin") printed more than 1 MiB for input: $input_text (probably an infinite loop)" "$(tail -c 2000 "$output_file")"
+    fi
+    RUN_OUTPUT=$(cat "$output_file")
+}
+
+expect_status() {
+    expected=$1
+    message=$2
+
+    if [ "$RUN_STATUS" -ne "$expected" ]; then
+        fail_with_output "$message (exit status $RUN_STATUS, expected $expected)" "$RUN_OUTPUT"
+    fi
+}
+
+run_input_checks() {
+    input_bin=$BUILD_DIR/3_user_input
+    run_lesson_with_input "$input_bin" '30\n3.5\nQ\n'
+    expect_status 0 "Lesson 3 failed on valid input."
+    expect_contains "$RUN_OUTPUT" "You entered 30." "Lesson 3 did not echo the age."
+    expect_contains "$RUN_OUTPUT" "Your GPA is 3.50." "Lesson 3 did not echo the GPA."
+    expect_contains "$RUN_OUTPUT" "Your favorite letter is 'Q'." "Lesson 3 did not echo the letter."
+    for bad_input in 'abc\n' '' '30\nx\n' '30\n3.5\n'; do
+        run_lesson_with_input "$input_bin" "$bad_input"
+        expect_status 1 "Lesson 3 did not reject bad or missing input."
+        expect_contains "$RUN_OUTPUT" "Exiting." "Lesson 3 did not explain why it stopped."
+    done
+
+    conditional_bin=$BUILD_DIR/5_conditional_statements
+    run_lesson_with_input "$conditional_bin" '7\n85\n'
+    expect_status 0 "Lesson 5 failed on valid input."
+    expect_contains "$RUN_OUTPUT" "7 is an odd number." "Lesson 5 did not classify 7 as odd."
+    expect_contains "$RUN_OUTPUT" "Your letter grade is B." "Lesson 5 did not grade 85 as a B."
+    for bad_input in 'abc\n' '' '7\nabc\n'; do
+        run_lesson_with_input "$conditional_bin" "$bad_input"
+        expect_status 1 "Lesson 5 did not reject bad or missing input."
+        expect_contains "$RUN_OUTPUT" "That was not a whole number." "Lesson 5 did not explain why it stopped."
+    done
+
+    loops_bin=$BUILD_DIR/6_loops
+    run_lesson_with_input "$loops_bin" 'abc\n2\n4\nxyz\n0\n7\n'
+    expect_status 0 "Lesson 6 failed to recover from bad input."
+    expect_contains "$RUN_OUTPUT" "That was not a number. Please try again." "Lesson 6 did not reject a non-numeric menu choice."
+    expect_contains "$RUN_OUTPUT" "You chose: 2" "Lesson 6 did not accept a menu choice after bad input."
+    expect_contains "$RUN_OUTPUT" "You successfully entered the number 7." "Lesson 6 did not recover in the do-while loop."
+    run_lesson_with_input "$loops_bin" ''
+    expect_status 1 "Lesson 6 did not stop cleanly on EOF."
+    expect_contains "$RUN_OUTPUT" "No more input." "Lesson 6 did not report EOF."
+
+    memory_bin=$BUILD_DIR/13_dynamic_memory_allocation
+    run_lesson_with_input "$memory_bin" '3\n'
+    expect_status 0 "Lesson 13 failed on valid input."
+    expect_contains "$RUN_OUTPUT" "Student 3 GPA: 2.90" "Lesson 13 did not store and print the GPAs."
+    for bad_input in 'abc\n' '' '-3\n' '0\n'; do
+        run_lesson_with_input "$memory_bin" "$bad_input"
+        expect_status 1 "Lesson 13 did not reject bad or missing input."
+        expect_contains "$RUN_OUTPUT" "Invalid number of students." "Lesson 13 did not explain why it stopped."
+    done
+}
+
 run_sanitizer_regressions() {
     if [ -z "${SANITIZER_FLAGS:-}" ]; then
         printf 'Skipping sanitizer regressions (compiler does not support -fsanitize=address,undefined).\n'
@@ -392,6 +480,7 @@ run_analyzer_check
 run_socket_check
 run_student_record_checks
 run_tiny_shell_check
+run_input_checks
 run_sanitizer_regressions
 
 printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31.\n' "$compiled_count"

@@ -15,6 +15,25 @@ Core idea: **every lesson is a small, readable, runnable C program, and the
 comments are the lesson.** The book chapters add a prose overview and embed the
 full source.
 
+## Current focus: the website
+
+The active phase is building **https://cfromthegroundup.com**, a self-hosted
+course site that becomes the main way to take the course. Its stack is
+SvelteKit 3, Svelte 5, TypeScript, Tailwind CSS 4, PostgreSQL 18 with Drizzle,
+adapter-node and Caddy.
+
+- The full plan, architecture defaults and milestones (W0-W8) are in
+  **[BUILD.md](BUILD.md), "Phase W"**. Unless the user asks for something
+  else, continue at the first unchecked item of the earliest unfinished
+  milestone.
+- The site goes in `site/`, which does not exist yet; W1 creates it. It reads
+  lesson content from `Part */` and `src/chapters/` at build time and never
+  keeps its own copy.
+- SvelteKit 3, Svelte 5 and Tailwind 4 differ a lot from older tutorials.
+  Check current docs before writing framework code.
+- When W1 lands, extend this file with the `site/` layout, commands and
+  conventions.
+
 Priorities, in order:
 
 1. **Correct.** Code compiles warning-free, runs, and does what the comments say.
@@ -116,6 +135,9 @@ What `scripts/smoke_check.sh` does:
   - lesson 26: a server and client exchange over a free local port
   - lesson 17: save/load round trip
   - lesson 29: overlong command rejection
+  - lessons 3, 5, 6 and 13: `run_input_checks` feeds valid input, garbage and
+    EOF through `run_lesson_with_input`, which enforces a 5-second timeout and a
+    1 MiB output cap
   If you change those messages, update the script in the same commit.
 - Runs ASan/UBSan regressions when the compiler supports them: lesson 30 on an
   empty file, and a harness that includes lesson 35 with `#define main ...` and
@@ -155,8 +177,10 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
 - Each lesson compiles cleanly as one translation unit with the smoke-check flags
   under both Clang and GCC. Lessons 26-30 may use POSIX; everything earlier must
   stay ISO C plus the standard library.
-- Interactive lessons must not hang when stdin hits EOF. Check `scanf` and
-  `fgets` return values.
+- Interactive lessons must not hang when stdin hits EOF or the user types
+  garbage. Always check `scanf` (`!= 1`) and `fgets` (`== NULL`) return values,
+  and initialize variables that `scanf` fills. Lessons 3 and 6 teach the
+  pattern; later lessons should follow it without re-explaining it.
 - Free what you allocate. Lessons should be clean under ASan and LeakSanitizer.
 - Compile commands inside lessons and chapters currently say `-std=c11`, while
   CI uses C23. This is a known inconsistency with an open decision in BUILD.md.

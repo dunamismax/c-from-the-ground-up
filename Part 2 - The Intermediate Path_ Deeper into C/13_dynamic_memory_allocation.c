@@ -70,15 +70,17 @@
 
 int main(void)
 {
-    int num_students;
+    int num_students = 0;
     double *gpa_list = NULL; // A pointer to hold the address of our dynamic array.
                              // It's good practice to initialize it to NULL.
 
     printf("How many student GPAs do you want to store? ");
-    scanf("%d", &num_students);
 
-    // Let's prevent the user from entering a non-positive number.
-    if (num_students <= 0)
+    // We are about to pass this number to `malloc`, so it MUST be valid.
+    // First check that `scanf` actually read a number (it returns 1 on success),
+    // then reject non-positive counts. The `||` operator stops at the first true
+    // condition, so if reading failed we never even look at `num_students`.
+    if (scanf("%d", &num_students) != 1 || num_students <= 0)
     {
         printf("Invalid number of students. Exiting.\n");
         return 1; // Exit with an error code.
