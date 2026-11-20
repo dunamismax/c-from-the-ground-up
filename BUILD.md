@@ -10,9 +10,9 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus), milestone W7 (launch). W1-W6 are done; what is left of W0 and W7 needs the maintainer. |
 | **Next step** | Until the maintainer clears W7, work the [course content track](#course-content-track) in order: finish the **chapter prose drift audit** (read each chapter beside its lesson for tone and order), then make the **GCC `-fanalyzer`** CI step blocking once it has stayed clean, then the [Ideas inbox](#ideas-inbox). Triage W8+ into milestones once W7 is done. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) The go-ahead to set the repo homepage (W7): `gh repo edit dunamismax/c-from-the-ground-up --homepage https://cfromthegroundup.com`. (3) A manual screen-reader pass (W7). (4) Decisions D1-D9; each has a default. (5) A redeploy: the site is behind `main` (see **Live**). |
-| **Live** | https://cfromthegroundup.com serves `a14e994`, deployed 2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are off until the OAuth app exists. `main` has lesson and chapter changes since then (the stricter-warning fixes, lesson 21's integer promotion, lesson 35's checked `fseek`, chapter prose fixes), so the site lags the book, which GitHub Pages publishes on every push. |
-| **`main`** | `make verify` and CI are green at `e43e11c`. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) The go-ahead to set the repo homepage (W7): `gh repo edit dunamismax/c-from-the-ground-up --homepage https://cfromthegroundup.com`. (3) A manual screen-reader pass (W7). (4) Decisions D1-D9; each has a default. |
+| **Live** | https://cfromthegroundup.com serves `25146a8`, deployed 2026-11-20 with `site/deploy/`, so the site matches the lessons on `main`. The database has the W6 tables; accounts are off until the OAuth app exists. |
+| **`main`** | `make verify` and CI are green at `25146a8`. |
 | **Last updated** | 2026-11-20 |
 
 ### Milestones at a glance
@@ -789,6 +789,17 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** sixth production deploy, commit `25146a8`, which brings the
+  site up to date with the lessons (stricter-warning edits, lesson 21's
+  integer promotion, lesson 35's checked `fseek`, chapter prose fixes).
+  Prepare and cutover passed first time (backup taken, no new migrations).
+  Checked from outside: `/version.txt`, `/healthz`, `/api/account` (off), a
+  spoofed `X-Forwarded-For` ignored, the `www` redirect, a runtime 404, the
+  new text on lessons 18, 21 and 35 and in a file download, the search index,
+  sitemap, course zip and an Open Graph image. The launch-check link crawl
+  (45 pages, 289 internal and 45 external URLs) and axe in both themes (92
+  runs) were clean again.
 
 - **2026-11-20:** static analysis. `.clang-tidy` turns on `bugprone-*`,
   `clang-analyzer-*` and `cert-*`; of 147 findings, all but one came from
