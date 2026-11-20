@@ -44,8 +44,10 @@
 //
 // - It takes one argument: the number of BYTES you want to allocate.
 // - It returns a "void pointer" (`void*`) to the start of that memory block.
-//   A `void*` is a generic pointer; we must CAST it to the specific pointer
-//   type we need (e.g., `int*`, `char*`).
+//   A `void*` is a generic pointer. In C it converts automatically to the
+//   pointer type we need (e.g., `int*`, `char*`), so a CAST like `(double *)`
+//   is optional. We write one below to make the type visible; many C
+//   programmers leave it out.
 // - If `malloc()` cannot find enough free memory, it returns `NULL`. You MUST
 //   always check for this!
 
@@ -57,6 +59,7 @@
 //
 // The common pattern for `malloc` is:
 // pointer = (type *)malloc(number_of_elements * sizeof(type));
+// (or, without the optional cast: pointer = malloc(number_of_elements * sizeof(type));)
 
 // --- Part 3: `free` - Giving Memory Back ---
 // When you are finished with memory you allocated with `malloc()`, you MUST

@@ -158,14 +158,26 @@ int main(int argc, char *argv[])
     // --- Part 5: Communicate with the Client ---
 
     char client_message[2000];
-    int read_size;
+    ssize_t read_size; // `ssize_t` is a signed size type, so it can hold -1.
 
     // Clear the buffer before reading into it.
     memset(client_message, 0, sizeof(client_message));
 
-    // Receive a message from the client using the NEW socket descriptor.
-    // `recv` is also a BLOCKING call.
-    read_size = recv(client_socket, client_message, 2000, 0);
+    /*
+     * Receive a message from the client using the NEW socket descriptor.
+     * `recv` is also a BLOCKING call.
+     *
+     * The bytes that arrive have no `\0` at the end. We ask for at most
+     * `sizeof(client_message) - 1` bytes, so the last byte always stays one of
+     * the zeros from `memset` and the message is a proper string for `%s`.
+     *
+     * NOTE: TCP delivers a STREAM of bytes, not separate messages. One `recv`
+     * may return only part of what the client sent. A short message between
+     * two programs on one machine almost always arrives in one piece, which is
+     * enough for this lesson. Real protocols mark where a message ends (with a
+     * newline or a length) and call `recv` in a loop until it is complete.
+     */
+    read_size = recv(client_socket, client_message, sizeof(client_message) - 1, 0);
     if (read_size > 0)
     {
         printf("Client message: %s\n", client_message);
@@ -173,8 +185,15 @@ int main(int argc, char *argv[])
         // Prepare and send a reply back to the client.
         const char *reply_message = "Message received. Thank you!";
         // `write()` is another function for sending data, similar to `send()`.
-        write(client_socket, reply_message, strlen(reply_message));
-        printf("Reply sent to client.\n");
+        // Like `send()`, it returns -1 if it fails.
+        if (write(client_socket, reply_message, strlen(reply_message)) < 0)
+        {
+            perror("Write failed");
+        }
+        else
+        {
+            printf("Reply sent to client.\n");
+        }
     }
     else if (read_size == 0)
     {

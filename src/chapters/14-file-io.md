@@ -133,7 +133,15 @@ int main(void)
     fprintf(file_pointer, "Player: %s, Score: %d\n", "Max", 100);
 
     // Step 4: Close the file.
-    fclose(file_pointer);
+    // `fprintf` collects text in a memory buffer and writes it to the disk in
+    // larger pieces. `fclose` writes whatever is still in that buffer, so it is
+    // where a full disk or a lost drive shows up. Like `fopen`, it reports
+    // failure through its return value: 0 means success.
+    if (fclose(file_pointer) != 0)
+    {
+        fprintf(stderr, "Error: Could not finish writing '%s'.\n", filename);
+        exit(1);
+    }
     file_pointer = NULL; // Good practice to nullify the pointer after closing.
     printf("Successfully wrote to and closed the file.\n\n");
 
@@ -186,6 +194,7 @@ int main(void)
  * 5.  `fprintf()` is like `printf()` but writes to a file stream.
  * 6.  `fgets()` is a safe and reliable way to read text line-by-line from a file.
  * 7.  `fclose()` is mandatory to save all changes and release system resources.
+ *     After writing, check that it returned 0, or your data may not be saved.
  *
  * HOW TO COMPILE AND RUN THIS CODE:
  *

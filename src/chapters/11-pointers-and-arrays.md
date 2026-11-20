@@ -8,9 +8,13 @@ THE BIG REVEAL:
 The name of an array, by itself, acts as a CONSTANT POINTER to the first
 element of that array.
 
-This means an array's name IS a memory address. This is why we didn't need the
-`&` operator when using `scanf` with a string (which is a `char` array) back
-in Lesson 3. The array's name already provided the address!
+This means an array's name IS a memory address. This is why, in Lesson 9, we
+could pass a `char` array like `message` straight to `strlen()` and `strcpy()`
+without the `&` operator. The array's name already provided the address!
+
+(One exception: `sizeof` still sees the whole array. With the `grades` array
+in this lesson, `sizeof(grades)` is the size of all 5 integers, not of one
+pointer.)
 
 This relationship enables a powerful technique called POINTER ARITHMETIC, which
 allows us to move between elements of an array using a pointer.
@@ -43,9 +47,12 @@ allows us to move between elements of an array using a pointer.
  * The name of an array, by itself, acts as a CONSTANT POINTER to the first
  * element of that array.
  *
- * This means an array's name IS a memory address. This is why we didn't need the
- * `&` operator when using `scanf` with a string (which is a `char` array) back
- * in Lesson 3. The array's name already provided the address!
+ * This means an array's name IS a memory address. This is why, in Lesson 9, we
+ * could pass a `char` array like `message` straight to `strlen()` and `strcpy()`
+ * without the `&` operator. The array's name already provided the address!
+ *
+ * (One exception: `sizeof` still sees the whole array. With the `grades` array
+ * below, `sizeof(grades)` is the size of all 5 integers, not of one pointer.)
  *
  * This relationship enables a powerful technique called POINTER ARITHMETIC, which
  * allows us to move between elements of an array using a pointer.

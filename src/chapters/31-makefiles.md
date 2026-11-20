@@ -66,7 +66,9 @@ how different C files work together:
  * --- The Include Guard ---
  *
  * What happens if a header file gets included more than once in the same
- * compilation process? It can lead to errors ("redeclaration of '...''").
+ * compilation process? Declaring a function twice is harmless, but headers
+ * often also DEFINE things, such as a `struct` type, and defining those twice
+ * is an error ("redefinition of 'struct ...'").
  * To prevent this, we use an INCLUDE GUARD. It's a standard preprocessor trick.
  *
  * `#ifndef HELPER_H`   // "If HELPER_H is NOT defined..."
@@ -128,8 +130,8 @@ void say_hello_from_helper(void);
  *
  * --- Including Local Headers ---
  * Notice we use `#include "helper.h"` with double quotes. This is a signal
- * to the compiler to look for the file in the CURRENT directory first, before
- * searching the system's standard library paths.
+ * to the compiler to look for the file in the directory that holds THIS source
+ * file first, before searching the system's standard library paths.
  *
  *  - `#include <stdio.h>`: Use angle brackets for system libraries.
  *  - `#include "helper.h"`: Use double quotes for your own project's header files.

@@ -45,7 +45,12 @@ file. To speed it up, we will:
    to a global total, and then unlock the mutex.
 6. The main thread will wait for all worker threads to complete and then print the result.
 
-We will use the POSIX Threads (pthreads) library, the standard for C.
+We will use the POSIX Threads (pthreads) library, the standard threading API
+on Unix-like systems such as Linux and macOS.
+
+Like most pthread functions, `pthread_create` returns 0 on success and an
+error number on failure. The program checks it and only waits for (joins) the
+threads that really started.
 
 ## Full Source
 
@@ -111,7 +116,8 @@ We will use the POSIX Threads (pthreads) library, the standard for C.
  *    to a global total, and then unlock the mutex.
  * 6. The main thread will wait for all worker threads to complete and then print the result.
  *
- * We will use the POSIX Threads (pthreads) library, the standard for C.
+ * We will use the POSIX Threads (pthreads) library, the standard threading API
+ * on Unix-like systems such as Linux and macOS.
  */
 
 // --- Required Headers ---
@@ -267,7 +273,16 @@ int main(int argc, char *argv[])
     // --- Initialize Threads and Mutex ---
     pthread_t threads[NUM_THREADS];
     ThreadData thread_args[NUM_THREADS];
-    pthread_mutex_init(&g_mutex, NULL); // Initialize the mutex
+    int threads_started = 0;
+
+    // Like most pthread functions, these return 0 on success and an error
+    // number on failure (they do not use -1 and errno).
+    if (pthread_mutex_init(&g_mutex, NULL) != 0) // Initialize the mutex
+    {
+        fprintf(stderr, "Could not initialize the mutex\n");
+        free(file_buffer);
+        return 1;
+    }
 
     long chunk_size = file_size / NUM_THREADS;
     for (int i = 0; i < NUM_THREADS; i++)
@@ -281,12 +296,20 @@ int main(int argc, char *argv[])
 
         printf("Launching thread %d to process %ld bytes.\n", i, thread_args[i].chunk_size);
         // `pthread_create` starts a new thread executing `analyze_chunk`
-        // and passes it a pointer to its `thread_args`.
-        pthread_create(&threads[i], NULL, analyze_chunk, &thread_args[i]);
+        // and passes it a pointer to its `thread_args`. It can fail, for
+        // example when the system is out of resources. Then `threads[i]` is not
+        // a real thread, so we must not wait for it.
+        if (pthread_create(&threads[i], NULL, analyze_chunk, &thread_args[i]) != 0)
+        {
+            fprintf(stderr, "Could not start thread %d\n", i);
+            break;
+        }
+        threads_started++;
     }
 
     // --- Wait for all threads to complete ---
-    for (int i = 0; i < NUM_THREADS; i++)
+    // Only join the threads that really started.
+    for (int i = 0; i < threads_started; i++)
     {
         // `pthread_join` blocks the main thread until the specified thread finishes.
         pthread_join(threads[i], NULL);
@@ -296,6 +319,13 @@ int main(int argc, char *argv[])
     // --- Clean up and Print Results ---
     pthread_mutex_destroy(&g_mutex); // Always destroy the mutex
     free(file_buffer);
+
+    if (threads_started < NUM_THREADS)
+    {
+        // Part of the file was never analyzed, so the totals would be wrong.
+        fprintf(stderr, "Analysis incomplete: only %d of %d threads ran.\n", threads_started, NUM_THREADS);
+        return 1;
+    }
 
     printf("\n--- Analysis Complete ---\n");
     printf("Total Characters: %lld\n", g_counts.total_chars);
@@ -327,10 +357,10 @@ int main(int argc, char *argv[])
  *    `gcc -Wall -Wextra -std=c11 -pthread -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c`
  *
  * 2. To see the benefit, you need a large file. You can create one with this command
- *    (this creates a ~100MB file of random data, which won't have many lines/words
- *    but is good for testing raw character counting performance):
+ *    (this creates a ~100MB file of random bytes. Its word and line counts are
+ *    meaningless, since it is not text, but it is good for timing the analyzer):
  *    `dd if=/dev/urandom of=large_test_file.txt bs=1M count=100`
- *    (On Windows, you'll need to find a large text file online to download).
+ *    (On Windows, run these commands in WSL, as this lesson needs POSIX threads.)
  *
  * 3. Run the analyzer on the large file:
  *    `./30_multithreaded_file_analyzer large_test_file.txt`

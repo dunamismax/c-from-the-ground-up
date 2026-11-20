@@ -21,13 +21,25 @@ In programming, a recursive function works the same way. It has two essential pa
    modified argument that brings it one step closer to the base case. It's
    the act of "opening the doll to find the next smaller one."
 
+## The Danger: Infinite Recursion and Stack Overflow
+
+What happens if you forget the base case? The function will call itself
+endlessly. Each time a function is called, a small amount of memory is used
+on the "call stack". If the recursion never stops, it will eventually use up
+all the available stack memory, and the program will crash with an error
+called a STACK OVERFLOW.
+
+The lesson keeps this example commented out:
+
+```c
 // DO NOT UNCOMMENT AND RUN THIS FUNCTION.
 // It is an example of what NOT to do.
 void infinite_recursion(void)
 {
-printf("This will run forever... and then crash!\n");
-infinite_recursion(); // No base case, no modification. Uh oh.
+    printf("This will run forever... and then crash!\n");
+    infinite_recursion(); // No base case, no modification. Uh oh.
 }
+```
 
 ## Full Source
 

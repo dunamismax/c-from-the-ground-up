@@ -85,22 +85,32 @@ typedef struct HashTable
 // --- Part 2: The Hash Function ---
 
 /*
- * This is a simple hash function. It sums the ASCII values of the characters
- * in the key and then uses the modulo operator to ensure the result is
- * within the bounds of our table size.
+ * This is a simple POLYNOMIAL hash function. For each character in the key,
+ * it multiplies the running value by 37 and adds the character's code. Then
+ * it uses the modulo operator to bring the result within the bounds of our
+ * table size.
+ *
+ * Why not just add up the character codes? Because then "stop" and "pots"
+ * (the same letters in a different order) would always collide. Multiplying
+ * before each addition makes the position of every character count.
+ *
+ * `value` is unsigned, so if it grows past the largest `unsigned long` it
+ * simply wraps around to small numbers again. That is well-defined for
+ * unsigned types and harmless for hashing. (Overflow of a SIGNED integer, by
+ * contrast, is undefined behavior.)
  *
  * A good hash function is crucial for performance, but this is fine for learning.
  */
 unsigned int hash_function(const char *key)
 {
     unsigned long int value = 0;
-    unsigned int i = 0;
-    unsigned int key_len = strlen(key);
+    size_t key_len = strlen(key);
 
-    // Sum the ASCII values of the characters
-    for (; i < key_len; ++i)
+    for (size_t i = 0; i < key_len; ++i)
     {
-        value = value * 37 + key[i]; // A slightly better algorithm (djb2-ish)
+        // The cast makes the character code 0-255 even where `char` is
+        // signed and the key holds non-ASCII bytes.
+        value = value * 37 + (unsigned char)key[i];
     }
 
     // Return the value modulo the table size
@@ -135,16 +145,41 @@ HashTable *ht_create(void)
 }
 
 /**
+ * @brief Makes a copy of a string on the heap.
+ *
+ * `strcpy` never checks the size of its destination, so it is only safe when
+ * we know the destination is big enough. Here we are sure: we allocate
+ * exactly `strlen(text) + 1` bytes, room for every character plus the `\0`.
+ *
+ * Like `create_node` in Lesson 20, we stop the program if `malloc` fails.
+ * Every caller can then rely on getting a valid copy back.
+ */
+char *copy_string(const char *text)
+{
+    char *copy = malloc(strlen(text) + 1);
+    if (copy == NULL)
+    {
+        fprintf(stderr, "Error: Memory allocation failed!\n");
+        exit(1);
+    }
+    strcpy(copy, text);
+    return copy;
+}
+
+/**
  * @brief Creates a new key-value entry.
  */
 Entry *create_entry(const char *key, const char *value)
 {
     Entry *entry = malloc(sizeof(Entry));
-    entry->key = malloc(strlen(key) + 1);
-    entry->value = malloc(strlen(value) + 1);
+    if (entry == NULL)
+    {
+        fprintf(stderr, "Error: Memory allocation failed!\n");
+        exit(1);
+    }
 
-    strcpy(entry->key, key);
-    strcpy(entry->value, value);
+    entry->key = copy_string(key);
+    entry->value = copy_string(value);
     entry->next = NULL;
 
     return entry;
@@ -165,8 +200,7 @@ void ht_insert(HashTable *hashtable, const char *key, const char *value)
         {
             // Key found, so update the value.
             free(current_entry->value); // Free the old value
-            current_entry->value = malloc(strlen(value) + 1);
-            strcpy(current_entry->value, value);
+            current_entry->value = copy_string(value);
             return; // We're done.
         }
         current_entry = current_entry->next;
@@ -294,12 +328,18 @@ int main(void)
 {
     printf("Creating a new hash table.\n");
     HashTable *ht = ht_create();
+    if (ht == NULL)
+    {
+        fprintf(stderr, "Error: Could not create the hash table.\n");
+        return 1;
+    }
 
     printf("\nInserting key-value pairs...\n");
     ht_insert(ht, "name", "John Doe");
     ht_insert(ht, "age", "30");
+    // With TABLE_SIZE 10, "age" and "city" hash to the same bucket (5): a
+    // COLLISION. The table output below shows them chained in one list.
     ht_insert(ht, "city", "New York");
-    // These two keys will likely cause a collision with TABLE_SIZE 10
     ht_insert(ht, "country", "USA");
     ht_insert(ht, "language", "C");
 

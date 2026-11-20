@@ -45,8 +45,8 @@ Let's explore the most important ones.
                    //           searches for these in a list of standard system directories.
 
 // #include "my_header.h" // `"..."` : Use for your own header files. The preprocessor
-//           searches for this file first in the CURRENT directory,
-//           and then in the standard system directories.
+//           searches first in the directory that holds the file doing the
+//           #include, and then in the standard system directories.
 // This is crucial for multi-file projects.
 
 // --- Part 2: `#define` for Constants and Macros ---

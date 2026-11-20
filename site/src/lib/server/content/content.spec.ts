@@ -15,6 +15,26 @@ const chapterFiles = readdirSync(path.join(root, 'src/chapters')).filter((name) 
 	name.endsWith('.md')
 );
 
+// Parse every chapter once, while the file loads, like `course` above. Doing it
+// inside each test made three tests re-highlight all 35 chapters, and in a full
+// `npm test` run (sharing the CPU with the browser tests) that could pass
+// Vitest's 5-second per-test timeout.
+const parsedChapters = new Map(
+	chapterFiles.map((file) => {
+		const chapterPath = `src/chapters/${file}`;
+		return [
+			chapterPath,
+			parseChapter(readFileSync(path.join(root, chapterPath), 'utf8'), chapterPath)
+		] as const;
+	})
+);
+
+function parsedChapter(chapterPath: string) {
+	const parsed = parsedChapters.get(chapterPath);
+	if (!parsed) throw new Error(`${chapterPath} is not in src/chapters`);
+	return parsed;
+}
+
 function lessonSourceFiles(): string[] {
 	const found: string[] = [];
 	for (const part of readdirSync(root).filter((name) => name.startsWith('Part '))) {
@@ -50,19 +70,14 @@ describe('course content', () => {
 
 	it('uses the same title in SUMMARY.md and the chapter heading', () => {
 		for (const lesson of course.lessons) {
-			const parsed = parseChapter(
-				readFileSync(path.join(root, lesson.chapterPath), 'utf8'),
-				lesson.chapterPath
-			);
+			const parsed = parsedChapter(lesson.chapterPath);
 			expect(parsed.title, lesson.chapterPath).toBe(lesson.title);
 		}
 	});
 
 	it('embeds every lesson source file exactly once, identical to the file on disk', () => {
 		const embedded: string[] = [];
-		for (const file of chapterFiles) {
-			const chapterPath = `src/chapters/${file}`;
-			const parsed = parseChapter(readFileSync(path.join(root, chapterPath), 'utf8'), chapterPath);
+		for (const [chapterPath, parsed] of parsedChapters) {
 			for (const listing of parsed.listings) {
 				const onDisk = readFileSync(path.join(root, listing.path), 'utf8');
 				expect(listing.embedded, `${chapterPath}: run make sync`).toBe(onDisk.replace(/\n$/, ''));
@@ -112,10 +127,7 @@ describe('course content', () => {
 
 	it('shows the same run commands in the chapter as the metadata generates', () => {
 		for (const lesson of course.lessons) {
-			const parsed = parseChapter(
-				readFileSync(path.join(root, lesson.chapterPath), 'utf8'),
-				lesson.chapterPath
-			);
+			const parsed = parsedChapter(lesson.chapterPath);
 			const chapterLines = (parsed.run?.children ?? [])
 				.flatMap((node) => (node.type === 'code' ? node.value.split('\n') : []))
 				.map((line) => line.trim());

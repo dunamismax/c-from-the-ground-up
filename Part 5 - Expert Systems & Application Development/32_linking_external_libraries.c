@@ -120,10 +120,14 @@ int main(void)
  *
  * WHAT HAPPENS IF YOU FORGET `-lm`?
  * Try compiling with: `gcc ... -o output 32_linking_external_libraries.c`
- * You will get an "undefined reference to `sqrt`" error (and to `pow`, `sin`).
- * This is the linker telling you, "I see you're calling a function named `sqrt`,
- * but I have no idea where its actual code is!" The `-lm` flag solves this by
- * telling the linker to look inside the math library.
+ * On Linux you will usually get an "undefined reference to `sqrt`" error (and
+ * to `pow`, `sin`). This is the linker telling you, "I see you're calling a
+ * function named `sqrt`, but I have no idea where its actual code is!" The
+ * `-lm` flag solves this by telling the linker to look inside the math library.
+ *
+ * On macOS the same command may work anyway: there, the math functions live in
+ * the system library that every program is linked with. Keep `-lm` regardless,
+ * so your build works on every system.
  *
  * 4. Run the executable:
  *    - On Linux/macOS:   `./32_linking_external_libraries`

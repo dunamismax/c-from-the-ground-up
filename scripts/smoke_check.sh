@@ -266,19 +266,21 @@ run_tiny_shell_check() {
     fi
 }
 
-# Run a lesson binary with the given stdin text, failing if it does not exit
-# within 5 seconds. Interactive lessons must never hang on bad input or EOF.
+# Run a lesson binary with the given stdin text (and any further arguments as
+# its command-line arguments), failing if it does not exit within 5 seconds.
+# Interactive lessons must never hang on bad input or EOF.
 # Output is capped at 1 MiB (ulimit -f counts 512-byte blocks) so a runaway
 # printing loop dies with SIGXFSZ instead of filling the disk.
 # Sets RUN_OUTPUT and RUN_STATUS.
 run_lesson_with_input() {
     lesson_bin=$1
     input_text=$2
+    shift 2
     input_file=$BUILD_DIR/stdin.txt
     output_file=$BUILD_DIR/stdout.txt
 
     printf '%b' "$input_text" > "$input_file"
-    (ulimit -f 2048 && exec "$lesson_bin" < "$input_file" > "$output_file" 2>&1) &
+    (ulimit -f 2048 && exec "$lesson_bin" "$@" < "$input_file" > "$output_file" 2>&1) &
     lesson_pid=$!
 
     ticks=0
@@ -352,6 +354,83 @@ run_input_checks() {
         expect_status 1 "Lesson 13 did not reject bad or missing input."
         expect_contains "$RUN_OUTPUT" "Invalid number of students." "Lesson 13 did not explain why it stopped."
     done
+}
+
+# Run a lesson with command-line arguments and no input. Sets RUN_OUTPUT and
+# RUN_STATUS like run_lesson_with_input.
+run_lesson_with_args() {
+    lesson_bin=$1
+    shift
+    run_lesson_with_input "$lesson_bin" '' "$@"
+}
+
+run_number_argument_checks() {
+    args_bin=$BUILD_DIR/15_command_line_arguments
+    run_lesson_with_args "$args_bin" Bob 42
+    expect_status 0 "Lesson 15 failed on valid arguments."
+    expect_contains "$RUN_OUTPUT" "In 10 years, you will be 52." "Lesson 15 did not convert the age."
+    for bad_age in forty 30x '' 99999999999999999999 -1; do
+        run_lesson_with_args "$args_bin" Dana "$bad_age"
+        expect_status 1 "Lesson 15 accepted the age '$bad_age'."
+        expect_contains "$RUN_OUTPUT" "The age must be a whole number from 0 to 150" "Lesson 15 did not explain a bad age."
+    done
+
+    calculator_bin=$BUILD_DIR/16_simple_calculator
+    run_lesson_with_args "$calculator_bin" 10.5 / 2
+    expect_status 0 "Lesson 16 failed on valid arguments."
+    expect_contains "$RUN_OUTPUT" "10.50 / 2.00 = 5.25" "Lesson 16 computed the wrong result."
+    for bad_number in ten 5x ''; do
+        run_lesson_with_args "$calculator_bin" "$bad_number" + 5
+        expect_status 1 "Lesson 16 accepted the number '$bad_number'."
+        expect_contains "$RUN_OUTPUT" "must both be numbers" "Lesson 16 did not explain a bad number."
+    done
+    run_lesson_with_args "$calculator_bin" 10 / 0
+    expect_status 1 "Lesson 16 allowed division by zero."
+    expect_contains "$RUN_OUTPUT" "Division by zero is not allowed." "Lesson 16 did not report division by zero."
+
+    client_bin=$BUILD_DIR/26_simple_socket_client
+    run_lesson_with_args "$client_bin" 999.1.1.1 8888 hello
+    expect_status 1 "Lesson 26 client accepted an invalid IP address."
+    expect_contains "$RUN_OUTPUT" "is not a valid IPv4 address" "Lesson 26 client did not reject an invalid IP address."
+    run_lesson_with_args "$client_bin" 127.0.0.1 88a8 hello
+    expect_status 1 "Lesson 26 client accepted an invalid port."
+    expect_contains "$RUN_OUTPUT" "Port must be a whole number between 1 and 65535." "Lesson 26 client did not reject an invalid port."
+}
+
+run_text_editor_check() {
+    editor_bin=$BUILD_DIR/25_simple_text_editor
+    editor_dir=$BUILD_DIR/editor
+    document=$editor_dir/doc.txt
+    mkdir -p "$editor_dir"
+
+    # An empty line and a bare "p" once made the editor parse bytes past the
+    # end of the text; "pq" and "d abc" were accepted as commands.
+    run_lesson_with_input "$editor_bin" 'a first\na second\n\npq\nd abc\ni 2 middle\np\ns\nq\n' "$document"
+    expect_status 0 "Lesson 25 did not exit cleanly."
+    expect_contains "$RUN_OUTPUT" "Unknown command. Type 'h' for help." "Lesson 25 accepted 'pq' as a command."
+    expect_contains "$RUN_OUTPUT" "Error: 'abc' is not a valid line number." "Lesson 25 accepted 'abc' as a line number."
+    expect_contains "$RUN_OUTPUT" "   2: middle" "Lesson 25 did not insert a line."
+    expect_contains "$RUN_OUTPUT" "File '$document' saved." "Lesson 25 did not save the file."
+    if [ "$(cat "$document")" != "$(printf 'first\nmiddle\nsecond')" ]; then
+        fail_with_output "Lesson 25 saved the wrong text." "$(cat "$document")"
+    fi
+
+    # The rest of an overlong line must not run as a second command.
+    long_input=$(awk 'BEGIN { printf "a "; for (i = 0; i < 1500; i++) printf "d"; printf "\\nq\\n" }')
+    run_lesson_with_input "$editor_bin" "$long_input" "$document"
+    expect_status 0 "Lesson 25 did not exit cleanly after an overlong line."
+    expect_contains "$RUN_OUTPUT" "Command too long." "Lesson 25 did not reject an overlong line."
+    expect_not_contains "$RUN_OUTPUT" "Unknown command" "Lesson 25 ran the rest of an overlong line as a command."
+}
+
+run_hash_table_check() {
+    run_lesson_with_input "$BUILD_DIR/28_hash_table_implementation" ''
+    expect_status 0 "Lesson 28 failed."
+    # The lesson's comment says "age" and "city" collide in bucket 5.
+    expect_contains "$RUN_OUTPUT" 'Bucket[5]:  -> ["city": "New York"] -> ["age": "30"]' "Lesson 28's collision is not where its comment says."
+    expect_contains "$RUN_OUTPUT" "Value for 'name': John Doe" "Lesson 28 did not find an existing key."
+    expect_contains "$RUN_OUTPUT" "Value for 'job': Not Found" "Lesson 28 found a missing key."
+    expect_contains "$RUN_OUTPUT" '["city": "Los Angeles"]' "Lesson 28 did not update a key."
 }
 
 run_sanitizer_regressions() {
@@ -495,6 +574,9 @@ run_socket_check
 run_student_record_checks
 run_tiny_shell_check
 run_input_checks
+run_number_argument_checks
+run_text_editor_check
+run_hash_table_check
 run_sanitizer_regressions
 
 printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31.\n' "$compiled_count"

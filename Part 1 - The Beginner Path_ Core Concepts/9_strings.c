@@ -90,6 +90,17 @@ int main(void)
      * You must copy the characters from the source to the destination.
      * WARNING: The destination array must be large enough to hold the source
      * string, including its null terminator!
+     *
+     * `strcpy` does NOT check this for you. It keeps copying until it reaches
+     * the source's `\0`, even past the end of the destination. Writing past
+     * the end of an array is called a BUFFER OVERFLOW. It is undefined
+     * behavior and one of the most common security bugs in C programs.
+     *
+     * Here it is safe because we chose the sizes: `source` holds 24 characters
+     * (23 of text plus the `\0`) and `destination` holds 50. When the source comes
+     * from the user or a file, you cannot know its length in advance: check it
+     * with `strlen()` before copying (Lesson 17 does this), or read it with a
+     * function that is told the destination's size, such as `fgets` (Lesson 14).
      */
     char destination[50]; // A buffer to copy into.
     char source[] = "Some text to be copied.";
@@ -101,7 +112,8 @@ int main(void)
      * `strcat()` - String Concatenate (join)
      * This function appends one string to the end of another.
      * WARNING: Again, the destination string must have enough space for the
-     * combined result!
+     * combined result! `strcat` does not check either. "Welcome, " (9 characters)
+     * plus "dunamismax" (10) plus `\0` needs 20 characters, and we have 50.
      */
     char full_greeting[50] = "Welcome, "; // Initialize with enough space.
     char user[] = "dunamismax";
@@ -159,6 +171,8 @@ int main(void)
  * - `strlen()` gets the length (not including `\0`).
  * - `strcpy()` copies one string to another.
  * - `strcat()` joins one string to the end of another.
+ * - Neither `strcpy()` nor `strcat()` checks the destination's size. Make sure
+ *   it is big enough, or you get a BUFFER OVERFLOW.
  * - `strcmp()` compares the content of two strings.
  *
  * HOW TO COMPILE AND RUN THIS CODE:

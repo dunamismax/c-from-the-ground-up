@@ -309,6 +309,9 @@ int parse_student_record(char *line, Student *student)
     {
         return 0;
     }
+    // `strcpy` does not check sizes, but this copy is safe: the check above
+    // rejected any name of MAX_NAME_LEN characters or more, so the name and
+    // its `\0` always fit in `student->name`.
     strcpy(student->name, first_comma + 1);
 
     if (!parse_double_value(second_comma + 1, &student->gpa) ||
@@ -424,7 +427,15 @@ void save_to_file(const Student students[], int count)
         fprintf(file, "%d,%s,%.2f\n", students[i].id, students[i].name, students[i].gpa);
     }
 
-    fclose(file);
+    // Writes are buffered, so a full disk may only show up when `fclose` writes
+    // the last of them. `ferror` reports whether any earlier write failed.
+    // Only claim success when every write and the close worked.
+    int write_failed = ferror(file);
+    if (fclose(file) != 0 || write_failed)
+    {
+        fprintf(stderr, "Error: Could not finish writing '%s'. Records may not be saved.\n", FILENAME);
+        return;
+    }
     printf("Successfully saved %d record(s) to %s.\n", count, FILENAME);
 }
 

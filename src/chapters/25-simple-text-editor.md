@@ -65,6 +65,7 @@ SKILLS INTEGRATED:
  * - Functions: To create a clean, modular, and readable program structure.
  */
 
+#include <limits.h>  // For INT_MAX
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,6 +96,8 @@ void insert_line(int line_number, const char *text);
 void delete_line(int line_number);
 void append_line(const char *text);
 void print_help(void);
+bool parse_line_number(const char *text, int *line_number);
+void discard_rest_of_line(void);
 
 // --- Main Function: The Editor's Control Loop ---
 
@@ -120,19 +123,49 @@ int main(int argc, char *argv[])
             break; // Exit on EOF (Ctrl+D)
         }
 
-        // Parse command and arguments
-        char command = input_buffer[0];
-        char *argument = input_buffer + 2;
-        int line_num = atoi(argument);
+        // If there is no newline, the line was too long for the buffer and the
+        // rest of it is still waiting in the input. Throw it away, or the next
+        // `fgets` would read it and run it as a command.
+        if (strchr(input_buffer, '\n') == NULL && !feof(stdin))
+        {
+            discard_rest_of_line();
+            printf("Error: Command too long. Maximum length is %d characters.\n",
+                   (int)sizeof(input_buffer) - 2);
+            continue;
+        }
+        input_buffer[strcspn(input_buffer, "\n")] = '\0'; // Remove the newline
 
+        // Parse the command and its argument. The command is the first
+        // character, and the argument is everything after the space that
+        // follows it ("a Some text" -> 'a' and "Some text").
+        //
+        // CAREFUL: a command like "p" has no argument. `input_buffer + 2` would
+        // then point past the end of the text, at bytes `fgets` never wrote.
+        // So `argument` starts as an empty string: it points at the `\0` that
+        // ends the text.
+        char command = input_buffer[0];
+        char *argument = input_buffer + strlen(input_buffer);
+
+        if (command == '\0')
+        {
+            continue; // An empty line: just show the prompt again.
+        }
+        if (input_buffer[1] == ' ')
+        {
+            argument = input_buffer + 2;
+        }
+        else if (input_buffer[1] != '\0')
+        {
+            command = '?'; // Something like "pq" is not one of our commands.
+        }
+
+        int line_num = 0;
         switch (command)
         {
         case 'p':
             print_lines();
             break;
         case 'a': // Append
-            // Remove newline from argument
-            argument[strcspn(argument, "\n")] = 0;
             append_line(argument);
             break;
         case 'i': // Insert
@@ -142,8 +175,10 @@ int main(int argc, char *argv[])
             {
                 *text_start = '\0'; // Split line number from text
                 text_start++;
-                text_start[strcspn(text_start, "\n")] = 0;
-                insert_line(atoi(argument), text_start);
+                if (parse_line_number(argument, &line_num))
+                {
+                    insert_line(line_num, text_start);
+                }
             }
             else
             {
@@ -152,7 +187,10 @@ int main(int argc, char *argv[])
             break;
         }
         case 'd': // Delete
-            delete_line(line_num);
+            if (parse_line_number(argument, &line_num))
+            {
+                delete_line(line_num);
+            }
             break;
         case 's':
             save_file(filename);
@@ -185,6 +223,40 @@ int main(int argc, char *argv[])
 // --- Function Implementations ---
 
 /**
+ * @brief Reads and throws away the rest of the current input line.
+ */
+void discard_rest_of_line(void)
+{
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF)
+    {
+        // Keep reading until the end of the line (or of the input).
+    }
+}
+
+/**
+ * @brief Converts a line number typed by the user, such as "3", to an int.
+ * @return true on success. On failure it prints why and returns false.
+ *
+ * We use `strtol` (Lesson 15) rather than `atoi`, which would turn "abc" into
+ * 0 and "2x" into 2 without telling us anything was wrong.
+ */
+bool parse_line_number(const char *text, int *line_number)
+{
+    char *end = NULL;
+    long value = strtol(text, &end, 10);
+
+    if (end == text || *end != '\0' || value < 1 || value > INT_MAX)
+    {
+        printf("Error: '%s' is not a valid line number.\n", text);
+        return false;
+    }
+
+    *line_number = (int)value;
+    return true;
+}
+
+/**
  * @brief Prints the help menu.
  */
 void print_help(void)
@@ -210,7 +282,9 @@ Line *create_line(const char *text)
         perror("malloc failed for new line");
         exit(1);
     }
-    // Allocate space for the text and copy it over.
+    // Allocate space for the text and copy it over. `strcpy` does not check
+    // sizes, but here the destination is exactly big enough: `strlen(text)`
+    // characters plus one for the `\0`.
     new_line->text = malloc(strlen(text) + 1);
     if (!new_line->text)
     {
@@ -255,6 +329,9 @@ void load_file(const char *filename)
         return; // It's okay if the file doesn't exist yet
     }
 
+    // NOTE: a line longer than the buffer is read in pieces, and each piece
+    // becomes its own line. That is fine for a teaching editor; a real one
+    // would grow the buffer with `realloc` until the whole line fits.
     char buffer[1024];
     while (fgets(buffer, sizeof(buffer), file))
     {
@@ -283,7 +360,17 @@ void save_file(const char *filename)
         fprintf(file, "%s\n", current->text);
         current = current->next;
     }
-    fclose(file);
+
+    // Writes are buffered, so an error such as a full disk may only appear
+    // when `fclose` writes the last of them. `ferror` tells us whether any
+    // earlier write failed. If anything went wrong we keep `modified` set,
+    // so quitting still warns about unsaved changes.
+    bool write_failed = ferror(file) != 0;
+    if (fclose(file) != 0 || write_failed)
+    {
+        printf("Error: Could not save '%s'. Your changes are NOT saved.\n", filename);
+        return;
+    }
     printf("File '%s' saved.\n", filename);
     modified = false;
 }

@@ -139,7 +139,13 @@ What `scripts/smoke_check.sh` does:
   - lesson 29: overlong command rejection
   - lessons 3, 5, 6 and 13: `run_input_checks` feeds valid input, garbage and
     EOF through `run_lesson_with_input`, which enforces a 5-second timeout and a
-    1 MiB output cap
+    1 MiB output cap (further arguments become the program's arguments)
+  - lessons 15, 16 and the lesson 26 client: `run_number_argument_checks`
+    rejects non-numeric, partly numeric and out-of-range arguments
+  - lesson 25: `run_text_editor_check` edits and saves a file, rejects bad
+    commands and line numbers, and an overlong line
+  - lesson 28: `run_hash_table_check`, including the bucket its comment says
+    "age" and "city" collide in
   If you change those messages, update the script in the same commit.
 - Runs ASan/UBSan regressions when the compiler supports them: lesson 30 on an
   empty file, and a harness that includes lesson 35 with `#define main ...` and

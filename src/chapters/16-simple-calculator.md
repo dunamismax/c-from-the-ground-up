@@ -13,7 +13,9 @@ SKILLS WE WILL USE:
    operator from the user when they run the program.
 2. Data Conversion: The arguments in `argv` are STRINGS. We need to convert
    the number strings ("10", "22") into actual numbers (`double`) so we can
-   do math with them. We'll use the `atof()` function for this.
+   do math with them. We'll use the `strtod()` function for this. It is the
+   decimal version of the `strtol()` function from Lesson 15, and it tells
+   us when an argument is not a number.
 3. Conditional Logic (`if`, `switch`): To check if the user provided the
    correct input and to decide which mathematical operation to perform.
 4. Error Handling: We will provide a helpful USAGE MESSAGE if the user makes a
@@ -52,7 +54,9 @@ SKILLS WE WILL USE:
  *    operator from the user when they run the program.
  * 2. Data Conversion: The arguments in `argv` are STRINGS. We need to convert
  *    the number strings ("10", "22") into actual numbers (`double`) so we can
- *    do math with them. We'll use the `atof()` function for this.
+ *    do math with them. We'll use the `strtod()` function for this. It is the
+ *    decimal version of the `strtol()` function from Lesson 15, and it tells
+ *    us when an argument is not a number.
  * 3. Conditional Logic (`if`, `switch`): To check if the user provided the
  *    correct input and to decide which mathematical operation to perform.
  * 4. Error Handling: We will provide a helpful USAGE MESSAGE if the user makes a
@@ -60,8 +64,28 @@ SKILLS WE WILL USE:
  */
 
 #include <stdio.h>
-#include <stdlib.h> // Required for atof() and exit()
+#include <stdlib.h> // Required for strtod() and exit()
 #include <string.h> // Required for strcmp()
+
+/**
+ * @brief Converts a string such as "10.5" to a double.
+ * @param text The string to convert.
+ * @param result Where to store the number. We pass a pointer so the function
+ *               can fill in the caller's variable.
+ * @return 1 if the WHOLE string was a number, 0 otherwise.
+ *
+ * `strtod` ("string to double") works like `strtol` from Lesson 15: it sets
+ * `end` to the first character it could not convert. If nothing was
+ * converted, or anything is left over (as in "ten" or "5x"), it is not a
+ * number. You may also see `atof()` ("ASCII to float") used for this, but
+ * `atof("ten")` quietly returns 0.0, so a typo would turn into a wrong answer.
+ */
+int parse_number(const char *text, double *result)
+{
+    char *end = NULL;
+    *result = strtod(text, &end);
+    return end != text && *end == '\0';
+}
 
 // We need argc and argv to get input from the command line.
 int main(int argc, char *argv[])
@@ -85,9 +109,13 @@ int main(int argc, char *argv[])
 
     // --- Step 2: Convert and Store Arguments ---
 
-    // `atof` (ASCII to float) converts a string to a double.
-    num1 = atof(argv[1]);
-    num2 = atof(argv[3]);
+    // `parse_number` (defined above) converts each number string to a double
+    // and tells us whether it really was a number.
+    if (!parse_number(argv[1], &num1) || !parse_number(argv[3], &num2))
+    {
+        fprintf(stderr, "Error: '%s' and '%s' must both be numbers.\n", argv[1], argv[3]);
+        exit(1);
+    }
 
     // The operator is a string like "+". We only need the first character.
     // We check if the string is longer than one character, which would be invalid.
@@ -154,7 +182,8 @@ int main(int argc, char *argv[])
  * Key Achievements in this Project:
  * - Combined multiple C features into a working application.
  * - Used `argc` and `argv` for real-world program input.
- * - Converted string data to numeric data for calculations (`atof`).
+ * - Converted string data to numeric data for calculations (`strtod`), and
+ *   rejected arguments that were not numbers.
  * - Implemented robust error checking for both user input and math rules.
  *
  * HOW TO COMPILE AND RUN THIS CODE:
@@ -181,8 +210,14 @@ int main(int argc, char *argv[])
  *    Division by zero (this will trigger our error message):
  *    ./16_simple_calculator 10 / 0
  *
- *    Incorrect usage (this will trigger our usage message):
+ *    Not a number (this will trigger our number check):
+ *    ./16_simple_calculator ten + 5
+ *
+ *    Not a single-character operator (this will trigger our operator check):
  *    ./16_simple_calculator 10 plus 5
+ *
+ *    Too few arguments (this will trigger our usage message):
+ *    ./16_simple_calculator 10 +
  */
 ```
 
@@ -196,3 +231,8 @@ cc -Wall -Wextra -std=c11 -o 16_simple_calculator 16_simple_calculator.c
 To multiply, quote the operator, as in `./16_simple_calculator 7 '*' 6`.
 Unquoted, the shell expands `*` into the names of the files in the current
 directory.
+
+Try the error checks too: `./16_simple_calculator ten + 5` is not a number,
+`./16_simple_calculator 10 plus 5` is not a single-character operator,
+`./16_simple_calculator 10 / 0` divides by zero, and
+`./16_simple_calculator 10 +` prints the usage message.

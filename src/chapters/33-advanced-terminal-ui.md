@@ -72,13 +72,14 @@ terminal until you call `refresh()`.
 
 // To use ncurses, you must include its header file.
 #include <ncurses.h>
+#include <stdlib.h> // For exit()
 #include <unistd.h> // We'll use sleep() for a small delay.
 
 // --- Function Prototypes ---
 // Good practice to declare our functions before main.
 void initialize_ncurses(void);
 void cleanup_ncurses(void);
-void draw_ui(void);
+WINDOW *draw_ui(void);
 
 // --- The Main Function ---
 
@@ -86,11 +87,18 @@ int main(void)
 {
     initialize_ncurses();
 
-    draw_ui();
+    WINDOW *info_win = draw_ui();
 
     // After drawing, we wait for the user to press any key before exiting.
     // getch() is the ncurses function to get a single character of input.
     getch();
+
+    // `newwin` allocated memory for the window, so we release it with
+    // `delwin`, just as every `malloc` needs a `free`.
+    if (info_win != NULL)
+    {
+        delwin(info_win);
+    }
 
     cleanup_ncurses();
 
@@ -123,10 +131,11 @@ void initialize_ncurses(void)
     // To use colors, we must check if the terminal supports them.
     if (has_colors() == FALSE)
     {
-        // If not, we have to exit gracefully.
-        endwin(); // This restores the terminal to its normal state.
-        printf("Your terminal does not support color\n");
-        // exit(1); // We don't have this yet, so we'll let main return.
+        // If not, we have to exit gracefully. endwin() comes FIRST: it restores
+        // the terminal to its normal state, so our message is readable.
+        endwin();
+        fprintf(stderr, "Your terminal does not support color.\n");
+        exit(1); // exit() from Lesson 14 ends the whole program right here.
     }
 
     // If colors are supported, we must start the color system.
@@ -155,8 +164,11 @@ void cleanup_ncurses(void)
  * NCURSES uses a VIRTUAL SCREEN. When you "print" something, it's drawn to an
  * in-memory representation of the screen first. Nothing appears on the actual
  * terminal until you call `refresh()`.
+ *
+ * This function returns the window it creates, so `main` can free it with
+ * `delwin` when the program is done. It returns NULL if there was no room.
  */
-void draw_ui(void)
+WINDOW *draw_ui(void)
 {
     // Clear the screen
     clear();
@@ -186,8 +198,15 @@ void draw_ui(void)
     int height = 10, width = 60;
     int start_y = 6, start_x = 5;
 
-    // `newwin()` creates a new window.
+    // `newwin()` creates a new window. Like `malloc`, it returns NULL when it
+    // fails, for example when the terminal is too small to hold the window.
     WINDOW *info_win = newwin(height, width, start_y, start_x);
+    if (info_win == NULL)
+    {
+        mvprintw(6, 2, "The terminal is too small for the window demo. Press any key to exit.");
+        refresh();
+        return NULL;
+    }
 
     // `box(win, 0, 0)` draws a border around the window using default characters.
     box(info_win, 0, 0);
@@ -201,13 +220,18 @@ void draw_ui(void)
     // (1, 1) here is one character down and one right from the window's border.
     mvwprintw(info_win, 1, 1, "This is a new window!");
 
-    attron(COLOR_PAIR(2)); // Use a different color for this next part
+    // Use a different color for this next part. Attributes belong to a window,
+    // so we use `wattron`/`wattroff` on `info_win`. Plain `attron` would
+    // change `stdscr` instead and have no effect on the text below.
+    wattron(info_win, COLOR_PAIR(2));
     mvwprintw(info_win, 3, 3, "You can draw here without affecting the main screen.");
     mvwprintw(info_win, 5, 3, "Press any key to exit this application.");
-    attroff(COLOR_PAIR(2));
+    wattroff(info_win, COLOR_PAIR(2));
 
     // To display the window, we must refresh IT.
     wrefresh(info_win);
+
+    return info_win;
 }
 
 /*
@@ -234,7 +258,7 @@ void draw_ui(void)
  *
  * 4. Run the executable:
  *    - On Linux/macOS:   `./33_advanced_terminal_ui`
- *    - On Windows:       `33_advanced_terminal_ui.exe`
+ *    - On Windows:       run it in WSL, where ncurses is available.
  *
  *    Your terminal will clear and show the UI we just created! Press any
  *    key to return to your normal command prompt.

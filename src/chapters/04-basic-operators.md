@@ -23,10 +23,13 @@ This operator gives you the REMAINDER of an integer division. It is
 incredibly useful in many programming scenarios.
 
 RELATIONAL OPERATORS are used to compare two values. The result of a
-relational operation is a "truth" value. In C, there is no built-in
-boolean type like `true` or `false`. Instead, C uses integers:
+relational operation is a "truth" value, and in C that value is an `int`:
 - `0` represents FALSE.
-- Any non-zero integer represents TRUE (typically `1`).
+- Any non-zero integer represents TRUE. Comparisons always give `1`.
+
+(Modern C does have a boolean type, `bool`, with the values `true` and
+`false`. You will meet it in a later lesson. Even so, comparisons and logical
+operators still produce the `int` values 1 and 0.)
 
 LOGICAL OPERATORS are used to combine or modify logical (true/false) expressions.
 
@@ -95,7 +98,7 @@ int main(void)
      * The fractional part is simply thrown away (truncated). This is called
      * INTEGER DIVISION.
      */
-    printf("Integer Division (a / b) = %d\n", a / 3); // 10 / 3 is 3, not 3.333
+    printf("Integer Division (a / b) = %d\n", a / b); // 10 / 3 is 3, not 3.333
 
     /*
      * To get a precise decimal result, at least one of the operands must be a
@@ -118,10 +121,13 @@ int main(void)
 
     /*
      * RELATIONAL OPERATORS are used to compare two values. The result of a
-     * relational operation is a "truth" value. In C, there is no built-in
-     * boolean type like `true` or `false`. Instead, C uses integers:
+     * relational operation is a "truth" value, and in C that value is an `int`:
      * - `0` represents FALSE.
-     * - Any non-zero integer represents TRUE (typically `1`).
+     * - Any non-zero integer represents TRUE. Comparisons always give `1`.
+     *
+     * (Modern C does have a boolean type, `bool`, with the values `true` and
+     * `false`. You will meet it in a later lesson. Even so, comparisons and
+     * logical operators still produce the `int` values 1 and 0.)
      */
     printf("--- Part 2: Relational Operators ---\n");
     printf("The results below will be 1 for TRUE and 0 for FALSE.\n\n");

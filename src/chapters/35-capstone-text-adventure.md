@@ -14,7 +14,9 @@ CONCEPTS YOU WILL USE IN THIS PROJECT:
 - Pointers: The entire game world is connected by POINTERS. This is the ultimate
   demonstration of their power.
 - File I/O: The game world is loaded from an external data file (`world.map`).
-- Parsing: `sscanf` is used to parse the world data file.
+- Parsing: The world data file is parsed with `strtol` (Lesson 15) and by
+  walking a `char *` through each line. Lesson 34 used `sscanf`; here every
+  field is checked by hand, so a malformed map is rejected with a clear error.
 - Command-Line Arguments: The program takes the map file as an argument.
 - External Libraries: We use the `ncurses` library for an advanced terminal UI.
 - Build Tooling: Lesson 31 introduced Makefiles, but this capstone stays in
@@ -24,12 +26,18 @@ CONCEPTS YOU WILL USE IN THIS PROJECT:
 
 You are no longer a beginner. You are a C developer. Let's build something awesome.
 
-This function demonstrates dynamic allocation, file I/O, and robust parsing.
+## Robust Input and Display
 
-and calls it.
+The game checks its ncurses calls the same way earlier lessons checked
+`scanf` and `malloc`:
 
-This is CRITICAL for preventing memory leaks. A C developer must always
-clean up their own mess.
+- `ui_init` refuses a terminal smaller than 40 columns by 10 rows, and checks
+  that each `newwin` call returned a window.
+- `ui_get_input` checks `wgetnstr`. If input has ended, the game loop stops
+  instead of acting on a buffer that was never filled.
+- Room descriptions are often wider than the terminal, so they wrap. `ui_draw`
+  prints each log message after the end of the previous one, rather than at a
+  fixed row, so a wrapped message is never drawn over.
 
 ## Full Source
 
@@ -65,7 +73,9 @@ clean up their own mess.
  * - Pointers: The entire game world is connected by POINTERS. This is the ultimate
  *   demonstration of their power.
  * - File I/O: The game world is loaded from an external data file (`world.map`).
- * - Parsing: `sscanf` is used to parse the world data file.
+ * - Parsing: The world data file is parsed with `strtol` (Lesson 15) and by
+ *   walking a `char *` through each line. Lesson 34 used `sscanf`; here every
+ *   field is checked by hand, so a malformed map is rejected with a clear error.
  * - Command-Line Arguments: The program takes the map file as an argument.
  * - External Libraries: We use the `ncurses` library for an advanced terminal UI.
  * - Build Tooling: Lesson 31 introduced Makefiles, but this capstone stays in
@@ -172,13 +182,15 @@ void handle_go(GameState *game, char *argument);
 void handle_help(GameState *game, char *argument);
 
 // UI Functions (ncurses)
-void ui_init(GameState *game);
+int ui_init(GameState *game);
 void ui_draw(GameState *game);
-void ui_get_input(GameState *game, char *buffer);
+int ui_get_input(GameState *game, char *buffer);
 void ui_log(GameState *game, const char *message);
 void ui_cleanup(GameState *game);
 
-// --- Main Program Entry ---
+// --- Parsing Helpers ---
+// Small functions used by the world loader below.
+
 int read_world_line(FILE *file, char *buffer, size_t size)
 {
     size_t length;
@@ -263,6 +275,7 @@ char *duplicate_string(const char *text)
     return copy;
 }
 
+// --- Main Program Entry ---
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -281,7 +294,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    ui_init(game); // Initialize the ncurses interface
+    // Initialize the ncurses interface. It fails if the terminal is too small.
+    if (!ui_init(game))
+    {
+        cleanup(game);
+        return 1;
+    }
 
     // Set the player's starting location.
     game->player.current_room = find_room_by_id(game, 0);
@@ -638,6 +656,9 @@ void handle_look(GameState *game, char *argument)
     Room *room = game->player.current_room;
     ui_log(game, room->description);
 
+    // `strcat` does not check sizes, so we made the buffer big enough for the
+    // longest possible result: "Exits: north south east west " is 29
+    // characters plus the `\0`, well under 100.
     char exits_str[100] = "Exits: ";
     int found_exit = 0;
     for (int i = 0; i < MAX_DIRECTIONS; i++)
@@ -709,7 +730,12 @@ void handle_help(GameState *game, char *argument)
 // |                                - NCURSES UI CODE -                                |
 // =====================================================================================
 
-void ui_init(GameState *game)
+/**
+ * @brief Starts ncurses and creates the game's three windows.
+ * @return 1 on success, 0 if the terminal is too small or a window could not
+ *         be created (the terminal is restored and an error printed).
+ */
+int ui_init(GameState *game)
 {
     initscr();
     cbreak();
@@ -719,10 +745,27 @@ void ui_init(GameState *game)
     int height, width;
     getmaxyx(stdscr, height, width);
 
+    // The layout needs a few rows for the log plus 5 for the status and input
+    // windows. On a tinier terminal the window sizes below would be zero or
+    // negative, so we stop with a clear message instead.
+    if (height < 10 || width < 40)
+    {
+        endwin();
+        fprintf(stderr, "Error: The terminal must be at least 40 columns by 10 rows.\n");
+        return 0;
+    }
+
     // Create a main window for game text, a status window, and an input window.
+    // Like `malloc`, `newwin` returns NULL when it fails, so we check all three.
     game->main_win = newwin(height - 5, width, 0, 0);
     game->status_win = newwin(3, width, height - 5, 0);
     game->input_win = newwin(2, width, height - 2, 0);
+    if (!game->main_win || !game->status_win || !game->input_win)
+    {
+        ui_cleanup(game); // delwin() safely ignores the NULL ones.
+        fprintf(stderr, "Error: Could not create the game windows.\n");
+        return 0;
+    }
 
     scrollok(game->main_win, TRUE); // Allow the main window to scroll.
 
@@ -730,6 +773,7 @@ void ui_init(GameState *game)
     wborder(game->input_win, ' ', ' ', 0, 0, '>', '<', 0, 0);
 
     refresh();
+    return 1;
 }
 
 void ui_draw(GameState *game)
@@ -742,11 +786,18 @@ void ui_draw(GameState *game)
     box(game->input_win, 0, 0);
     mvwprintw(game->input_win, 1, 2, "> ");
 
-    // Draw main window log messages
+    // Draw main window log messages. A room description is often wider than
+    // the terminal, so it WRAPS onto the next line. Printing message `i` at a
+    // fixed row such as `i + 1` would draw the next message over that wrapped
+    // text. Instead we start at row 1 and let each message (ending in "\n")
+    // leave the cursor where the next one should begin. Because the window
+    // has `scrollok` on, text that runs past the bottom scrolls the oldest
+    // lines away, so the newest messages are always visible.
     werase(game->main_win);
+    wmove(game->main_win, 1, 0);
     for (int i = 0; i < game->log_count; i++)
     {
-        mvwprintw(game->main_win, i + 1, 2, "%s", game->log_messages[i]);
+        wprintw(game->main_win, "  %s\n", game->log_messages[i]);
     }
 
     // Refresh all windows to show changes
@@ -778,11 +829,24 @@ void ui_log(GameState *game, const char *message)
     game->log_messages[game->log_count++] = message_copy;
 }
 
-void ui_get_input(GameState *game, char *buffer)
+/**
+ * @brief Reads one command from the player.
+ * @return 1 if a line was read, 0 if input has ended or failed.
+ */
+int ui_get_input(GameState *game, char *buffer)
 {
     // Move cursor to input window and get string from user.
     wmove(game->input_win, 1, 4);
-    wgetnstr(game->input_win, buffer, INPUT_BUFFER_SIZE - 1);
+
+    // Like `scanf` and `fgets`, `wgetnstr` can fail, for example when the
+    // terminal goes away. It then returns ERR and may not have written
+    // anything into `buffer`, so we must not use the buffer's contents.
+    if (wgetnstr(game->input_win, buffer, INPUT_BUFFER_SIZE - 1) == ERR)
+    {
+        buffer[0] = '\0';
+        return 0;
+    }
+    return 1;
 }
 
 void ui_cleanup(GameState *game)
@@ -799,12 +863,18 @@ void ui_cleanup(GameState *game)
 
 void game_loop(GameState *game)
 {
-    char input_buffer[INPUT_BUFFER_SIZE];
+    char input_buffer[INPUT_BUFFER_SIZE] = "";
 
     while (!game->game_should_close)
     {
         ui_draw(game);
-        ui_get_input(game, input_buffer);
+        if (!ui_get_input(game, input_buffer))
+        {
+            // No more input can arrive. Without this check the loop would
+            // spin forever on the same failed read.
+            game->game_should_close = 1;
+            break;
+        }
         parse_and_execute_command(game, input_buffer);
     }
 }

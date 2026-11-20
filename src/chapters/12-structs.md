@@ -84,6 +84,8 @@ int main(void)
     // To access the members of a struct variable, we use the DOT OPERATOR (.).
     // Let's assign some values to student1's members.
     // For strings, we must use `strcpy` from <string.h> as we can't assign to an array directly.
+    // Remember from Lesson 9 that `strcpy` never checks sizes. This copy is safe
+    // because "Jane Doe" needs 9 characters (with its `\0`) and `name` holds 50.
     strcpy(student1.name, "Jane Doe");
     student1.student_id = 12345;
     student1.gpa = 3.8;

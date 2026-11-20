@@ -2,9 +2,10 @@
 
 ## The Client
 
-Welcome to the world of network programming! In this lesson and the next, we
-will build a complete, working client-server application. This is your gateway
-to understanding how programs communicate over the internet.
+Welcome to the world of network programming! In this lesson, we will build a
+complete, working client-server application in two programs: a CLIENT and a
+SERVER. This is your gateway to understanding how programs communicate over
+the internet.
 
 THE CLIENT-SERVER MODEL
 Most network communication follows a CLIENT-SERVER model.
@@ -51,8 +52,16 @@ ARGUMENTS:
 - sin_port: The port number. We must use `htons()` (Host TO Network Short)
   to convert the port number into NETWORK BYTE ORDER. This ensures that
   computers with different byte ordering can communicate correctly.
-- sin_addr.s_addr: The IP address. `inet_addr()` converts the string IP
-  (e.g., "127.0.0.1") into the correct binary format in network byte order.
+- sin_addr: The IP address. `inet_pton()` ("presentation to network")
+  converts the string IP (e.g., "127.0.0.1") into the binary format the
+  network uses. It returns 1 on success and 0 if the string is not a valid
+  IPv4 address, so the client can report a typo instead of connecting to the
+  wrong place. (Older code uses `inet_addr()`, which cannot tell an error
+  apart from the real address 255.255.255.255.)
+
+The client fills the whole struct with zeros using `memset` first, so the
+fields it never sets do not hold leftover garbage. It also checks the port
+with `strtol`, exactly as the server does.
 
 The `connect()` function establishes a connection to the server.
 It's a BLOCKING call; it will wait until the connection is made or an
@@ -71,6 +80,15 @@ The `recv()` function receives data from a socket.
 It's a BLOCKING call; the program will pause here until data arrives.
 It returns the number of bytes received, 0 if the connection was closed,
 or -1 on error.
+
+The bytes that arrive have no `\0` at the end. Both programs ask `recv` for at
+most `sizeof(buffer) - 1` bytes into a zeroed buffer, so the last byte always
+stays `\0` and the message is a proper string for `%s`.
+
+TCP delivers a STREAM of bytes, not separate messages, so one `recv` may
+return only part of what was sent. A short message between two programs on one
+machine almost always arrives in one piece, which is enough for this lesson.
+Real protocols mark where a message ends and call `recv` in a loop.
 
 ### Client Source
 
@@ -92,9 +110,10 @@ or -1 on error.
  * |                                   - LESSON START -                                  |
  * =====================================================================================
  *
- * Welcome to the world of network programming! In this lesson and the next, we
- * will build a complete, working client-server application. This is your gateway
- * to understanding how programs communicate over the internet.
+ * Welcome to the world of network programming! In this lesson, we will build a
+ * complete, working client-server application in two programs: this CLIENT and
+ * a SERVER (`26_simple_socket_server.c`). This is your gateway to understanding
+ * how programs communicate over the internet.
  *
  * THE CLIENT-SERVER MODEL
  * Most network communication follows a CLIENT-SERVER model.
@@ -130,12 +149,13 @@ or -1 on error.
 
 // --- Required Headers ---
 // We need several headers for network programming.
+#include <errno.h>      // For errno, which strtol() sets on overflow
 #include <stdio.h>      // For standard I/O, like printf() and perror()
-#include <stdlib.h>     // For exit() and atoi()
+#include <stdlib.h>     // For exit() and strtol()
 #include <string.h>     // For string manipulation, like strlen() and memset()
 #include <unistd.h>     // For close()
 #include <sys/socket.h> // The main header for socket programming functions
-#include <arpa/inet.h>  // For functions like inet_addr() and htons()
+#include <arpa/inet.h>  // For functions like inet_pton() and htons()
 
 // This is the function signature we use when we want to accept command-line arguments.
 int main(int argc, char *argv[])
@@ -153,8 +173,20 @@ int main(int argc, char *argv[])
 
     // Parse the arguments from the command line.
     char *server_ip = argv[1];
-    int port = atoi(argv[2]); // `atoi` converts a string to an integer.
     char *message = argv[3];
+
+    // The port arrives as a string. We convert it with `strtol` and check it,
+    // exactly as the server does: `atoi` would turn a typo such as "88a8" into
+    // 88 and silently connect to the wrong port.
+    char *endptr = NULL;
+    errno = 0;
+    long parsed_port = strtol(argv[2], &endptr, 10);
+    if (errno != 0 || endptr == argv[2] || *endptr != '\0' || parsed_port < 1 || parsed_port > 65535)
+    {
+        fprintf(stderr, "Error: Port must be a whole number between 1 and 65535.\n");
+        return 1;
+    }
+    int port = (int)parsed_port;
 
     // --- Part 1: Create a Socket ---
 
@@ -185,7 +217,11 @@ int main(int argc, char *argv[])
     // --- Part 2: Configure Server Address ---
 
     // We need a structure to hold the server's address information.
+    // `memset` fills it with zeros first. The struct has fields we never set
+    // ourselves (padding, and on some systems a length field), and they must
+    // not hold leftover garbage.
     struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
 
     /*
      * `struct sockaddr_in` is a structure used to store addresses for the AF_INET family.
@@ -194,12 +230,21 @@ int main(int argc, char *argv[])
      * - sin_port: The port number. We must use `htons()` (Host TO Network Short)
      *   to convert the port number into NETWORK BYTE ORDER. This ensures that
      *   computers with different byte ordering can communicate correctly.
-     * - sin_addr.s_addr: The IP address. `inet_addr()` converts the string IP
-     *   (e.g., "127.0.0.1") into the correct binary format in network byte order.
+     * - sin_addr: The IP address. `inet_pton()` ("presentation to network")
+     *   converts the string IP (e.g., "127.0.0.1") into the binary format the
+     *   network uses. It returns 1 on success and 0 if the string is not a
+     *   valid IPv4 address, so we can report a typo instead of connecting to
+     *   the wrong place. (Older code uses `inet_addr()`, which cannot tell an
+     *   error apart from the real address 255.255.255.255.)
      */
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
-    server_addr.sin_addr.s_addr = inet_addr(server_ip);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1)
+    {
+        fprintf(stderr, "Error: '%s' is not a valid IPv4 address.\n", server_ip);
+        close(client_socket);
+        return 1;
+    }
 
     // --- Part 3: Connect to the Server ---
 
@@ -240,7 +285,7 @@ int main(int argc, char *argv[])
 
     // Now we wait for the server's reply.
     char server_reply[2000];
-    int recv_size;
+    ssize_t recv_size; // `ssize_t` is a signed size type, so it can hold -1.
 
     // It's good practice to clear the buffer before receiving data into it.
     memset(server_reply, 0, sizeof(server_reply));
@@ -250,8 +295,14 @@ int main(int argc, char *argv[])
      * It's a BLOCKING call; the program will pause here until data arrives.
      * It returns the number of bytes received, 0 if the connection was closed,
      * or -1 on error.
+     *
+     * The data we receive is just bytes, with no `\0` at the end. We ask for at
+     * most `sizeof(server_reply) - 1` bytes, so the last byte of the buffer is
+     * always one of the zeros from `memset`. That guarantees the reply is a
+     * proper string when we print it with `%s`, even if the server sends
+     * 2000 bytes or more.
      */
-    recv_size = recv(client_socket, server_reply, 2000, 0);
+    recv_size = recv(client_socket, server_reply, sizeof(server_reply) - 1, 0);
     if (recv_size < 0)
     {
         perror("Receive failed");
@@ -283,7 +334,7 @@ int main(int argc, char *argv[])
  * 1. Open a terminal and compile the client:
  *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_client 26_simple_socket_client.c`
  *
- * 2. In a DIFFERENT terminal, compile and run the server (which we will build next):
+ * 2. In a DIFFERENT terminal, compile and run the server (`26_simple_socket_server.c`):
  *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c`
  *    `./26_simple_socket_server 8888`
  *
@@ -510,14 +561,26 @@ int main(int argc, char *argv[])
     // --- Part 5: Communicate with the Client ---
 
     char client_message[2000];
-    int read_size;
+    ssize_t read_size; // `ssize_t` is a signed size type, so it can hold -1.
 
     // Clear the buffer before reading into it.
     memset(client_message, 0, sizeof(client_message));
 
-    // Receive a message from the client using the NEW socket descriptor.
-    // `recv` is also a BLOCKING call.
-    read_size = recv(client_socket, client_message, 2000, 0);
+    /*
+     * Receive a message from the client using the NEW socket descriptor.
+     * `recv` is also a BLOCKING call.
+     *
+     * The bytes that arrive have no `\0` at the end. We ask for at most
+     * `sizeof(client_message) - 1` bytes, so the last byte always stays one of
+     * the zeros from `memset` and the message is a proper string for `%s`.
+     *
+     * NOTE: TCP delivers a STREAM of bytes, not separate messages. One `recv`
+     * may return only part of what the client sent. A short message between
+     * two programs on one machine almost always arrives in one piece, which is
+     * enough for this lesson. Real protocols mark where a message ends (with a
+     * newline or a length) and call `recv` in a loop until it is complete.
+     */
+    read_size = recv(client_socket, client_message, sizeof(client_message) - 1, 0);
     if (read_size > 0)
     {
         printf("Client message: %s\n", client_message);
@@ -525,8 +588,15 @@ int main(int argc, char *argv[])
         // Prepare and send a reply back to the client.
         const char *reply_message = "Message received. Thank you!";
         // `write()` is another function for sending data, similar to `send()`.
-        write(client_socket, reply_message, strlen(reply_message));
-        printf("Reply sent to client.\n");
+        // Like `send()`, it returns -1 if it fails.
+        if (write(client_socket, reply_message, strlen(reply_message)) < 0)
+        {
+            perror("Write failed");
+        }
+        else
+        {
+            printf("Reply sent to client.\n");
+        }
     }
     else if (read_size == 0)
     {

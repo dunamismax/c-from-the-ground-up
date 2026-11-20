@@ -136,7 +136,9 @@ int main(void)
     data.d = 987.654;
     printf("Stored a double: data.d = %f\n", data.d);
 
-    // The integer value is now corrupted because the same memory was reused.
+    // Reading `data.i` now reads some of the double's bytes as if they were an
+    // int. C allows this, but the number is meaningless: the 123 is gone,
+    // because the same memory was reused.
     printf("The int value is now garbage: data.i = %d\n\n", data.i);
 
     printf("--- Part 3: Using Tagged Unions ---\n");

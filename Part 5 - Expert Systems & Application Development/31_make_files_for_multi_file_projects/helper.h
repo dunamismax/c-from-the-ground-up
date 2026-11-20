@@ -26,7 +26,9 @@
  * --- The Include Guard ---
  *
  * What happens if a header file gets included more than once in the same
- * compilation process? It can lead to errors ("redeclaration of '...''").
+ * compilation process? Declaring a function twice is harmless, but headers
+ * often also DEFINE things, such as a `struct` type, and defining those twice
+ * is an error ("redefinition of 'struct ...'").
  * To prevent this, we use an INCLUDE GUARD. It's a standard preprocessor trick.
  *
  * `#ifndef HELPER_H`   // "If HELPER_H is NOT defined..."

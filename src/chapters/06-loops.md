@@ -21,9 +21,11 @@ The `for` loop is ideal when you know exactly how many times you want to
 repeat a block of code. It has a very specific structure with three parts
 inside its parentheses, separated by semicolons.
 
+```c
 for (INITIALIZATION; CONDITION; POST-ITERATION) {
     // Code to be repeated
 }
+```
 
 1. INITIALIZATION: A statement that runs only ONCE before the loop starts.
    It's typically used to declare and initialize a counter variable.
@@ -37,9 +39,11 @@ The `while` loop is simpler. It repeats a block of code AS LONG AS its
 condition remains true. It's useful when you don't know the exact number
 of iterations beforehand.
 
+```c
 while (condition) {
     // Code to be repeated
 }
+```
 
 The condition is checked BEFORE each iteration.
 

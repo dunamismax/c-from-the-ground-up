@@ -23,8 +23,8 @@
  *
  * --- Including Local Headers ---
  * Notice we use `#include "helper.h"` with double quotes. This is a signal
- * to the compiler to look for the file in the CURRENT directory first, before
- * searching the system's standard library paths.
+ * to the compiler to look for the file in the directory that holds THIS source
+ * file first, before searching the system's standard library paths.
  *
  *  - `#include <stdio.h>`: Use angle brackets for system libraries.
  *  - `#include "helper.h"`: Use double quotes for your own project's header files.

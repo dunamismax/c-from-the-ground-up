@@ -39,7 +39,8 @@
 // --- Part 1: The Building Block - The Node ---
 
 // This is the blueprint for a single "car" in our train.
-// It's a SELF-REFERENTIAL struct because it contains a pointer to itself.
+// It's a SELF-REFERENTIAL struct because it contains a pointer to another
+// struct of its own type (`struct Node`).
 typedef struct Node
 {
     int data;          // The data this node holds

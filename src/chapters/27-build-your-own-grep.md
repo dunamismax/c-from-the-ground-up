@@ -129,6 +129,11 @@ int main(int argc, char *argv[])
     // `fgets()` reads one line (or up to 2047 characters + null terminator)
     // from `file_pointer` and stores it in `line_buffer`.
     // It returns NULL when it reaches the end of the file, which ends the loop.
+    //
+    // LIMITATION: a line longer than 2047 characters arrives in several pieces,
+    // one per loop. We would then print only the piece that matched, and miss a
+    // match that straddles two pieces. Real `grep` handles lines of any length;
+    // for ordinary text files this buffer is plenty.
     while (fgets(line_buffer, sizeof(line_buffer), file_pointer) != NULL)
     {
         // --- The Core Logic: Searching for a Substring ---

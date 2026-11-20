@@ -16,19 +16,25 @@ The `if` statement is the simplest form of a conditional. It executes a
 block of code ONLY if its condition is true.
 
 Syntax:
+
+```c
 if (condition) {
     // Code to execute if 'condition' is true
 }
+```
 
 The `else` statement provides an alternative block of code to execute
 when the `if` condition is false.
 
 Syntax:
+
+```c
 if (condition) {
     // Code to execute if 'condition' is true
 } else {
     // Code to execute if 'condition' is false
 }
+```
 
 To check for multiple, mutually exclusive conditions, you can chain
 `else if` statements. The program will check each condition in order.

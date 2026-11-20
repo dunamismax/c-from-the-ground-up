@@ -52,7 +52,7 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h> // We need this for atoi() to convert a string to an integer
+#include <stdlib.h> // We need this for strtol() to convert a string to a number
 
 // Note the new main function signature!
 int main(int argc, char *argv[])
@@ -94,8 +94,35 @@ int main(int argc, char *argv[])
     char *name = argv[1];
 
     // `argv[2]` will be the age, but it's a STRING (e.g., "30").
-    // We need to convert it to an integer using `atoi()` (ASCII to Integer).
-    int age = atoi(argv[2]);
+    // We need to convert it to an integer.
+
+    /*
+     * You will often see `atoi()` ("ASCII to integer") used for this. It is
+     * short, but RISKY: it has no way to report a problem. `atoi("abc")`
+     * quietly returns 0, `atoi("30abc")` returns 30, and a number too big for
+     * an `int` is undefined behavior. Your program cannot tell bad input from
+     * a real 0.
+     *
+     * `strtol()` ("string to long") does the same job and lets us check it:
+     * - The first argument is the string to convert.
+     * - The second is the ADDRESS of a `char *` (the `&` from Lesson 10).
+     *   `strtol` sets that pointer to the first character it could NOT
+     *   convert. If it still points at the start, there were no digits at
+     *   all. If it does not point at the `\0` that ends the string, there was
+     *   junk after the number.
+     * - The third is the number BASE: 10 for ordinary decimal numbers.
+     *
+     * It returns a `long`, a wider integer type. A number too big even for
+     * that comes back as the largest `long`, which our range check rejects.
+     */
+    char *end = NULL;
+    long parsed_age = strtol(argv[2], &end, 10);
+    if (end == argv[2] || *end != '\0' || parsed_age < 0 || parsed_age > 150)
+    {
+        fprintf(stderr, "Error: The age must be a whole number from 0 to 150, not \"%s\".\n", argv[2]);
+        return 1;
+    }
+    int age = (int)parsed_age; // Safe: we checked that it is between 0 and 150.
 
     printf("Hello, %s!\n", name);
     printf("You are %d years old.\n", age);
@@ -118,8 +145,10 @@ int main(int argc, char *argv[])
  * 5.  `argv[0]` is always the program's name.
  * 6.  Always check `argc` to ensure the user has provided the correct number of
  *     inputs before you try to access them in `argv`.
- * 7.  Arguments are always passed as strings. You may need to convert them to
- *     numbers using functions like `atoi()` (for integers) or `atof()` (for floats).
+ * 7.  Arguments are always passed as strings. Convert them to numbers with
+ *     `strtol()` (for integers) or `strtod()` (for decimals), and check that the
+ *     whole string was a number. Avoid `atoi()` and `atof()`: they cannot tell
+ *     you when the input was bad.
  *
  * HOW TO COMPILE AND RUN THIS CODE:
  *
@@ -140,4 +169,7 @@ int main(int argc, char *argv[])
  *
  *    Try running with too many arguments:
  *    - On Linux/macOS:   `./15_command_line_arguments Charlie 25 Extra`
+ *
+ *    Try running with an age that is not a number (this will fail our strtol check):
+ *    - On Linux/macOS:   `./15_command_line_arguments Dana forty`
  */

@@ -36,9 +36,10 @@ first for conventions and the verification workflow.
   - `mdbook build`
   - a compile of every lesson with `-Wall -Wextra -Wpedantic -Wstrict-prototypes
     -Werror -std=c23`
-  - behavioural checks for lessons 3, 5, 6, 13, 17, 26, 29 and 30. The
-    interactive lessons are fed valid input, garbage and EOF under a 5-second
-    timeout and a 1 MiB output cap.
+  - behavioural checks for lessons 3, 5, 6, 13, 15, 16, 17, 25, 26, 28, 29
+    and 30. The interactive lessons are fed valid input, garbage and EOF under
+    a 5-second timeout and a 1 MiB output cap; the argument-parsing lessons
+    are given bad numbers.
   - ASan/UBSan regressions for lessons 30 and 35
 - Code listings in the book are generated from the `.c` files by
   `scripts/sync_chapters.py`. Chapter prose is still hand-maintained and can drift.
@@ -593,21 +594,16 @@ the lessons it serves.
       produce the right output. The old lesson 13 passed them for exactly that
       reason. Consider a Linux CI job that builds the interactive lessons with
       Clang `-fsanitize=memory` and replays the `run_input_checks` inputs.
-- [ ] **Unsafe-API audit.** Check every use of `strcpy`, `atoi`, `sprintf` and
-      unbounded `%s`:
-  - `strcpy`: `9_strings.c`, `17_student_record_system.c`,
-    `25_simple_text_editor.c`, `28_hash_table_implementation.c`
-  - `atoi`: `15_command_line_arguments.c`, `25_simple_text_editor.c`,
-    `26_simple_socket_client.c`
-  - For each, either show that the destination is sized correctly (for example,
-    28 mallocs `strlen + 1`), or switch to a bounded form. Lessons from 15 onward
-    that parse numbers should use `strtol` with error checks. Either way, add a
-    comment explaining the risk where the lesson teaches the unsafe form.
+- [x] **Unsafe-API audit.** Done 2026-11-20; see the Done log.
 - [ ] **Chapter prose drift audit.** The prose above `## Full Source` was
       converted from lesson comments once and is not synced. Compare each chapter
       against its lesson for:
   - mis-converted structure (chapter 7 had a bullet list turned into `##`
-    headings, now fixed)
+    headings, now fixed; on 2026-11-20 chapters 5, 6 and 19 got code fences
+    for their syntax examples, 17, 20 and 35 lost stray half-sentences, and
+    34's banner line became a heading. A scan for unfenced code and fragment
+    paragraphs is clean now, but no chapter has been read side by side with
+    its lesson yet.)
   - stale claims
   - explanations that no longer match the code
   - Then consider extending `sync_chapters.py` with a heuristic warning when a
@@ -709,11 +705,24 @@ pick them up.
   would also feed the table of contents; that is a chapter prose change, so
   it belongs to the prose drift audit.
 
+- **Lesson 35's input window.** It is 2 rows high and `box()` draws both its
+  borders, so the prompt is printed on the bottom border. A 3-row window (or
+  no box) would give the input a real line; it needs a look in a terminal.
+- **Lesson 25 splits long lines on load.** `load_file` reads with a 1024-byte
+  `fgets` buffer, so a longer line becomes several lines and saving changes
+  the file. The lesson now says so; a `realloc`-based reader would fix it
+  but adds code to a Part 3 capstone.
+
 - **Linux smoke check from macOS.** Add a `make smoke-linux` target that runs
   `scripts/smoke_check.sh` in a Docker image (for example `gcc:15` plus
   `libncurses-dev` and `clang`). macOS headers define things glibc hides in
   strict `-std=` modes (lesson 32's `M_PI` passed locally but failed CI for
   several commits), so a local Linux run would catch that before pushing.
+  This works today without a target (2026-11-20): `COPYFILE_DISABLE=1 tar
+  --no-xattrs -cf - Part* scripts | docker run --rm -i gcc:15 sh -c 'mkdir
+  /r && cd /r && tar xf - && apt-get update && apt-get install -y
+  libncurses-dev clang && CC=gcc sh scripts/smoke_check.sh'` (a bind mount
+  of the scratch directory did not work with Docker Desktop).
 
 ---
 
@@ -769,6 +778,33 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** lesson correctness review of all 35 lessons, and the
+  unsafe-API audit.
+  - Bugs fixed: lesson 25 parsed bytes past the end of the text for an empty
+    line or a bare command, ran the rest of an overlong line as a command, and
+    accepted "pq" and "d abc"; lesson 26 printed unterminated buffers when a
+    full 2000 bytes arrived, never validated the client's IP or port, and left
+    `sockaddr_in` padding uninitialized; lesson 28 did not check `malloc`;
+    lesson 30 joined threads that `pthread_create` failed to start; lesson 33
+    kept drawing after `endwin()` when colors were missing and used `attron`
+    on the wrong window; lesson 35 acted on an unfilled buffer when
+    `wgetnstr` failed, drew wrapped log messages over each other, and did not
+    check `newwin`. Lessons 14, 17 and 25 now check `fclose` after writing.
+  - Wrong comments fixed in lessons 4 (`a / 3`; "no boolean type"), 11
+    (`scanf` with a string in Lesson 3), 13 (the `malloc` cast is required),
+    16 (`10 plus 5` gives the usage message), 20, 22 and 31 (`"..."` includes
+    search the current directory), 23, 26 ("this lesson and the next"), 28
+    (the hash "sums" characters; which keys collide), 30, 32 (`-lm` on
+    macOS), 33 (`exit` not taught yet) and 35 ("sscanf is used").
+  - Unsafe APIs: `atoi`/`atof` replaced by `strtol`/`strtod` with checks in
+    15, 16, 25 and the 26 client (lesson 15 now teaches why); every remaining
+    `strcpy`/`strcat` (9, 12, 17, 25, 28, 35) has a comment showing the
+    destination is big enough; 34's `strtok` example is bounded. No lesson uses
+    `sprintf`, `gets` or an unbounded `%s` read.
+  - New smoke checks for lessons 15, 16, 25, 26 (client arguments) and 28;
+    each was verified to fail against the old lesson. Smoke check run on macOS
+    (Clang, GCC 16) and on Linux in `gcc:15` (GCC 15, Clang).
 
 - **2026-11-20:** third production deploy, commit `de586a7` (W5's migrator
   and client-IP check, W6, W7's Open Graph images). `prepare.sh` passed,

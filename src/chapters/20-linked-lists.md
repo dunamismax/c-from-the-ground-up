@@ -18,7 +18,8 @@ data) and has a coupling that connects it to the next car (the `next` pointer).
 All we need to know to find the entire train is where the first car is. This
 first-car pointer is called the HEAD.
 
-so we can modify the `head` pointer in the main function.
+To add a node at the front, `insert_at_beginning` takes a pointer to the head
+pointer (`Node **`), so it can modify the `head` pointer in `main`.
 
 ## Full Source
 
@@ -65,7 +66,8 @@ so we can modify the `head` pointer in the main function.
 // --- Part 1: The Building Block - The Node ---
 
 // This is the blueprint for a single "car" in our train.
-// It's a SELF-REFERENTIAL struct because it contains a pointer to itself.
+// It's a SELF-REFERENTIAL struct because it contains a pointer to another
+// struct of its own type (`struct Node`).
 typedef struct Node
 {
     int data;          // The data this node holds

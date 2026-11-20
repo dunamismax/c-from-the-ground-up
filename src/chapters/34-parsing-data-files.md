@@ -23,7 +23,7 @@ from a string instead of the keyboard. It's powerful because it can parse
 complex patterns, and its return value tells you how many items were
 successfully assigned, which makes error checking very easy.
 
-|                    - (For Reference) Parsing with strtok() -                      |
+## For Reference: Parsing with strtok()
 
 `strtok` is another function for splitting a string. It works by finding a
 delimiter, replacing it with a null terminator (`\0`), and returning a pointer
@@ -40,17 +40,24 @@ as you will encounter it in existing C code.
 
 Example `strtok` loop:
 
-  // Important: `strtok` modifies the string, so we'd need a copy.
-  // char line_copy[MAX_LINE_LENGTH];
-  // strcpy(line_copy, line);
+```c
+// Important: `strtok` modifies the string, so we'd need a copy.
+// char line_copy[MAX_LINE_LENGTH];
+// strcpy(line_copy, line);
 
-  char *token = strtok(line, ","); // Get first token
-  if (token) user.id = atoi(token);
+char *token = strtok(line, ","); // Get first token
+if (token) user.id = (int)strtol(token, NULL, 10); // Lesson 15: avoid atoi
 
-  token = strtok(NULL, ","); // Get next token
-  if (token) strcpy(user.username, token);
+token = strtok(NULL, ","); // Get next token
+// `strcpy` would overflow `username` if the token were 50 characters or
+// more, so check the length first:
+if (token && strlen(token) < sizeof(user.username))
+    strcpy(user.username, token);
+```
 
-  ... and so on. As you can see, it's more verbose and requires more care.
+... and so on. As you can see, it's more verbose and requires more care. (A
+complete version would also check `strtol`'s end pointer, as Lesson 15 does.
+`sscanf` with `%49[^,]` does the length check for us.)
 
 ## Full Source
 
@@ -93,8 +100,7 @@ Example `strtok` loop:
  */
 
 #include <stdio.h>
-#include <stdlib.h> // For atoi() in the strtok example
-#include <string.h> // For strtok(), strcpy()
+#include <string.h> // For strtok(), shown in the reference section below
 
 #define MAX_LINE_LENGTH 256
 #define MAX_USERS 10
@@ -239,12 +245,17 @@ void print_user(const User *user)
  *   // strcpy(line_copy, line);
  *
  *   char *token = strtok(line, ","); // Get first token
- *   if (token) user.id = atoi(token);
+ *   if (token) user.id = (int)strtol(token, NULL, 10); // Lesson 15: avoid atoi
  *
  *   token = strtok(NULL, ","); // Get next token
- *   if (token) strcpy(user.username, token);
+ *   // `strcpy` would overflow `username` if the token were 50 characters or
+ *   // more, so check the length first:
+ *   if (token && strlen(token) < sizeof(user.username))
+ *       strcpy(user.username, token);
  *
  *   ... and so on. As you can see, it's more verbose and requires more care.
+ *   (A complete version would also check `strtol`'s end pointer, as Lesson 15
+ *   does. `sscanf` with `%49[^,]` does the length check for us.)
  */
 
 /*
@@ -275,6 +286,9 @@ void print_user(const User *user)
  *    You must provide the name of the data file as a command-line argument.
  *    - On Linux/macOS:   `./34_parsing_data_files users.dat`
  *    - On Windows:       `34_parsing_data_files.exe users.dat`
+ *
+ *    NOTE: this program keeps at most MAX_USERS (10) records and stops reading
+ *    after that.
  *
  *    The program will read `users.dat`, parse its contents, print a warning for
  *    the bad line, and then display the structured data it successfully extracted.
