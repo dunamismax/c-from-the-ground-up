@@ -1,0 +1,4 @@
+/* Tailwind CSS 4 is configured here, in CSS. There is no tailwind.config.js.
+   Design tokens go in an @theme block (milestone W3). */
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';

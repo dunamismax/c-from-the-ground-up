@@ -1,6 +1,14 @@
 # mdBook build output
 book/
 
+# Course website (site/): dependencies, build output, secrets, test reports
+site/node_modules/
+site/.svelte-kit/
+site/build/
+site/.env
+site/test-results/
+site/playwright-report/
+
 # Prerequisites
 *.d
 

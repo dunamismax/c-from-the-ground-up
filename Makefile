@@ -7,16 +7,18 @@
 #   make sync               copy lesson sources into the book chapters
 #   make serve              live-preview the book at http://localhost:3000
 #   make smoke CC=gcc-15    smoke check with a specific compiler
+#   make site-verify        website gate: npm ci, check, lint, test, build
+#   make site-e2e           website Playwright tests (needs the site database)
 
 CC ?= cc
 PYTHON ?= python3
 
-.PHONY: help verify sync check-sync book serve smoke smoke-all clean
+.PHONY: help verify sync check-sync book serve smoke smoke-all site-verify site-e2e clean
 
 help:
-	@sed -n '3,10p' Makefile
+	@sed -n '3,12p' Makefile
 
-verify: check-sync book smoke-all
+verify: check-sync book smoke-all site-verify
 
 sync:
 	$(PYTHON) scripts/sync_chapters.py
@@ -40,5 +42,13 @@ smoke-all:
 	CC=clang sh scripts/smoke_check.sh
 	CC=$(GCC) sh scripts/smoke_check.sh
 
+# The course website in site/ (SvelteKit). Needs Node 24+ and npm.
+site-verify:
+	cd site && npm ci && npm run check && npm run lint && npm test && npm run build
+
+# Start the database first: cd site && npm run db:start
+site-e2e:
+	cd site && npm run test:e2e
+
 clean:
-	rm -rf book
+	rm -rf book site/build site/.svelte-kit

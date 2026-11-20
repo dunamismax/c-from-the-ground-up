@@ -26,13 +26,11 @@ adapter-node and Caddy.
   **[BUILD.md](BUILD.md), "Phase W"**. Unless the user asks for something
   else, continue at the first unchecked item of the earliest unfinished
   milestone.
-- The site goes in `site/`, which does not exist yet; W1 creates it. It reads
-  lesson content from `Part */` and `src/chapters/` at build time and never
-  keeps its own copy.
+- The site lives in `site/` (see **The website** below). It reads lesson
+  content from `Part */` and `src/chapters/` at build time and never keeps its
+  own copy.
 - SvelteKit 3, Svelte 5 and Tailwind 4 differ a lot from older tutorials.
   Check current docs before writing framework code.
-- When W1 lands, extend this file with the `site/` layout, commands and
-  conventions.
 
 Priorities, in order:
 
@@ -78,9 +76,10 @@ scripts/sync_chapters.py                            copies lesson sources into c
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
 Makefile                                            maintainer entry points (not a lesson)
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
-.github/workflows/verify.yml                        CI: listing check, mdbook build, smoke check (clang + gcc)
+.github/workflows/verify.yml                        CI: listing check, mdbook build, smoke check (clang + gcc), site
 .github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main
 assets/images/                                      images (not yet used in the book)
+site/                                               the course website, cfromthegroundup.com (see below)
 ```
 
 The directory names contain spaces, `_` and `&`. **Always quote paths** in shell
@@ -116,7 +115,9 @@ block:
 ## Verification
 
 ```sh
-make verify              # check-sync + mdbook build + smoke check under clang and $(GCC)
+make verify              # check-sync + mdbook build + smoke check under clang and $(GCC) + site-verify
+make site-verify         # website only: npm ci, check, lint, test, build
+make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
 make smoke CC=clang      # one compiler only
 make serve               # live preview at http://localhost:3000
@@ -145,9 +146,82 @@ What `scripts/smoke_check.sh` does:
   signatures of those functions, or of `GameState` / `Room`, breaks the harness.
 
 Requirements: a C compiler (Clang and GCC in CI), ncurses headers
-(`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+, and mdBook **0.5.4**.
+(`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+, mdBook **0.5.4**,
+and Node 24+ with npm for `site-verify`. The site's e2e tests also need Docker
+(or any PostgreSQL 18) and a Playwright Chromium (`npx playwright install
+chromium` in `site/`).
 CI pins mdBook in both workflows. Bump the pin deliberately, in both files, after
 `make verify` passes locally with the new version.
+
+## The website (`site/`)
+
+SvelteKit 3 app for https://cfromthegroundup.com. The roadmap is BUILD.md,
+Phase W; `site/README.md` has the developer quick start.
+
+```text
+site/package.json                  scripts, engines (Node >= 24), `imports` for the #lib alias
+site/.nvmrc                        Node 24 (the production and CI version)
+site/vite.config.ts                ALL SvelteKit config: the sveltekit({...}) plugin call, plus Vitest projects
+site/src/env.ts                    environment variables (defineEnvVars), validated at build and start
+site/src/app.css                   Tailwind 4 entry: @import "tailwindcss", @plugin typography, @theme tokens
+site/src/app.html                  page shell
+site/src/routes/                   pages and endpoints (+page.svelte, +server.ts, ...)
+site/src/routes/healthz/+server.ts health probe: 200 when the database answers `select 1`, else 503
+site/src/lib/                      shared code, imported as #lib/...
+site/src/lib/server/               server-only code (never shipped to the browser)
+site/src/lib/server/db/            Drizzle: schema.ts (tables) and index.ts (getDb(), lazy postgres.js client)
+site/drizzle/                      generated migrations (committed; created by the first db:generate)
+site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
+site/.env.example                  copy to site/.env (git-ignored) for local development
+site/playwright.config.ts          e2e tests run against `node build`, not the dev server
+site/deploy/                       Caddy, systemd and deploy runbook (milestone W5)
+```
+
+Commands (run in `site/`):
+
+```sh
+npm run dev                 # dev server
+npm run build               # production build into build/
+npm run start               # node build, loading .env if present
+npm run check               # svelte-check
+npm run lint                # prettier --check + eslint
+npm run format              # prettier --write
+npm test                    # vitest: *.spec.ts (node) and *.svelte.spec.ts (browser)
+npm run test:e2e            # playwright: *.e2e.ts against node build on :4173
+npm run db:start            # docker compose up --wait (db:stop to stop)
+npm run db:generate         # migration from schema.ts into drizzle/
+npm run db:migrate          # apply migrations
+```
+
+Conventions:
+
+- **SvelteKit 3, not 2.** There is no `svelte.config.js`; options go
+  directly in `sveltekit({...})` in `vite.config.ts`, not under `kit`. The
+  `$lib` alias is gone: import `#lib/...` **with the file extension**, for
+  example `import { getDb } from '#lib/server/db/index.js'` (`.js` resolves to
+  the `.ts` file). Environment variables are declared in `src/env.ts` and
+  imported from `$app/env/private` or `$app/env/public`, not `$env/*`.
+- **Svelte 5 runes only:** `$props`, `$state`, `$derived`, `$effect` and
+  snippets (`{@render ...}`). No `export let`, no `$:` and no legacy stores.
+  Runes mode is forced for project files in `vite.config.ts`.
+- **Tailwind 4 is configured in CSS** (`src/app.css`). Put design tokens in an
+  `@theme` block there. Do not add `tailwind.config.js`.
+- **Drizzle:** tables go in `src/lib/server/db/schema.ts`. Change the schema,
+  run `npm run db:generate`, review and commit the SQL under `drizzle/`. Do not
+  use `drizzle-kit push`; production applies the committed migrations. The
+  client is postgres.js (`postgres`). Get it through `getDb()`, which connects
+  lazily so builds never need a database.
+- **Database holds learner state only.** Course content comes from the lesson
+  and chapter files at build time; never copy it into `site/`.
+- **Formatting:** Prettier (tabs, single quotes, width 100) and ESLint with
+  type-checked typescript-eslint rules. Run `npm run format` before committing;
+  `npm run lint` must pass.
+- **Tests:** unit tests sit next to the code as `*.spec.ts`; component tests are
+  `*.svelte.spec.ts` (Vitest browser mode, Chromium); e2e tests are `*.e2e.ts`.
+  Keep logic in plain modules (like `src/lib/server/health.ts`) so it can be unit
+  tested without a server or database.
+- **Secrets:** `site/.env` is git-ignored; only `site/.env.example` is
+  committed. Production configuration lives on the server.
 
 ## Lesson conventions
 

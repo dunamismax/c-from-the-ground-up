@@ -45,3 +45,58 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
         run: sh scripts/smoke_check.sh
+
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: cftgu
+          POSTGRES_PASSWORD: cftgu
+          POSTGRES_DB: cfromthegroundup
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cftgu -d cfromthegroundup"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://cftgu:cftgu@127.0.0.1:5432/cfromthegroundup
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: site/.nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      # Vitest component tests and the e2e tests both run in Chromium.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit and component tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: End-to-end tests
+        run: npm run test:e2e

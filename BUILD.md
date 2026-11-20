@@ -43,8 +43,9 @@ first for conventions and the verification workflow.
 - Code listings in the book are generated from the `.c` files by
   `scripts/sync_chapters.py`. Chapter prose is still hand-maintained and can drift.
 - **Website:** the domain `cfromthegroundup.com` is registered, and its DNS in
-  Cloudflare points at the maintainer's self-hosted Ubuntu server. No site code
-  exists yet. Start at milestone W1.
+  Cloudflare points at the maintainer's self-hosted Ubuntu server. W1 is done:
+  `site/` holds a SvelteKit 3 scaffold with a placeholder home page and
+  `/healthz`, wired into `make verify` and CI. Continue at milestone W2.
 
 ---
 
@@ -146,9 +147,9 @@ before relying on memory. In particular:
 
 #### W1. Scaffold the app
 
-- [ ] Create `site/` with `npx sv create site`: SvelteKit minimal template with
+- [x] Create `site/` with `npx sv create site`: SvelteKit minimal template with
       TypeScript.
-- [ ] Add the add-ons with `npx sv add`:
+- [x] Add the add-ons with `npx sv add`:
   - tailwindcss
   - drizzle (PostgreSQL)
   - eslint
@@ -159,24 +160,24 @@ before relying on memory. In particular:
   Confirm that the result has the SvelteKit 3 layout described above. Record
   the Postgres client choice (`postgres` / postgres.js or `pg` /
   node-postgres) in the Decision log.
-- [ ] Add a local development database: `site/compose.yaml` running `postgres:18`
+- [x] Add a local development database: `site/compose.yaml` running `postgres:18`
       on localhost, with a `DATABASE_URL` example in `site/.env.example`.
-- [ ] Add npm scripts:
+- [x] Add npm scripts:
   - `dev`, `build`, `preview`
   - `check` (svelte-check), `lint`, `format`
   - `test` (vitest), `test:e2e` (playwright)
   - `db:generate`, `db:migrate`, `db:studio`
-- [ ] Add a `/healthz` endpoint that returns 200 when the app is up and can run
+- [x] Add a `/healthz` endpoint that returns 200 when the app is up and can run
       `select 1` against the database. Caddy and the deploy script will use it.
-- [ ] Update the root `.gitignore`: `site/node_modules/`, `site/.svelte-kit/`,
+- [x] Update the root `.gitignore`: `site/node_modules/`, `site/.svelte-kit/`,
       `site/build/`, `site/.env`, `site/test-results/`, `site/playwright-report/`.
-- [ ] Wire the site into the repo gates:
+- [x] Wire the site into the repo gates:
   - a `make site-verify` target that runs `npm ci`, `check`, `lint`, `test` and
     `build` in `site/`
   - `make verify` runs `site-verify` too
   - a `site` job in `.github/workflows/verify.yml` on Node 24, with a
     `postgres:18` service container for tests that need a database
-- [ ] Update AGENTS.md:
+- [x] Update AGENTS.md:
   - the `site/` layout
   - the site commands
   - Svelte, Tailwind and Drizzle conventions
@@ -184,6 +185,7 @@ before relying on memory. In particular:
   - `make verify` and CI are green
   - `npm run build && node build` serves a placeholder page
   - `/healthz` returns 200 against the local database
+- **Status:** done 2026-11-20 (see the Done log).
 
 #### W2. Course content pipeline
 
@@ -490,7 +492,8 @@ the lessons it serves.
 - [ ] **`compile_commands.json`** or a `.clangd` file, so editors understand the
       lesson files out of the box.
 - [ ] **CI upkeep.** Review the action versions (`actions/checkout@v4`,
-      `configure-pages@v5`, `upload-pages-artifact@v3`, `deploy-pages@v4`). Make
+      `actions/setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`,
+      `deploy-pages@v4`). Make
       `deploy.yml` run the sync check before publishing.
 - [ ] **Book link checking.** Verify internal links and anchors. First check
       whether a link-check preprocessor supports mdBook 0.5.x; if not, write a
@@ -553,6 +556,18 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-20: site scaffold choices (W1).**
+  - Postgres client: **postgres.js** (`postgres`), the `sv add drizzle`
+    option for PostgreSQL. It needs no native build and Drizzle supports it
+    directly (`drizzle-orm/postgres-js`).
+  - Node: `.nvmrc` pins **24** (production and CI); `engines` says `>=24` so
+    newer local Node versions still install with `engine-strict`.
+  - Local database: `site/compose.yaml` runs `postgres:18` on
+    **127.0.0.1:5434**, so it does not collide with a PostgreSQL already on 5432.
+  - Migrations only: the `db:push` script from the scaffold was removed so the
+    schema can only change through committed `drizzle-kit generate` migrations.
+  - E2E tests run against the real adapter-node server (`node build`), not
+    `vite preview`.
 - **2026-11-20: the website is the primary focus.** `cfromthegroundup.com`,
   self-hosted on the maintainer's Ubuntu server. The stack is SvelteKit 3,
   Svelte 5, TypeScript, Tailwind CSS 4, PostgreSQL 18 + Drizzle,
@@ -575,6 +590,25 @@ pick them up.
 
 ## Done log
 
+- **2026-11-20:** milestone W1, site scaffold.
+  - `site/` created with `sv create` (minimal, TypeScript) and the prettier,
+    eslint, vitest, playwright, tailwindcss (typography), adapter-node and
+    drizzle (PostgreSQL, postgres.js) add-ons. It uses the SvelteKit 3
+    layout: config in `sveltekit({...})` in `vite.config.ts`, `#lib` subpath
+    imports, and env vars in `src/env.ts`.
+  - The scaffold's demo table and example tests were removed. `schema.ts` is
+    empty until W6.
+  - `site/compose.yaml` (PostgreSQL 18), `.env.example`, `.nvmrc`, and the npm
+    scripts `dev`/`build`/`preview`/`start`/`check`/`lint`/`format`/`test`/
+    `test:e2e`/`db:*`.
+  - `GET /healthz` returns 200 `{"status":"ok","database":"ok"}` after a
+    `select 1`, and 503 when the database is down or slower than 3 s. Unit
+    tests cover the check; a Playwright test hits it on `node build`.
+  - `DATABASE_URL` is optional at build time, so builds and CI need no database,
+    and required and validated when the server starts.
+  - Root `.gitignore`, `make site-verify` (part of `make verify`), `make
+    site-e2e`, a `site` CI job on Node 24 with a `postgres:18` service, and the
+    AGENTS.md "The website" section.
 - **2026-11-20:** input robustness.
   - Lesson 3 now teaches that `scanf` returns the number of items read,
     covering `1`, `0` and `EOF`, and it checks every read. Variables are
