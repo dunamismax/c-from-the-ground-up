@@ -1,0 +1,41 @@
+# Static analysis for the lessons (`make tidy`, and the analyze CI job with a
+# pinned clang-tidy 23). The bugprone, clang-analyzer and CERT families stay
+# on; the checks below are off because they flag what the course teaches on
+# purpose, or flag a safe idiom, and silencing them in the lessons would mean
+# NOLINT comments a beginner should not have to read:
+#
+#   cert-err33-c             every unchecked printf/fprintf/fclose return. The
+#                            lessons check the returns that matter (scanf,
+#                            fgets, malloc, fopen, and fclose after writing).
+#   ...DeprecatedOrUnsafeBufferHandling, ...insecureAPI.strcpy
+#                            any memcpy, strcpy, strcat or sprintf-family call
+#                            (the strcpy check fires only with glibc; macOS
+#                            headers hide the calls behind fortify macros).
+#                            The lessons that use strcpy/strcat show the
+#                            destination is big enough (BUILD.md, unsafe-API
+#                            audit).
+#   bugprone-signed-bitwise  `1 << 7` style masks in lesson 21.
+#   bugprone-unchecked-string-to-number-conversion, cert-err34-c
+#                            scanf("%d") itself. The lessons check scanf's
+#                            return value (lesson 3) and teach strtol for
+#                            range checks (lesson 15).
+#   bugprone-multi-level-implicit-pointer-conversion
+#                            `Entry **e = calloc(...)`: lesson 13 teaches
+#                            that void * converts without a cast.
+#   clang-analyzer-security.ArrayBound
+#                            `buf[strcspn(buf, "\n")] = '\0'` after fgets is
+#                            reported as a tainted index; it is in bounds.
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  cert-*,
+  -cert-err33-c,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -clang-analyzer-security.insecureAPI.strcpy,
+  -bugprone-signed-bitwise,
+  -bugprone-unchecked-string-to-number-conversion,
+  -cert-err34-c,
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -clang-analyzer-security.ArrayBound
+WarningsAsErrors: '*'

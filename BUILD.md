@@ -632,8 +632,9 @@ the lessons it serves.
 - [x] **Stricter warnings.** Done 2026-11-20; see the Done log.
 - [x] **`.clang-format`** that reproduces the existing style. Done
       2026-11-20 (see the Done log).
-- [ ] **`.clang-tidy`** with `bugprone-*`, `clang-analyzer-*` and `cert-*`,
-      tuned for teaching code. Run it in CI as non-blocking at first.
+- [x] **`.clang-tidy`** with `bugprone-*`, `clang-analyzer-*` and `cert-*`,
+      tuned for teaching code. Done 2026-11-20 (see the Done log). It is
+      blocking from the start, since it is clean and pinned.
 - [x] **Sanitizers for every lesson.** Done 2026-11-20 (see the Done log).
       Not covered: 26 (its exchange runs in the smoke check, unsanitized) and
       33 and 35's game loop, which need a terminal; see the Ideas inbox.
@@ -642,7 +643,10 @@ the lessons it serves.
 - [x] **Leak checking** with LeakSanitizer for every lesson it can run,
       including the heap lessons 13, 17, 20, 25, 28 and 35's loader. Done
       2026-11-20.
-- [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first.
+- [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first. `make analyze`
+      and a `continue-on-error` step in the `analyze` CI job (GCC 14) exist
+      since 2026-11-20; GCC 15 and 16 report nothing. Make the step blocking
+      once it has stayed clean on CI for a while.
 - [x] **`compile_commands.json`** or a `.clangd` file. Done 2026-11-20: a
       root `.clangd` adds the smoke check's flags (without `-Werror`).
 - [x] **CI upkeep.** Done 2026-11-20; see the Done log. Review the action
@@ -784,6 +788,19 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** static analysis. `.clang-tidy` turns on `bugprone-*`,
+  `clang-analyzer-*` and `cert-*`; of 147 findings, all but one came from
+  seven checks that flag what the course teaches on purpose or a safe idiom
+  (unchecked `printf` returns, `strcpy`/`memcpy`, `1 << 7` masks, `scanf`
+  conversions, `void *` conversions, `buf[strcspn(...)]`), which are off with
+  the reason written next to each. The one real finding: lesson 35 used
+  `rewind`, which cannot report failure; it now uses a checked
+  `fseek(file, 0, SEEK_SET)` as lesson 30 does. `make tidy` (in `make
+  verify`) and the new `analyze` CI job run clang-tidy 23 (pinned from PyPI)
+  and fail on any finding; `make analyze` runs GCC's `-fanalyzer`, clean
+  with GCC 15 and 16, and non-blocking in CI for now. Both were checked to
+  fail on a planted null dereference.
 
 - **2026-11-20:** `.clang-format` and `.clangd`. The format (LLVM base,
   4-space indents, Allman braces, right-hand pointers, no column limit, no

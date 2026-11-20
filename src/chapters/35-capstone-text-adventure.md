@@ -381,8 +381,16 @@ GameState *load_world(const char *filename)
         }
     }
 
-    // Rewind the file pointer to the beginning for the second pass.
-    rewind(file);
+    // Go back to the beginning of the file for the second pass. `rewind(file)`
+    // does the same but cannot report failure; `fseek` returns non-zero when
+    // it fails, as in Lesson 30, so we can stop instead of reading nothing.
+    if (fseek(file, 0, SEEK_SET) != 0)
+    {
+        perror("Error rewinding world file");
+        fclose(file);
+        cleanup(game);
+        return NULL;
+    }
     line_number = 0;
 
     // Pass 2: Read all link definitions and connect the already-created rooms.

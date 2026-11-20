@@ -11,18 +11,20 @@
 #   make sanitize           lessons under ASan/UBSan/LSan, MSan and TSan
 #   make sanitize-linux     the same on Linux (Docker), where MSan works
 #   make format             apply .clang-format to the lesson sources
+#   make tidy               clang-tidy with .clang-tidy (static analysis)
+#   make analyze GCC=gcc-15 GCC's static analyzer (-fanalyzer)
 #   make site-verify        website gate: npm ci, check, lint, test, build
 #   make site-e2e           website Playwright tests (needs the site database)
 
 CC ?= cc
 PYTHON ?= python3
 
-.PHONY: help verify sync check-sync book serve smoke smoke-all smoke-linux sanitize sanitize-linux format check-format site-verify site-e2e clean
+.PHONY: help verify sync check-sync book serve smoke smoke-all smoke-linux sanitize sanitize-linux format check-format tidy analyze site-verify site-e2e clean
 
 help:
-	@sed -n '3,16p' Makefile
+	@sed -n '3,18p' Makefile
 
-verify: check-sync check-format book smoke-all sanitize site-verify
+verify: check-sync check-format tidy book smoke-all sanitize site-verify
 
 sync:
 	$(PYTHON) scripts/sync_chapters.py
@@ -70,6 +72,17 @@ format:
 	$(LESSON_SOURCES) | xargs -0 $(CLANG_FORMAT) -i
 check-format:
 	$(LESSON_SOURCES) | xargs -0 $(CLANG_FORMAT) --dry-run --Werror
+
+# Static analysis. clang-tidy's checks and the reasons some are off are in
+# .clang-tidy; CI pins clang-tidy 23. GCC's analyzer needs real GCC (on macOS
+# `gcc` is Clang), so it is not part of verify; CI runs it without failing
+# the build while it proves itself (BUILD.md).
+CLANG_TIDY ?= clang-tidy
+LESSON_C_SOURCES = find ./Part* -type f -name '*.c' -print0
+tidy:
+	$(LESSON_C_SOURCES) | xargs -0 sh -c '$(CLANG_TIDY) --quiet "$$@" -- -std=c23' sh
+analyze:
+	$(LESSON_C_SOURCES) | xargs -0 -n 1 sh -c '$(GCC) -std=c23 -fanalyzer -Werror -c -o /dev/null "$$0"'
 
 # Sanitizer runs of every lesson (scripts/sanitizer_check.sh). Needs Clang;
 # MemorySanitizer is skipped where it cannot run (macOS). CI runs it on Linux

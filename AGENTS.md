@@ -79,6 +79,7 @@ scripts/sanitizer_check.sh                          runs the lessons under ASan/
 Makefile                                            maintainer entry points (not a lesson)
 .clang-format                                       lesson code style; `make format`, checked in CI
 .clangd                                             editor flags for the lessons (the smoke check's warnings)
+.clang-tidy                                         static-analysis checks, and why some are off; `make tidy`
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
 .github/workflows/verify.yml                        CI: listing check, mdbook build, link check, smoke check (clang + gcc), site
@@ -120,8 +121,10 @@ block:
 ## Verification
 
 ```sh
-make verify              # check-sync + check-format + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + site-verify
+make verify              # check-sync + check-format + tidy + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + site-verify
 make format              # apply .clang-format to the lessons, then run make sync
+make tidy                # clang-tidy over the lessons (fails on any finding)
+make analyze GCC=gcc-16  # GCC -fanalyzer over the lessons (needs real GCC)
 make site-verify         # website only: npm ci, check, lint, test, build
 make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
@@ -179,7 +182,8 @@ What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
   leaks, reads uninitialized memory or races fails this check.
 
 Requirements: a C compiler (Clang and GCC in CI; Clang for `make sanitize`),
-clang-format 23 (`pipx install clang-format==23.1.5`, or Homebrew's LLVM),
+clang-format and clang-tidy 23 (`pipx install clang-format==23.1.5` and
+`clang-tidy==23.1.4`, or Homebrew's LLVM),
 ncurses headers (`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+,
 mdBook **0.5.4**, and Node 24+ with npm for `site-verify`. The site's e2e tests also need Docker
 (or any PostgreSQL 18) and a Playwright Chromium (`npx playwright install
@@ -411,4 +415,6 @@ Each `src/chapters/NN-slug.md` contains:
 - Do not "modernize" a lesson past what the reader has learned at that point.
   Lesson 5 should not use function pointers.
 - Do not weaken the smoke-check flags or delete behavioural checks to make a
-  change pass.
+  change pass. The same goes for `.clang-tidy`: turn a check off only with a
+  comment there saying why it does not fit teaching code, never with NOLINT
+  comments in a lesson.

@@ -78,6 +78,28 @@ jobs:
           SANITIZERS_REQUIRED: '1'
         run: sh scripts/sanitizer_check.sh
 
+  # Static analysis: clang-tidy (.clang-tidy, pinned to the version the
+  # config was tuned with) and GCC's -fanalyzer.
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install ncurses headers
+        run: sudo apt-get update && sudo apt-get install --yes libncurses-dev
+
+      - name: clang-tidy
+        run: |
+          pipx install clang-tidy==23.1.4
+          make tidy
+
+      # Not blocking yet (BUILD.md): the analyzer's findings vary between GCC
+      # releases. GCC 15 and 16 report nothing for the lessons.
+      - name: GCC static analyzer
+        continue-on-error: true
+        run: make analyze GCC="$(command -v gcc-14 || command -v gcc)"
+
   site:
     runs-on: ubuntu-latest
     defaults:
