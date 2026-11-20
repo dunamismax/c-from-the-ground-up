@@ -1,0 +1,18 @@
+[Unit]
+Description=Back up cfromthegroundup.com database and configuration
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cfromthegroundup-backup
+UMask=0077
+Nice=10
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/cfromthegroundup
+MemoryHigh=512M
+MemoryMax=1G
+TasksMax=256

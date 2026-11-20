@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Nightly backup of cfromthegroundup.com: the database (pg_dump), credentials,
+# host config and the live release. Installed as
+# /usr/local/sbin/cfromthegroundup-backup by site/deploy/provision.sh and run by
+# cfromthegroundup-backup.timer. Root-only: archives contain credentials.
+set -euo pipefail
+umask 077
+if ! test -e /proc/$$/fd/9 || test "$(readlink /proc/$$/fd/9)" != /run/astro-deploy/lock; then
+    exec /usr/local/sbin/with-deploy-lock "$0" "$@"
+fi
+flock -n 9
+base=/srv/www/cfromthegroundup.com
+destination=/var/backups/cfromthegroundup
+install -d -o root -g sawyer -m 0750 "$destination"
+work=$(mktemp -d "$destination/.building.XXXXXXXX")
+trap 'rm -rf -- "$work"' EXIT
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+runuser -u postgres -- /usr/lib/postgresql/18/bin/pg_dump -Fc cfromthegroundup > "$work/database.dump"
+/usr/lib/postgresql/18/bin/pg_restore --list "$work/database.dump" > "$work/database.contents"
+cp /usr/local/sbin/cfromthegroundup-backup "$work/backup.sh"
+cp /etc/systemd/system/cfromthegroundup-backup.{service,timer} "$work/"
+tar -czf "$work/credentials.tar.gz" -C / etc/astro-apps/cfromthegroundup
+if [[ -L $base/current ]]; then
+    cp /etc/caddy/sites/cfromthegroundup.com.caddy /etc/systemd/system/cfromthegroundup.service "$work/"
+    readlink -f "$base/current" > "$work/release.txt"
+    tar -czf "$work/application.tar.gz" -C "$base/current" .
+fi
+tar -czf "$destination/.cftgu-$stamp.partial" -C "$work" .
+mv "$destination/.cftgu-$stamp.partial" "$destination/cftgu-$stamp.tar.gz"
+cd "$destination"
+sha256sum "cftgu-$stamp.tar.gz" > "cftgu-$stamp.tar.gz.sha256"
+chown root:sawyer "cftgu-$stamp.tar.gz" "cftgu-$stamp.tar.gz.sha256"
+chmod 0640 "cftgu-$stamp.tar.gz" "cftgu-$stamp.tar.gz.sha256"
+find "$destination" -maxdepth 1 -type f -name 'cftgu-*.tar.gz*' -mtime +30 -delete
+printf 'Backup created: %s/cftgu-%s.tar.gz\n' "$destination" "$stamp"

@@ -1,0 +1,74 @@
+# cfromthegroundup.com: installed as /etc/caddy/sites/cfromthegroundup.com.caddy
+# by site/deploy/cutover.sh and loaded by the host's main Caddyfile
+# (`import /etc/caddy/sites/*.caddy`), which this file never replaces.
+#
+# The site is a SvelteKit app built with adapter-node (cfromthegroundup.service
+# on 127.0.0.1:4317). Caddy serves client assets straight from the live
+# release on disk (with their .br/.gz variants) and proxies everything else
+# to Node.
+# Automatic HTTPS: DNS for both names points straight at the host (not
+# proxied by Cloudflare), so Caddy obtains and renews the certificates itself.
+#
+# Check and reload: caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy
+
+www.cfromthegroundup.com {
+	redir https://cfromthegroundup.com{uri} permanent
+}
+
+cfromthegroundup.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# SvelteKit fingerprints everything under /_app/immutable/, so it can be
+	# cached forever. Everything else revalidates (cheap, ETags); /healthz and
+	# learner pages set their own Cache-Control.
+	@immutable path /_app/immutable/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+	@fresh {
+		not path /_app/immutable/*
+		not path /healthz
+	}
+	header @fresh ?Cache-Control "public, max-age=0, must-revalidate"
+
+	# Client assets: static/ files, the Vite bundles and version.txt. Paths
+	# ending in / are pages, which Node renders.
+	@asset {
+		not path */
+		file {
+			root /srv/www/cfromthegroundup.com/current/build/client
+			try_files {path}
+		}
+	}
+	handle @asset {
+		root * /srv/www/cfromthegroundup.com/current/build/client
+		file_server {
+			precompressed br gzip
+		}
+	}
+
+	# Everything else: SvelteKit (pages, /healthz, the 404 page).
+	handle {
+		reverse_proxy 127.0.0.1:4317
+	}
+
+	handle_errors 502 503 504 {
+		header Cache-Control "no-store"
+		respond "C From The Ground Up is restarting. Try again in a few seconds." 503
+	}
+
+	log {
+		output file /var/log/caddy/cfromthegroundup-access.log {
+			roll_size 10MiB
+			roll_keep 7
+			roll_keep_for 168h
+		}
+	}
+}

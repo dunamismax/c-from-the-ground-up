@@ -1,0 +1,49 @@
+# /etc/systemd/system/cfromthegroundup.service: installed by
+# site/deploy/cutover.sh.
+#
+# Runs the live release's SvelteKit server (adapter-node, build/) on loopback
+# as a throwaway unprivileged user. Caddy serves client assets from disk and
+# proxies everything else here. Learner state lives in the local PostgreSQL 18
+# database `cfromthegroundup` (schema `app`), reached over 127.0.0.1 as
+# `cfromthegroundup_web`; DATABASE_URL is in the root-only web.env. Migrations
+# are never run by this service.
+#
+# Client IPs: Caddy is the only proxy (Cloudflare DNS only) and sets
+# X-Forwarded-For to the visitor's address, so XFF_DEPTH=1 makes
+# event.getClientAddress() return it. ORIGIN fixes the URL scheme and host.
+[Unit]
+Description=C From The Ground Up course site (SvelteKit)
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+DynamicUser=yes
+User=cfromthegroundup
+WorkingDirectory=/srv/www/cfromthegroundup.com/current
+Environment=NODE_ENV=production HOST=127.0.0.1 PORT=4317 ORIGIN=https://cfromthegroundup.com
+Environment=ADDRESS_HEADER=X-Forwarded-For XFF_DEPTH=1
+EnvironmentFile=/etc/astro-apps/cfromthegroundup/web.env
+ExecStart=/opt/astro-runtime/bin/node /srv/www/cfromthegroundup.com/current/build
+Restart=always
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+MemoryHigh=192M
+MemoryMax=384M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target
