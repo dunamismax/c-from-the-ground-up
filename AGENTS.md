@@ -165,7 +165,11 @@ site/vite.config.ts                ALL SvelteKit config: the sveltekit({...}) pl
 site/src/env.ts                    environment variables (defineEnvVars), validated at build and start
 site/src/app.css                   Tailwind 4 entry: @import "tailwindcss", @plugin typography, @theme tokens
 site/src/app.html                  page shell
-site/src/routes/                   pages and endpoints (+page.svelte, +server.ts, ...)
+site/src/routes/                   pages and endpoints (+page.svelte, +server.ts, ...); all prerendered except /healthz
+site/src/routes/lessons/[slug]/    lesson page; files/[name] serves each lesson file as a download
+site/src/routes/*.e2e.ts           Playwright tests, including a11y.e2e.ts (axe-core, WCAG 2.2 AA, both themes)
+site/src/lib/components/           Svelte components (CodeBlock, RunPanel, CourseSidebar, ...)
+site/src/lib/site.ts               site-wide constants (name, URLs)
 site/src/routes/healthz/+server.ts health probe: 200 when the database answers `select 1`, else 503
 site/src/lib/                      shared code, imported as #lib/...
 site/src/lib/server/               server-only code (never shipped to the browser)
@@ -208,7 +212,15 @@ Conventions:
   snippets (`{@render ...}`). No `export let`, no `$:` and no legacy stores.
   Runes mode is forced for project files in `vite.config.ts`.
 - **Tailwind 4 is configured in CSS** (`src/app.css`). Put design tokens in an
-  `@theme` block there. Do not add `tailwind.config.js`.
+  `@theme` block there. Do not add `tailwind.config.js`. Colors are `--c-*`
+  properties defined once per theme (`:root` and `[data-theme='dark']`) and
+  exposed through `@theme inline`, so use the token utilities (`bg-canvas`,
+  `text-muted`, `border-line`, `text-accent`, ...) rather than raw colors or
+  `dark:` variants. The theme is `data-theme` on `<html>`, set before paint by
+  the script in `app.html`. Code blocks are dark in both themes.
+- **Accessibility is tested.** `a11y.e2e.ts` fails on any axe-core WCAG 2.2 AA
+  violation. Keep text at AA contrast (do not dim text with `opacity`), give
+  every scrollable `pre` `tabindex="0"`, and keep focus rings visible.
 - **Drizzle:** tables go in `src/lib/server/db/schema.ts`. Change the schema,
   run `npm run db:generate`, review and commit the SQL under `drizzle/`. Do not
   use `drizzle-kit push`; production applies the committed migrations. The

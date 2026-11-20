@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { displayTitle, parseSummary } from './summary.js';
+import { displayTitle, parsePartSummaries, parseSummary } from './summary.js';
 
 describe('parseSummary', () => {
 	it('parses parts and chapters and skips the introduction', () => {
@@ -48,5 +48,28 @@ describe('parseSummary', () => {
 
 	it('turns the ASCII double dash into an em dash', () => {
 		expect(displayTitle('A -- B')).toBe('A — B');
+	});
+});
+
+describe('parsePartSummaries', () => {
+	it('reads the part descriptions from the Structure list', () => {
+		const summaries = parsePartSummaries(
+			[
+				'# Intro',
+				'',
+				'## Structure',
+				'',
+				'- **Part 1: The Beginner Path** -- Core language fundamentals from Hello World',
+				'  through strings',
+				'- **Part 2: Next** -- Pointers',
+				'',
+				'## Quick Start',
+				'- **Part 3: Ignored** -- not in the section'
+			].join('\n')
+		);
+		expect([...summaries]).toEqual([
+			[1, 'Core language fundamentals from Hello World through strings'],
+			[2, 'Pointers']
+		]);
 	});
 });

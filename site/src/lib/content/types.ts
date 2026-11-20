@@ -46,7 +46,7 @@ export interface SourceFile {
 	language: 'c' | 'makefile';
 	contents: string;
 	lineCount: number;
-	/** Shiki-highlighted HTML (light and dark themes as CSS variables). */
+	/** Shiki-highlighted HTML (github-dark-default). */
 	html: string;
 	/** The file on GitHub. */
 	githubUrl: string;
@@ -99,6 +99,8 @@ export interface Lesson extends LessonRef {
 }
 
 export interface Part extends PartRef {
+	/** One line on what the part covers, from the book's introduction. */
+	summary: string;
 	lessons: LessonRef[];
 }
 

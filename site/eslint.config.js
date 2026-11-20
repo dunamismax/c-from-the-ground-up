@@ -37,8 +37,12 @@ export default defineConfig(
 		}
 	},
 	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
+		rules: {
+			// The site has no base path, and the prerender crawl fails the build on
+			// any internal link that does not resolve, so plain hrefs are safe.
+			'svelte/no-navigation-without-resolve': ['error', { ignoreLinks: true }],
+			// Allow `const { dropped, ...rest } = object` to omit a field.
+			'@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }]
+		}
 	}
 );

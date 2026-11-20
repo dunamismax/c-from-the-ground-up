@@ -59,3 +59,24 @@ export function parseSummary(text: string): SummaryPart[] {
 	}
 	return parts;
 }
+
+const PART_BLURB_RE = /^- \*\*Part (\d+): [^*]+\*\* -- (.+)$/;
+
+/**
+ * One-line descriptions of each part, from the "## Structure" list in
+ * src/index.md (the book's introduction), for example:
+ *
+ *   - **Part 1: The Beginner Path** -- Core language fundamentals from Hello World
+ *     through strings
+ */
+export function parsePartSummaries(indexMarkdown: string): Map<number, string> {
+	const section = /^## Structure\n([\s\S]*?)(?=^## )/m.exec(indexMarkdown)?.[1] ?? '';
+	// Join each bullet's continuation lines onto it.
+	const bullets = section.replace(/\n {2,}/g, ' ').split('\n');
+	const summaries = new Map<number, string>();
+	for (const bullet of bullets) {
+		const match = PART_BLURB_RE.exec(bullet.trim());
+		if (match) summaries.set(Number(match[1]), match[2].trim());
+	}
+	return summaries;
+}

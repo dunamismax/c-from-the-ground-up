@@ -453,7 +453,10 @@ printf 'Smoke check compiler: %s\n' "$CC"
 printf 'Smoke check standard: %s\n' "$STANDARD_FLAG"
 printf 'Smoke check flags: %s\n' "$EFFECTIVE_CFLAGS"
 
-(cd "$ROOT_DIR" && find . -type f -name '*.c' | sort > "$SOURCE_LIST")
+# Lessons live only in the Part directories. Searching the whole repository
+# would also pick up copies elsewhere, such as the lesson downloads the
+# website build writes under site/.
+(cd "$ROOT_DIR" && find ./Part* -type f -name '*.c' | sort > "$SOURCE_LIST")
 
 compiled_count=0
 

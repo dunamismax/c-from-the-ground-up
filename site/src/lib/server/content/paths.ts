@@ -10,15 +10,22 @@ const BRANCH = 'main';
  * so this is normally `..`. Course content is only read at build time.
  */
 export function courseRoot(start: string = process.cwd()): string {
+	const root = findCourseRoot(start);
+	if (root === null) {
+		throw new Error(`cannot find the course root (book.toml and src/SUMMARY.md) above ${start}`);
+	}
+	return root;
+}
+
+/** Like courseRoot(), but returns null when there is no course above `start`. */
+export function findCourseRoot(start: string = process.cwd()): string | null {
 	let dir = path.resolve(start);
 	for (;;) {
 		if (existsSync(path.join(dir, 'book.toml')) && existsSync(path.join(dir, 'src/SUMMARY.md'))) {
 			return dir;
 		}
 		const parent = path.dirname(dir);
-		if (parent === dir) {
-			throw new Error(`cannot find the course root (book.toml and src/SUMMARY.md) above ${start}`);
-		}
+		if (parent === dir) return null;
 		dir = parent;
 	}
 }

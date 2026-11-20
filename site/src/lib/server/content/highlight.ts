@@ -1,11 +1,21 @@
-// Build-time syntax highlighting with Shiki. Pages get finished HTML whose
-// token colors are CSS variables for both themes (--shiki-light and
-// --shiki-dark); app.css picks one. No highlighting code reaches the browser.
+// Build-time syntax highlighting with Shiki. Pages get finished HTML with the
+// token colors inline; no highlighting code reaches the browser. Code is shown
+// dark in both site themes, so one theme is enough. The <pre> background comes
+// from the site's own --c-code token (app.css), not from the theme.
 
-import { createHighlighter, type Highlighter } from 'shiki';
+import { createHighlighter, type Highlighter, type ShikiTransformer } from 'shiki';
 import type { Element, Root } from 'hast';
 
-export const THEMES = { light: 'github-light', dark: 'github-dark' } as const;
+// github-dark-default, not github-dark: its comments (#8b949e) meet WCAG AA
+// contrast on the code background, and in this course the comments are the
+// lesson.
+export const THEME = 'github-dark-default';
+
+const dropPreStyle: ShikiTransformer = {
+	pre(node) {
+		delete node.properties.style;
+	}
+};
 
 const LANGUAGES = ['c', 'makefile', 'shellscript'] as const;
 
@@ -25,7 +35,7 @@ const ALIASES: Record<string, string> = {
 let highlighter: Promise<Highlighter> | undefined;
 
 export function getHighlighter(): Promise<Highlighter> {
-	highlighter ??= createHighlighter({ themes: Object.values(THEMES), langs: [...LANGUAGES] });
+	highlighter ??= createHighlighter({ themes: [THEME], langs: [...LANGUAGES] });
 	return highlighter;
 }
 
@@ -47,8 +57,8 @@ export function highlightToHast(hl: Highlighter, code: string, lang: string): El
 	const language = shikiLanguage(lang);
 	const root = hl.codeToHast(trimFinalNewline(code), {
 		lang: language,
-		themes: THEMES,
-		defaultColor: false
+		theme: THEME,
+		transformers: [dropPreStyle]
 	});
 	const pre = root.children.find(
 		(node): node is Element => node.type === 'element' && node.tagName === 'pre'
@@ -61,8 +71,8 @@ export function highlightToHast(hl: Highlighter, code: string, lang: string): El
 export function highlightToHtml(hl: Highlighter, code: string, lang: string): string {
 	return hl.codeToHtml(trimFinalNewline(code), {
 		lang: shikiLanguage(lang),
-		themes: THEMES,
-		defaultColor: false
+		theme: THEME,
+		transformers: [dropPreStyle]
 	});
 }
 

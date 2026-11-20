@@ -47,7 +47,9 @@ first for conventions and the verification workflow.
   `site/` holds a SvelteKit 3 scaffold with a placeholder home page and
   `/healthz`, wired into `make verify` and CI. W2 is done: the content loader
   in `site/src/lib/server/content/` turns the chapters and lesson files into
-  typed, highlighted `Lesson` objects. Continue at milestone W3.
+  typed, highlighted `Lesson` objects. W3 is done except a Lighthouse run: the
+  design system, landing, course overview, part, lesson, setup, about and 404
+  pages, all prerendered. Continue at milestone W4.
 - **Live:** https://cfromthegroundup.com serves the W1 placeholder from
   `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
   remaining items are listed there.
@@ -235,36 +237,51 @@ before relying on memory. In particular:
 
 #### W3. Design system and core pages
 
-- [ ] Visual identity: a logo or wordmark, a color palette and a type scale.
+- [x] Visual identity: a logo or wordmark, a color palette and a type scale.
   - a readable serif or sans for long-form prose, plus a monospace for code
   - light and dark themes, with dark preferred for code
   - define everything as Tailwind `@theme` tokens
-- [ ] Layout: a header and footer, plus a course sidebar that lists the parts
+  Done: the mark (a C on two layers of ground, `Logo.svelte` and
+  `favicon.svg`), warm paper neutrals with a "C blue" accent and an ember
+  highlight, system font stacks only (serif prose, sans UI, mono code), all as
+  `--c-*` properties per theme exposed through `@theme inline` in `app.css`.
+  Code is dark in both themes.
+- [x] Layout: a header and footer, plus a course sidebar that lists the parts
       and lessons. The sidebar collapses on mobile. Add skip links.
-- [ ] Pages:
+- [x] Pages:
   - landing (`/`): pitch, curriculum overview, "Start lesson 1" call to action
   - course overview (`/lessons`): all parts, lesson cards, what each part
-    covers
+    covers (part summaries are parsed from the Structure list in
+    `src/index.md`)
   - lesson pages (`/lessons/[slug]`)
+  - part pages (`/parts/[n]`), per the stable-URL plan
   - Setup guide (`/setup`): installing a compiler on macOS, Linux and Windows
     (WSL), and running your first program. This absorbs the "Setup chapter"
     item from the Later backlog.
   - about (`/about`), with a GitHub link and the license
   - a custom 404 page
-- [ ] Lesson page components:
+- [x] Lesson page components:
   - code block with copy button, line numbers, file name, download link and a
-    "View on GitHub" link
+    "View on GitHub" link (downloads are prerendered at
+    `/lessons/<slug>/files/<name>`)
   - compile and run panel with macOS / Linux / Windows (WSL) tabs
   - an "on this page" table of contents
   - previous and next navigation
   - part and lesson breadcrumbs
   - platform badges (POSIX, ncurses)
-- [ ] Accessibility target: WCAG 2.2 AA. Pages must be fully keyboard navigable,
+- [x] Accessibility target: WCAG 2.2 AA. Pages must be fully keyboard navigable,
       use visible focus rings, and respect `prefers-reduced-motion`.
-- [ ] Performance target: Lighthouse 95+ on mobile for lesson pages.
+      `src/routes/a11y.e2e.ts` runs axe-core (WCAG 2.2 AA rules) on every kind
+      of page in both themes; other e2e tests cover the skip link, keyboard tab
+      switching and the mobile outline. A manual screen-reader pass belongs to
+      the W7 launch check.
+- [ ] Performance target: Lighthouse 95+ on mobile for lesson pages. Not yet
+      measured. Pages ship no web fonts and little JavaScript; the largest
+      lesson page (35) is 20 KB with Brotli.
 - **Done when:** every lesson is readable on the site at parity with the mdBook,
   on desktop and mobile, in both themes, and Playwright e2e tests cover the
   landing page, a lesson page and navigation.
+- **Status (2026-11-20):** done except the Lighthouse measurement.
 
 #### W4. Learner experience (no accounts yet)
 
@@ -546,7 +563,7 @@ the lessons it serves.
 - [ ] **Per-chapter "What you'll learn / prerequisites"** box at the top of each
       chapter.
 - [ ] **Glossary page** for the UPPERCASE terms the lessons introduce.
-- [ ] **Setup chapter** ("Chapter 0"). Cover installing a compiler on
+- [ ] **Setup chapter** ("Chapter 0"). The site's `/setup` page exists now (W3). Cover installing a compiler on
       macOS, Linux and Windows (WSL), using a terminal, and running a lesson. This
       depends on D1 and D3. It is now planned as the site's `/setup` page in W3;
       add it to the book too if the mdBook is kept (D6).
@@ -586,6 +603,18 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
+
+- **Content type for lesson downloads.** Prerendered files under
+  `/lessons/<slug>/files/` are served by adapter-node without a
+  `Content-Type` for `.c`, `.h` and `Makefile` (the download links still
+  work through the `download` attribute). Opening one directly downloads it
+  rather than showing it. Consider having Caddy serve `build/prerendered`
+  for those paths with `text/plain; charset=utf-8`.
+- **Chapter prose is all one style of paragraph.** The converted comments
+  keep their UPPERCASE run-in headings ("WHAT IS A COMPILER?") inside
+  paragraphs. On the site these could become real `###` headings, which
+  would also feed the table of contents; that is a chapter prose change, so
+  it belongs to the prose drift audit.
 
 - **Linux smoke check from macOS.** Add a `make smoke-linux` target that runs
   `scripts/smoke_check.sh` in a Docker image (for example `gcc:15` plus
@@ -638,6 +667,25 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** milestone W3, design system and core pages (Lighthouse
+  measurement still open).
+  - Tokens in `site/src/app.css`; components in `site/src/lib/components/`
+    (header, footer, theme toggle, course sidebar, code block, copy button,
+    run panel, table of contents, prev/next, badges, lesson card, page meta).
+  - Routes: `/`, `/lessons`, `/lessons/[slug]`, `/lessons/[slug]/files/[name]`,
+    `/parts/[n]`, `/setup`, `/about` and `+error.svelte`, all prerendered. An
+    unknown lesson or part at runtime is a clean 404 (checked against a copy of
+    the build outside the repository, as production runs it).
+  - Shiki uses `github-dark-default`, whose comment color passes AA contrast on
+    the code background.
+  - e2e: landing, header navigation, theme persistence, skip link, 404, lesson
+    page (listing, run panel, sidebar, prev/next), keyboard tabs, table of
+    contents, downloads, mobile outline, part page, and axe-core in both
+    themes (30 tests).
+  - Chapters 15, 16, 25, 26, 27, 30 and 34 now show run commands with the
+    arguments their programs need, and a test keeps them in step with the
+    site's metadata.
 
 - **2026-11-20:** milestone W2, course content pipeline.
   - `site/src/lib/server/content/`: `summary.ts` parses `src/SUMMARY.md`,
