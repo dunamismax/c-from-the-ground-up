@@ -161,8 +161,8 @@ int calculate_damage(int strength, int weapon_power)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 7_functions 7_functions.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 7_functions 7_functions.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./7_functions`
- *    - On Windows:       `7_functions.exe`
+ *    - On Windows (WSL): `./7_functions`
  */

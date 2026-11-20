@@ -7,10 +7,10 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 
 | | |
 | --- | --- |
-| **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus), milestone W7 (launch). W1-W6 are done; what is left of W0 and W7 needs the maintainer. |
-| **Next step** | Until the maintainer clears W7, work the [course content track](#course-content-track) in order: finish the **chapter prose drift audit** (read each chapter beside its lesson for tone and order), then make the **GCC `-fanalyzer`** CI step blocking once it has stayed clean, then the [Ideas inbox](#ideas-inbox). Triage W8+ into milestones once W7 is done. |
+| **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
+| **Next step** | The **chapter prose drift audit** (read each chapter beside its lesson for tone and order), then the [Ideas inbox](#ideas-inbox), the Later items (setup chapter, prerequisites boxes, glossary, exercises), Part 6 (lessons 36-38) and W9. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) The go-ahead to set the repo homepage (W7): `gh repo edit dunamismax/c-from-the-ground-up --homepage https://cfromthegroundup.com`. (3) A manual screen-reader pass (W7). (4) Decisions D1-D9; each has a default. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). |
 | **Live** | https://cfromthegroundup.com serves `25146a8`, deployed 2026-11-20 with `site/deploy/`, so the site matches the lessons on `main`. The database has the W6 tables; accounts are off until the OAuth app exists. |
 | **`main`** | `make verify` and CI are green at `25146a8`. |
 | **Last updated** | 2026-11-20 |
@@ -19,14 +19,15 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 
 | Milestone | Status |
 | --- | --- |
-| [W0. Inputs from the maintainer](#w0-inputs-from-the-maintainer-agents-ask-do-not-block-on-these) | Server facts and DNS done; the OAuth app and decisions D6-D10 are open |
+| [W0. Inputs from the maintainer](#w0-inputs-from-the-maintainer-agents-ask-do-not-block-on-these) | Server facts, DNS and decisions done; the OAuth app is open |
 | [W1. Scaffold the app](#w1-scaffold-the-app) | Done |
 | [W2. Course content pipeline](#w2-course-content-pipeline) | Done |
 | [W3. Design system and core pages](#w3-design-system-and-core-pages) | Done |
 | [W4. Learner experience](#w4-learner-experience-no-accounts-yet) | Done |
 | [W5. Production deployment](#w5-production-deployment) | Done |
 | [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production until the OAuth app exists |
-| [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer steps left: repo homepage, screen-reader pass |
+| [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer step left: screen-reader pass |
+| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Not started |
 | [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Ideas, to triage when W7 is done |
 
 ## How to work this file
@@ -166,9 +167,9 @@ before relying on memory. In particular:
     at `/home/sawyer/github/c-from-the-ground-up`
 - [x] Cloudflare setup: both records are **DNS only**. They resolve straight to
       the host's public IP, so Caddy's automatic HTTPS applies (D10).
-- [ ] Decisions D6-D10 below. Every one has a default, so W1-W5 can proceed
-      without them. W6 was built with D7's default (GitHub only); say if you
-      want something else.
+- [x] Decisions D6-D10, settled 2026-11-20 (see the Decision log): keep the
+      book as a mirror, GitHub sign-in only, Compiler Explorer links, Umami
+      analytics, DNS only.
 - [ ] A GitHub OAuth app for sign-in (W6), under the maintainer's account:
       homepage `https://cfromthegroundup.com`, callback
       `https://cfromthegroundup.com/api/auth/callback/github`. Then write
@@ -467,10 +468,10 @@ runbook.
       (`src/lib/server/og.ts`). Fonts come from the `@fontsource` packages
       (Inter, JetBrains Mono; OFL), so no font file is committed. `PageMeta`
       sets `og:image` and `twitter:card`.
-- [ ] Point everything at the site:
-  - [ ] set the repo homepage to `https://cfromthegroundup.com` (a GitHub
-        setting: `gh repo edit dunamismax/c-from-the-ground-up --homepage
-        https://cfromthegroundup.com`; waiting for the maintainer's go-ahead)
+- [x] Point everything at the site:
+  - [x] set the repo homepage to `https://cfromthegroundup.com`. Done
+        2026-11-20 with the maintainer's go-ahead (`gh repo edit
+        --homepage`); `gh repo view --json homepageUrl` returns it.
   - [x] the site is the first link in `README.md`
   - [x] a banner in `src/index.md`, and D6's default applied to the mdBook:
         every book page has a link to the same lesson on the site
@@ -497,90 +498,66 @@ runbook.
       cannot judge it.
 - **Done when:** the site is the documented primary way to take the course.
 
+#### W9. Analytics (D9: self-hosted Umami)
+
+- [ ] Umami runs on `ubuntu-vm` as its own systemd service on a local port,
+      with its own database and role in the shared PostgreSQL 18, set up by a
+      script in `site/deploy/` (no other site's files touched).
+- [ ] The tracker reaches Umami through the site's own origin (a Caddy
+      `handle` for the script and the collect endpoint), so no new DNS record
+      and no new CSP origin are needed. The dashboard is reached over an SSH
+      tunnel, not published.
+- [ ] The site loads the tracker only when `PUBLIC_UMAMI_WEBSITE_ID` is set,
+      respects Do Not Track, sets no cookies, and the CSP allows it; e2e
+      tests cover both on and off.
+- [ ] `/privacy` says what Umami records (page, referrer, browser, country;
+      no cookies, no IP stored) and the runbook says how to install, back up
+      and update it.
+- **Done when:** page views from the live site show up in Umami, and the site
+  works exactly as before when Umami is down or switched off.
+
 #### W8+. Beyond parity (triage into milestones when W7 is done)
 
 - Exercises per lesson with automated checking (see "Exercises" in Later), and
   short end-of-lesson quizzes.
-- In-browser compile and run (D8).
+- In-browser compile and run: not planned. D8 keeps the Compiler Explorer
+  link-out.
 - Completion certificates per part and for the whole course.
 - Notes and bookmarks per lesson (needs W6).
-- Self-hosted, privacy-friendly analytics (D9).
+- Self-hosted, privacy-friendly analytics: chosen by D9, now milestone W9.
 - Offline support (PWA), and a printable or PDF edition generated from the same
   content.
 - Translations, if the audience asks for them.
 
 ### Website decisions (maintainer)
 
-- [ ] **D6. Future of the mdBook on GitHub Pages.** The default's banner is in
-      place (W7, 2026-11-20); a redirect or retirement is still open.
-  - Default: keep publishing it until W7, then add a banner on every page
-    pointing to the matching lesson on the site.
-  - Alternatives: full redirect, or retire it.
-- [ ] **D7. Sign-in methods.** W6 was built with the default (2026-11-20).
-  - Default: GitHub OAuth only. It fits the audience and needs no email service.
-  - Options: add email magic links (requires an SMTP or email API provider),
-    and/or email + password.
-- [ ] **D8. Running C in the browser.**
-  - Default: link out to Compiler Explorer (W4).
-  - Options:
-    - Compiler Explorer's API from our backend
-    - a WebAssembly toolchain in the browser (heavy download, sandboxed)
-    - our own sandboxed compile server, using nsjail or Firecracker on the
-      server. This has a real security cost and must not be built without
-      explicit approval.
-- [ ] **D9. Analytics.**
-  - Default: none until launch.
-  - Options: self-hosted Umami or Plausible, sharing the PostgreSQL instance.
-- [x] **D10. Cloudflare proxy and TLS.** Settled 2026-11-20: the records are
-      DNS only, so Caddy's automatic HTTPS is used (see the Decision log).
-  - If the DNS record is **DNS only**, Caddy's automatic HTTPS works
-    unchanged.
-  - If it is **proxied**, set Cloudflare SSL/TLS to **Full (strict)** and do
-    one of the following:
-    - (a) Default: install a Cloudflare Origin CA certificate in Caddy with the
-      `tls` directive.
-    - (b) Build Caddy with the `caddy-dns/cloudflare` module and use the ACME
-      DNS challenge, which needs a scoped API token on the server.
-  - Either way, configure Caddy `trusted_proxies` with Cloudflare's IP ranges
-    so client IPs are correct.
+All settled on 2026-11-20; the outcomes are in the Decision log.
+
+- [x] **D6. Future of the mdBook on GitHub Pages:** keep it as a mirror, with
+      the banner on every page linking to the site.
+- [x] **D7. Sign-in methods:** GitHub OAuth only, as built in W6.
+- [x] **D8. Running C in the browser:** keep linking out to Compiler Explorer
+      (W4). No backend compile service.
+- [x] **D9. Analytics:** self-hosted Umami, cookieless (see W9).
+- [x] **D10. Cloudflare proxy and TLS:** DNS only, so Caddy's automatic HTTPS
+      is used.
 
 ---
 
-## Open decisions: course content (maintainer)
+## Course content decisions (maintainer)
 
-Website decisions D6-D10 are listed under Phase W. These block related backlog
-items. Agents: do not act on them; ask the user, or
-leave them alone.
+All settled on 2026-11-20; the outcomes are in the Decision log.
 
-- [ ] **D1. Which C standard do the lessons teach?** CI compiles with `-std=c23`
-      (falling back to c17), but 113 compile commands in lesson comments and chapter
-      "How to Compile and Run" sections say `-std=c11`. Lesson 1 explains the flag
-      as "the C11 standard".
-  - Options:
-    - (a) Teach `-std=c17`. It is universally available and needs no fallback
-      note.
-    - (b) Teach `-std=c23` with a "use `-std=c2x` or `-std=c17` on older
-      compilers" note. Ubuntu 22.04's GCC 11 rejects `-std=c23`.
-    - (c) Keep c11 and just say CI checks newer standards too.
-  - Whichever is chosen, update every lesson, chapter, README and `src/index.md`
-    in one sweep, and teach the chosen flag in lesson 1.
-- [ ] **D2. Rename the `Part N - ...` directories to path-safe names?** Examples:
-      `part-1-beginner/01_hello_world.c`. Spaces and `&` make every shell command
-      awkward and stop mdBook `{{#include}}` from working, which is why the sync
-      script exists.
-  - Cost: it breaks every external deep link to a lesson file on GitHub, and
-    GitHub does not redirect moved paths.
-  - If yes: rename with `git mv`, update `scripts/`, `AGENTS.md`, `README.md`,
-    the markers and the smoke check, then consider replacing the sync script with
-    `{{#include}}`.
-- [ ] **D3. Windows support level.** Today it is "use WSL for lessons 26-35". The
-      options: add a CI job for MinGW (MSYS2) or MSVC on lessons 1-25, or state
-      WSL as the official Windows path.
-- [ ] **D4. Which new-content tracks to pursue?** See **Content expansion**. The
-      libsodium, fuzzing and CMake tracks add dependencies and CI weight. Pick the
-      tracks before anyone starts them.
-- [ ] **D5. `@date` headers.** Every lesson says `06-15-2025`. The options:
-      leave them, drop the tag, or update it on meaningful edits.
+- [x] **D1. C standard:** the lessons teach `-std=c17`. The smoke check
+      compiles every lesson with it and again with `-std=c23`.
+- [x] **D2. Directory names:** keep the `Part N - ...` names, so external
+      links keep working. The sync script stays.
+- [x] **D3. Windows:** WSL is the official Windows path for the whole course.
+- [x] **D4. New content:** the debugging, undefined behaviour and testing
+      lessons, as a new Part 6 (lessons 36-38). The other tracks stay in
+      **Content expansion** as ideas, not planned work.
+- [x] **D5. `@date` headers:** keep them as the date a lesson was first
+      published; do not bump them on edits.
 
 ---
 
@@ -649,10 +626,9 @@ the lessons it serves.
 - [x] **Leak checking** with LeakSanitizer for every lesson it can run,
       including the heap lessons 13, 17, 20, 25, 28 and 35's loader. Done
       2026-11-20.
-- [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first. `make analyze`
-      and a `continue-on-error` step in the `analyze` CI job (GCC 14) exist
-      since 2026-11-20; GCC 14 (on CI), 15 and 16 report nothing. Make the
-      step blocking once it has stayed clean on CI for a while.
+- [x] **GCC `-fanalyzer`** pass in CI. Blocking since 2026-11-20: the step
+      passed on every CI run since it was added, and GCC 14 (on CI), 15 and
+      16 report nothing, so `continue-on-error` is gone.
 - [x] **`compile_commands.json`** or a `.clangd` file. Done 2026-11-20: a
       root `.clangd` adds the smoke check's flags (without `-Werror`).
 - [x] **CI upkeep.** Done 2026-11-20; see the Done log. Review the action
@@ -664,33 +640,38 @@ the lessons it serves.
 - [ ] **Exercises.** Add a "Try it yourself" section to each chapter with 2-3
       exercises. Optionally add hidden solutions in an `exercises/` directory
       that the smoke check compiles.
-- [ ] **Images.** `assets/images/` holds 7 images that the book never
-      references. Use them, for example in the introduction, or delete them.
+- [x] **Images.** Done 2026-11-20: the 7 unused images in `assets/images/`
+      were deleted at the maintainer's request (unused, and several were
+      third-party artwork with no clear license). `assets/images/site/` keeps
+      the README screenshots.
 - [ ] **Per-chapter "What you'll learn / prerequisites"** box at the top of each
       chapter.
 - [ ] **Glossary page** for the UPPERCASE terms the lessons introduce.
 - [ ] **Setup chapter** ("Chapter 0") for the book. The site's `/setup` page
-      (W3) already covers this. If the mdBook is kept (D6), add a matching
+      (W3) already covers this. The mdBook is kept (D6), so add a matching
       chapter: installing a compiler on macOS, Linux and Windows (WSL), using a
-      terminal, and running a lesson. Depends on D1 and D3.
+      terminal, and running a lesson, teaching `-std=c17` (D1) and WSL on
+      Windows (D3).
 
-### Content expansion (pending D4)
+### Content expansion
 
-Carried over from the original Phase 6 plan, plus new ideas. Each new lesson
-follows the "Adding a new lesson" checklist in AGENTS.md.
+D4 (2026-11-20) picked the first three items below, as Part 6, lessons 36-38.
+The rest are ideas, not planned work; each needs the maintainer's go-ahead
+before anyone starts it. Each new lesson follows the "Adding a new lesson"
+checklist in AGENTS.md.
 
-- [ ] **Debugging lesson.** Cover `gdb`/`lldb` basics, breakpoints and
-      backtraces, and reading sanitizer reports. It fits well in Part 3.
-- [ ] **Undefined behaviour lesson.** Cover signed overflow, out-of-bounds
+- [ ] **Debugging lesson** (Part 6, lesson 36). Cover `gdb`/`lldb` basics, breakpoints and
+      backtraces, and reading sanitizer reports.
+- [ ] **Undefined behaviour lesson** (Part 6, lesson 37). Cover signed overflow, out-of-bounds
       access, uninitialized reads and strict aliasing, and show UBSan catching
       them.
-- [ ] **Testing in C lesson.** Use plain `assert` and exit-code tests, with the
+- [ ] **Testing in C lesson** (Part 6, lesson 38). Use plain `assert` and exit-code tests, with the
       `#define main` harness trick the smoke check already uses. Add
       `tests/test_linked_list.c` (lesson 20) and `tests/test_hash_table.c`
       (lesson 28).
 - [ ] **Modern C (C23) lesson.** Cover `nullptr`, `bool`/`true` as keywords,
       `constexpr`, `typeof`, `[[nodiscard]]`, digit separators and `#embed`. This
-      depends on D1.
+      D1 teaches C17, so this lesson would give the `-std=c23` command.
 - [ ] **Build systems beyond Make.** A lesson on CMake with Ninja, optionally
       with a root `CMakeLists.txt` and CTest registration for all lessons.
 - [ ] **Networking depth.** A `poll()`-based concurrent echo server, and a Unix
@@ -736,6 +717,26 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-20: the maintainer settled D1-D9.**
+  - D1: the lessons teach **C17**. Every `-std=c11` became `-std=c17`, lesson 1
+    explains the standards, and the site's `C_STANDARD` is `c17`. The smoke
+    check now compiles with `-std=c17` and, when the compiler accepts it,
+    again with `-std=c23`; the sanitizer check, clang-tidy and the analyzer
+    use C17.
+  - D2: keep the directory names. External links matter more than shorter
+    paths; the sync script stays.
+  - D3: **WSL** is the official Windows path. Run lines say "On Windows
+    (WSL)", not `.exe`.
+  - D4: build the debugging, undefined behaviour and testing lessons as a new
+    **Part 6** (lessons 36-38), appended so no published URL moves. The other
+    content tracks stay as ideas.
+  - D5: keep `@date` as the first-published date.
+  - D6: keep the mdBook as a mirror with the banner. So the book gets a setup
+    chapter too.
+  - D7: GitHub sign-in only.
+  - D8: keep the Compiler Explorer link-out.
+  - D9: self-hosted **Umami** analytics (W9). The images in `assets/images/`
+    were deleted at the same time.
 - **2026-11-20: W6 uses `+server.ts` JSON endpoints, not remote functions.**
   BUILD.md planned remote functions for progress, but in SvelteKit 3.1 they
   are still experimental and need Svelte's experimental async mode across the
@@ -789,6 +790,17 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** the maintainer settled D1-D9 and set the repo homepage.
+  D1: 123 `-std=c11` commands became `-std=c17` (lessons, chapters, lesson
+  31's Makefile, the site's `C_STANDARD` and its tests), lesson 1 explains the
+  C standards, and the README and book intro teach C17. The smoke check now
+  requires `-std=c17` and compiles all 37 source files again with
+  `-std=c23`; the sanitizer check, clang-tidy and the analyzer use C17. D3:
+  the 28 "On Windows: `x.exe`" lines say "On Windows (WSL): `./x`". D5 is
+  written into AGENTS.md. The 7 unused images were deleted, and the GCC
+  analyzer step is blocking (it passed on every CI run). Checked with `make
+  verify`.
 
 - **2026-11-20:** sixth production deploy, commit `25146a8`, which brings the
   site up to date with the lessons (stricter-warning edits, lesson 21's

@@ -219,8 +219,8 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 6_loops 6_loops.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 6_loops 6_loops.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./6_loops`
- *    - On Windows:       `6_loops.exe`
+ *    - On Windows (WSL): `./6_loops`
  */

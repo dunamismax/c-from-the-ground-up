@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 16_simple_calculator 16_simple_calculator.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 16_simple_calculator 16_simple_calculator.c`
  *
  * 4. Run the executable with different arguments:
  *

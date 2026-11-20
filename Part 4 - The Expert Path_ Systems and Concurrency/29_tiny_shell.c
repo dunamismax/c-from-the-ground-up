@@ -207,7 +207,7 @@ int main(void)
  * HOW TO COMPILE AND RUN THIS CODE:
  *
  * 1. Open a terminal and compile the program:
- *    `gcc -Wall -Wextra -std=c11 -o 29_tiny_shell 29_tiny_shell.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 29_tiny_shell 29_tiny_shell.c`
  *
  * 2. Run your new shell:
  *    `./29_tiny_shell`

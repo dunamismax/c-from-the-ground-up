@@ -53,10 +53,11 @@ export UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1:exitcode=$FOUND"
 export MSAN_OPTIONS="exitcode=$FOUND"
 export TSAN_OPTIONS="exitcode=$FOUND:halt_on_error=1"
 
-STANDARD=-std=c23
+# The standard the lessons teach (BUILD.md decision D1). The smoke check also
+# compiles every lesson under C23.
+STANDARD=-std=c17
 probe=$BUILD_DIR/probe.c
 printf 'int main(void)\n{\n    return 0;\n}\n' > "$probe"
-"$CC" $STANDARD "$probe" -o "$BUILD_DIR/probe" >/dev/null 2>&1 || STANDARD=-std=c17
 
 NCURSES_FLAG=
 for flag in -lncursesw -lncurses; do

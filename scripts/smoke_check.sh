@@ -12,6 +12,12 @@ LESSON31_DIR="$ROOT_DIR/Part 5 - Expert Systems & Application Development/31_mak
 SOCKET_SERVER_PID=
 STANDARD_FLAG=
 EFFECTIVE_CFLAGS=
+# The lessons teach C17 (BUILD.md decision D1), so that is the standard every
+# check below uses. When the compiler also accepts C23, every lesson is
+# compiled a second time under it, so the course keeps building on the newest
+# standard too.
+TAUGHT_STANDARD=-std=c17
+NEWER_STANDARD=-std=c23
 
 cleanup() {
     if [ -n "${SOCKET_SERVER_PID}" ]; then
@@ -24,7 +30,7 @@ cleanup() {
 
 trap cleanup EXIT INT TERM HUP
 
-detect_standard_flag() {
+standard_supported() {
     cat > "$BUILD_DIR/standard_probe.c" <<'EOF'
 int main(void)
 {
@@ -32,14 +38,7 @@ int main(void)
 }
 EOF
 
-    for flag in -std=c23 -std=c17; do
-        if "$CC" $BASE_CFLAGS "$BUILD_DIR/standard_probe.c" -o "$BUILD_DIR/standard_probe" "$flag" >/dev/null 2>&1; then
-            printf '%s\n' "$flag"
-            return 0
-        fi
-    done
-
-    return 1
+    "$CC" $BASE_CFLAGS "$BUILD_DIR/standard_probe.c" -o "$BUILD_DIR/standard_probe" "$1" >/dev/null 2>&1
 }
 
 detect_ncurses_flag() {
@@ -81,6 +80,7 @@ EOF
 compile_lesson() {
     lesson_path=$1
     output_path=$2
+    lesson_cflags=${3:-$EFFECTIVE_CFLAGS}
     extra_flags=
 
     case "$lesson_path" in
@@ -96,7 +96,7 @@ compile_lesson() {
     esac
 
     printf 'Compiling %s\n' "$lesson_path"
-    "$CC" $EFFECTIVE_CFLAGS "$ROOT_DIR/$lesson_path" -o "$output_path" $extra_flags
+    "$CC" $lesson_cflags "$ROOT_DIR/$lesson_path" -o "$output_path" $extra_flags
 }
 
 fail_with_output() {
@@ -526,10 +526,11 @@ case "$BASE_CFLAGS" in
         }')
         ;;
     *)
-        STANDARD_FLAG=$(detect_standard_flag) || {
-            echo "Could not find a usable language standard flag (-std=c23 or -std=c17)." >&2
+        standard_supported "$TAUGHT_STANDARD" || {
+            echo "$CC does not accept $TAUGHT_STANDARD, the standard the lessons teach." >&2
             exit 1
         }
+        STANDARD_FLAG=$TAUGHT_STANDARD
         EFFECTIVE_CFLAGS="$BASE_CFLAGS $STANDARD_FLAG"
         ;;
 esac
@@ -570,6 +571,28 @@ make -C "$LESSON31_DIR" CC="$CC" CFLAGS="$EFFECTIVE_CFLAGS" >/dev/null
 test -x "$LESSON31_DIR/31_project_main"
 make -C "$LESSON31_DIR" clean >/dev/null
 
+newer_count=0
+if [ "$STANDARD_FLAG" = "$TAUGHT_STANDARD" ] && standard_supported "$NEWER_STANDARD"; then
+    newer_cflags="$BASE_CFLAGS $NEWER_STANDARD"
+    printf 'Compiling every lesson again with %s\n' "$NEWER_STANDARD"
+    while IFS= read -r lesson_path; do
+        lesson_path=${lesson_path#./}
+        lesson_name=$(basename "${lesson_path%.c}")
+        case "$lesson_path" in
+            */31_make_files_for_multi_file_projects/*)
+                # Lesson 31 is several files; -c compiles each without linking.
+                "$CC" $newer_cflags -c "$ROOT_DIR/$lesson_path" -o "$BUILD_DIR/newer_$lesson_name.o"
+                ;;
+            *)
+                compile_lesson "$lesson_path" "$BUILD_DIR/newer_$lesson_name" "$newer_cflags" >/dev/null
+                ;;
+        esac
+        newer_count=$((newer_count + 1))
+    done < "$SOURCE_LIST"
+else
+    printf 'Skipping the %s pass: %s does not accept it.\n' "$NEWER_STANDARD" "$CC"
+fi
+
 run_analyzer_check
 run_socket_check
 run_student_record_checks
@@ -580,4 +603,8 @@ run_text_editor_check
 run_hash_table_check
 run_sanitizer_regressions
 
-printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31.\n' "$compiled_count"
+printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31 with %s' "$compiled_count" "$STANDARD_FLAG"
+if [ "$newer_count" -gt 0 ]; then
+    printf ', and %d source files again with %s' "$newer_count" "$NEWER_STANDARD"
+fi
+printf '.\n'

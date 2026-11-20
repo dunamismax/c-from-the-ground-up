@@ -238,10 +238,10 @@ int main(int argc, char *argv[])
  * the server first.
  *
  * 1. Open a terminal and compile the client:
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_client 26_simple_socket_client.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_client 26_simple_socket_client.c`
  *
  * 2. In a DIFFERENT terminal, compile and run the server (`26_simple_socket_server.c`):
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_server 26_simple_socket_server.c`
  *    `./26_simple_socket_server 8888`
  *
  * 3. Go back to the FIRST terminal (for the client) and run it, providing the

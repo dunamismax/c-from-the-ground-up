@@ -156,16 +156,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 11_pointers_and_arrays 11_pointers_and_arrays.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 11_pointers_and_arrays 11_pointers_and_arrays.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./11_pointers_and_arrays`
- *    - On Windows:       `11_pointers_and_arrays.exe`
+ *    - On Windows (WSL): `./11_pointers_and_arrays`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 11_pointers_and_arrays 11_pointers_and_arrays.c
+cc -Wall -Wextra -std=c17 -o 11_pointers_and_arrays 11_pointers_and_arrays.c
 ./11_pointers_and_arrays
 ```

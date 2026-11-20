@@ -459,7 +459,7 @@ int main(void)
  * HOW TO COMPILE AND RUN THIS CODE:
  *
  * 1. Open a terminal and compile the program:
- *    `gcc -Wall -Wextra -std=c11 -o 28_hash_table_implementation 28_hash_table_implementation.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 28_hash_table_implementation 28_hash_table_implementation.c`
  *
  * 2. Run the executable:
  *    `./28_hash_table_implementation`
@@ -473,6 +473,6 @@ int main(void)
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 28_hash_table_implementation 28_hash_table_implementation.c
+cc -Wall -Wextra -std=c17 -o 28_hash_table_implementation 28_hash_table_implementation.c
 ./28_hash_table_implementation
 ```

@@ -68,9 +68,9 @@ describe('lesson metadata', () => {
 	it('generates compile and run commands', () => {
 		const hello = lessonMeta(1, ['1_hello_world.c']);
 		expect(lessonCommands(hello)).toEqual({
-			build: ['cc -Wall -Wextra -std=c11 -o 1_hello_world 1_hello_world.c'],
+			build: ['cc -Wall -Wextra -std=c17 -o 1_hello_world 1_hello_world.c'],
 			run: ['./1_hello_world'],
-			onlineOptions: '-std=c11 -Wall -Wextra'
+			onlineOptions: '-std=c17 -Wall -Wextra'
 		});
 		expect(hello).toMatchObject({
 			platform: 'portable',
@@ -79,7 +79,7 @@ describe('lesson metadata', () => {
 			online: true
 		});
 		expect(lessonCommands(lessonMeta(32, ['32_linking_external_libraries.c'])).onlineOptions).toBe(
-			'-std=c11 -Wall -Wextra -lm'
+			'-std=c17 -Wall -Wextra -lm'
 		);
 		// Lessons that need files, POSIX or several files run locally only.
 		for (const [lesson, files] of [
@@ -94,7 +94,7 @@ describe('lesson metadata', () => {
 
 		const threads = lessonMeta(30, ['30_multithreaded_file_analyzer.c']);
 		expect(lessonCommands(threads).build).toEqual([
-			'cc -Wall -Wextra -std=c11 -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c -pthread'
+			'cc -Wall -Wextra -std=c17 -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c -pthread'
 		]);
 		expect(threads).toMatchObject({ platform: 'posix', needsArgs: true });
 
@@ -114,7 +114,7 @@ describe('lesson metadata', () => {
 
 	it('puts link flags after the source file', () => {
 		expect(compileCommand({ source: 'a.c', output: 'a', args: '' }, ['m', 'ncurses'])).toBe(
-			'cc -Wall -Wextra -std=c11 -o a a.c -lm -lncurses'
+			'cc -Wall -Wextra -std=c17 -o a a.c -lm -lncurses'
 		);
 	});
 

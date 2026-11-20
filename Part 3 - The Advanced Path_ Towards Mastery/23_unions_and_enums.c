@@ -167,8 +167,8 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 23_unions_and_enums 23_unions_and_enums.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 23_unions_and_enums 23_unions_and_enums.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./23_unions_and_enums`
- *    - On Windows:       `23_unions_and_enums.exe`
+ *    - On Windows (WSL): `./23_unions_and_enums`
  */

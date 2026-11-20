@@ -238,16 +238,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 9_strings 9_strings.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 9_strings 9_strings.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./9_strings`
- *    - On Windows:       `9_strings.exe`
+ *    - On Windows (WSL): `./9_strings`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 9_strings 9_strings.c
+cc -Wall -Wextra -std=c17 -o 9_strings 9_strings.c
 ./9_strings
 ```

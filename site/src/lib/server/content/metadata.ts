@@ -8,11 +8,11 @@
 import type { Commands, LessonMeta, Library, Platform, Program } from '#lib/content/types.js';
 
 /**
- * The C standard the compile commands teach. The lessons and chapters say
- * c11 today; BUILD.md decision D1 may change it, and this is the one place
+ * The C standard the compile commands teach: C17, settled by BUILD.md
+ * decision D1. The lessons and chapters say the same; this is the one place
  * the site needs to follow.
  */
-export const C_STANDARD = 'c11';
+export const C_STANDARD = 'c17';
 
 export const COMPILER = 'cc';
 export const WARNING_FLAGS = ['-Wall', '-Wextra'];

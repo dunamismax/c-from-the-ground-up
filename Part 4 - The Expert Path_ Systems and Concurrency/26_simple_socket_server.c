@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
  * This is the SERVER. It must be running BEFORE you run the client.
  *
  * 1. Open a terminal and compile the server:
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_server 26_simple_socket_server.c`
  *
  * 2. Run the server, providing a port number for it to listen on.
  *    A common choice for testing is a high-numbered port like 8888.

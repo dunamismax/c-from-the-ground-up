@@ -80,9 +80,9 @@ check-format:
 CLANG_TIDY ?= clang-tidy
 LESSON_C_SOURCES = find ./Part* -type f -name '*.c' -print0
 tidy:
-	$(LESSON_C_SOURCES) | xargs -0 sh -c '$(CLANG_TIDY) --quiet "$$@" -- -std=c23' sh
+	$(LESSON_C_SOURCES) | xargs -0 sh -c '$(CLANG_TIDY) --quiet "$$@" -- -std=c17' sh
 analyze:
-	$(LESSON_C_SOURCES) | xargs -0 -n 1 sh -c '$(GCC) -std=c23 -fanalyzer -Werror -c -o /dev/null "$$0"'
+	$(LESSON_C_SOURCES) | xargs -0 -n 1 sh -c '$(GCC) -std=c17 -fanalyzer -Werror -c -o /dev/null "$$0"'
 
 # Sanitizer runs of every lesson (scripts/sanitizer_check.sh). Needs Clang;
 # MemorySanitizer is skipped where it cannot run (macOS). CI runs it on Linux

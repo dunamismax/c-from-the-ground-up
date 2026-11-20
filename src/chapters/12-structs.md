@@ -154,16 +154,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 12_structs 12_structs.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 12_structs 12_structs.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./12_structs`
- *    - On Windows:       `12_structs.exe`
+ *    - On Windows (WSL): `./12_structs`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 12_structs 12_structs.c
+cc -Wall -Wextra -std=c17 -o 12_structs 12_structs.c
 ./12_structs
 ```

@@ -94,10 +94,10 @@ jobs:
           pipx install clang-tidy==23.1.4
           make tidy
 
-      # Not blocking yet (BUILD.md): the analyzer's findings vary between GCC
-      # releases. GCC 15 and 16 report nothing for the lessons.
+      # Blocking since 2026-11-20: GCC 14 (here), 15 and 16 report nothing for
+      # the lessons. A new finding after a GCC upgrade needs a real look, not
+      # continue-on-error.
       - name: GCC static analyzer
-        continue-on-error: true
         run: make analyze GCC="$(command -v gcc-14 || command -v gcc)"
 
   site:

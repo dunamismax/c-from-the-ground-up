@@ -153,21 +153,24 @@ int main(void)
  *
  * HOW TO COMPILE AND RUN THIS CODE:
  *
- * 1. Open a terminal or command prompt.
+ * 1. Open a terminal. On Windows, use the Ubuntu terminal of WSL (the Windows
+ *    Subsystem for Linux), which is how this course runs on Windows.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to translate this source code into an executable program.
  *    The command below does the following:
  *    - `gcc`: Invokes the compiler.
  *    - `-Wall -Wextra`: Enables all and extra warning flags to catch potential errors.
- *    - `-std=c11`: Specifies that we are using the C11 standard of the language.
+ *    - `-std=c17`: Asks for the C17 standard of the language. C has been revised
+ *      several times (C89, C99, C11, C17, C23); C17 is supported by every current
+ *      compiler, so it is the version this course teaches.
  *    - `-o 1_hello_world`: Specifies the output file name should be `1_hello_world`.
  *    - `1_hello_world.c`: Specifies the input source file to compile.
  *
- *    `gcc -Wall -Wextra -std=c11 -o 1_hello_world 1_hello_world.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 1_hello_world 1_hello_world.c`
  *
  * 4. Run the newly created executable:
  *    - On Linux/macOS:   `./1_hello_world`
- *    - On Windows:       `1_hello_world.exe`
+ *    - On Windows (WSL): `./1_hello_world`
  *
  * You should see "Hello, World!" printed to your console.
  */
@@ -176,6 +179,6 @@ int main(void)
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 1_hello_world 1_hello_world.c
+cc -Wall -Wextra -std=c17 -o 1_hello_world 1_hello_world.c
 ./1_hello_world
 ```

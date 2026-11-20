@@ -49,7 +49,7 @@
 
 // M_PI, the value of Pi, is NOT part of ISO C. Many systems (macOS, and Linux
 // in its default GNU mode) define it in <math.h> anyway, but a strict standard
-// mode such as `-std=c11` on Linux hides it. Using the #ifndef guard from the
+// mode such as `-std=c17` on Linux hides it. Using the #ifndef guard from the
 // preprocessor lesson, we define it ourselves only when it is missing, so the
 // program compiles everywhere.
 #ifndef M_PI
@@ -108,7 +108,7 @@ int main(void)
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler with a special flag to link the math library:
  *
- *    `gcc -Wall -Wextra -std=c11 -o 32_linking_external_libraries 32_linking_external_libraries.c -lm`
+ *    `gcc -Wall -Wextra -std=c17 -o 32_linking_external_libraries 32_linking_external_libraries.c -lm`
  *
  * THE -lm FLAG
  * This is the key to this lesson. The `-l` flag is used to tell the linker
@@ -131,5 +131,5 @@ int main(void)
  *
  * 4. Run the executable:
  *    - On Linux/macOS:   `./32_linking_external_libraries`
- *    - On Windows:       `32_linking_external_libraries.exe`
+ *    - On Windows (WSL): `./32_linking_external_libraries`
  */

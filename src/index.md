@@ -44,19 +44,22 @@ The book is organized into five progressive parts:
 Most lessons are single-file programs. Pick one `.c` file, compile it, and run it:
 
 ```sh
-cc -Wall -Wextra -std=c23 \
+cc -Wall -Wextra -std=c17 \
   "Part 1 - The Beginner Path_ Core Concepts/1_hello_world.c" \
   -o /tmp/1_hello_world
 
 /tmp/1_hello_world
 ```
 
-If your compiler does not support `-std=c23` yet, use `-std=c17`.
+On Windows, take the course inside WSL (the Windows Subsystem for Linux), the
+supported way to run every lesson there. The site's
+[setup guide](https://cfromthegroundup.com/setup) shows how to install a
+compiler on macOS, Linux and Windows.
 
 ## Build Notes
 
-- The repo-level verification baseline prefers `-std=c23` and falls back to `-std=c17` when a compiler does not yet accept C23.
-- Most lessons compile with `cc -Wall -Wextra -Wpedantic -Wstrict-prototypes -std=c23 lesson.c -o lesson_name`.
+- The lessons teach C17 (`-std=c17`), which every current compiler accepts. CI compiles every lesson with `-std=c17` and again with `-std=c23`, so the course also builds on the newest standard.
+- Most lessons compile with `cc -Wall -Wextra -Wpedantic -Wstrict-prototypes -std=c17 lesson.c -o lesson_name`.
 - Lessons 26 through 30 use POSIX APIs (sockets, `fork`, `waitpid`, `pthread`).
 - Lesson 30 needs `-pthread`.
 - Lesson 32 needs `-lm`.

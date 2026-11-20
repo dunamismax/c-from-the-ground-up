@@ -215,12 +215,12 @@ void print_user(const User *user)
  *
  * 2. COMPILE THE C FILE:
  *    Open a terminal and navigate to the directory.
- *    `gcc -Wall -Wextra -std=c11 -o 34_parsing_data_files 34_parsing_data_files.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 34_parsing_data_files 34_parsing_data_files.c`
  *
  * 3. RUN THE EXECUTABLE:
  *    You must provide the name of the data file as a command-line argument.
  *    - On Linux/macOS:   `./34_parsing_data_files users.dat`
- *    - On Windows:       `34_parsing_data_files.exe users.dat`
+ *    - On Windows (WSL): `./34_parsing_data_files users.dat`
  *
  *    NOTE: this program keeps at most MAX_USERS (10) records and stops reading
  *    after that.

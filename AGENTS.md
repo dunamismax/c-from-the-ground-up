@@ -94,7 +94,8 @@ in BUILD.md's Decision log:
 
 Ask the maintainer in chat, and do not act until they answer:
 
-- the open decisions themselves (D1-D10 in BUILD.md)
+- new product decisions (D11 onward) and changes to settled ones (D1-D10 in
+  BUILD.md's Decision log)
 - renaming or moving lesson files, `Part */` directories, chapter files or
   published URLs
 - a new lesson dependency, or a change to the site's stack
@@ -148,7 +149,7 @@ book.toml                                           mdBook config; output goes t
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
 .github/workflows/verify.yml                        CI: listing and format checks, mdbook build and link check, smoke check (clang + gcc), sanitizers, clang-tidy and GCC analyzer, site
 .github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main (or run by hand)
-assets/images/                                      images (not yet used in the book)
+assets/images/site/                                 screenshots of the site used by README.md
 site/                                               the course website, cfromthegroundup.com (see below)
 ```
 
@@ -203,8 +204,10 @@ What `scripts/smoke_check.sh` does:
 
 - Compiles every single-file lesson with
   `-Wall -Wextra -Wpedantic -Wstrict-prototypes -Wshadow -Wconversion
-  -Wsign-conversion -Wmissing-prototypes -Werror` plus `-std=c23`, falling
-  back to `-std=c17`. Warnings are errors.
+  -Wsign-conversion -Wmissing-prototypes -Werror` plus `-std=c17`, the
+  standard the lessons teach (D1). Warnings are errors. When the compiler
+  accepts `-std=c23`, it compiles every lesson (lesson 31's files with `-c`)
+  a second time under C23.
 - Adds per-lesson link flags in `compile_lesson()`: `-pthread` (30), `-lm` (32),
   ncurses (33, 35). **A new lesson that needs a library must be added there.**
 - Builds lesson 31 through its own Makefile.
@@ -441,9 +444,16 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
   and initialize variables that `scanf` fills. Lessons 3 and 6 teach the
   pattern; later lessons should follow it without re-explaining it.
 - Free what you allocate. Lessons should be clean under ASan and LeakSanitizer.
-- Compile commands inside lessons and chapters currently say `-std=c11`, while
-  CI uses C23. This is a known inconsistency with an open decision in BUILD.md.
-  Do not mass-edit it until that decision is made.
+- The lessons teach **C17** (D1): every compile command in a lesson, chapter
+  or README says `-std=c17`, and so do the site's generated commands
+  (`C_STANDARD` in `metadata.ts`). Lessons must also compile under C23, which
+  the smoke check tests; a lesson that teaches a C23-only feature must say so
+  and give the `-std=c23` command.
+- Windows is supported through **WSL** (D3). Run instructions say
+  "On Windows (WSL): `./program`", not `program.exe`.
+- `@date` is the date the lesson was first published (D5). Leave it alone
+  when you edit a lesson; git history records the changes. A new lesson gets
+  the date it is added, as `MM-DD-YYYY`.
 
 ## Chapter conventions
 
@@ -476,7 +486,7 @@ Each `src/chapters/NN-slug.md` contains:
 ## Things to avoid
 
 - Do not rename `Part */` directories or lesson files on your own. External
-  links depend on them, and BUILD.md tracks it as an open decision.
+  links depend on them; D2 settled that they keep their names.
 - Do not hand-edit synced code blocks, and do not add `{{#include}}`.
 - Do not add third-party dependencies to lessons beyond what is already used
   (libc, libm, pthreads, ncurses). New ones, such as libsodium, are planned in

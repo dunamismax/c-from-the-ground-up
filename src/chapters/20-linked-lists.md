@@ -220,16 +220,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 20_linked_lists 20_linked_lists.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 20_linked_lists 20_linked_lists.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./20_linked_lists`
- *    - On Windows:       `20_linked_lists.exe`
+ *    - On Windows (WSL): `./20_linked_lists`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 20_linked_lists 20_linked_lists.c
+cc -Wall -Wextra -std=c17 -o 20_linked_lists 20_linked_lists.c
 ./20_linked_lists
 ```

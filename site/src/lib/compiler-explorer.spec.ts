@@ -3,7 +3,7 @@ import { clientState, COMPILER_ID, shortLink } from './compiler-explorer.js';
 
 const lesson = {
 	source: 'int main(void) { return 0; }\n',
-	options: '-std=c11 -Wall',
+	options: '-std=c17 -Wall',
 	args: '5 + 3'
 };
 
@@ -11,9 +11,9 @@ describe('Compiler Explorer', () => {
 	it('builds a C session with a compiler and an executor', () => {
 		const session = clientState(lesson).sessions[0];
 		expect(session).toMatchObject({ language: 'c', source: lesson.source });
-		expect(session.compilers).toEqual([{ id: COMPILER_ID, options: '-std=c11 -Wall' }]);
+		expect(session.compilers).toEqual([{ id: COMPILER_ID, options: '-std=c17 -Wall' }]);
 		expect(session.executors[0]).toMatchObject({
-			compiler: { id: COMPILER_ID, options: '-std=c11 -Wall' },
+			compiler: { id: COMPILER_ID, options: '-std=c17 -Wall' },
 			arguments: '5 + 3'
 		});
 	});

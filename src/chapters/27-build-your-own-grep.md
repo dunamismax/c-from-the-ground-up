@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
  * HOW TO COMPILE AND RUN THIS CODE:
  *
  * 1. Open a terminal and compile the program:
- *    `gcc -Wall -Wextra -std=c11 -o 27_build_your_own_grep 27_build_your_own_grep.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 27_build_your_own_grep 27_build_your_own_grep.c`
  *
  * 2. Run it! A great first test is to make it search for something in its own source code.
  *    Let's search for every line containing the word "main":
@@ -199,6 +199,6 @@ int main(int argc, char *argv[])
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 27_build_your_own_grep 27_build_your_own_grep.c
+cc -Wall -Wextra -std=c17 -o 27_build_your_own_grep 27_build_your_own_grep.c
 ./27_build_your_own_grep main 27_build_your_own_grep.c
 ```

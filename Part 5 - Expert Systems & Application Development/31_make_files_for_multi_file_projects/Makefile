@@ -41,7 +41,7 @@ CC = gcc
 
 # The flags we pass to the compiler. These are the same flags we've been using.
 # CFLAGS stands for "C Compiler Flags".
-CFLAGS = -Wall -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c17
 
 # The name of the final executable file we want to build.
 TARGET = 31_project_main
@@ -110,7 +110,7 @@ clean:
 #
 # 3. To run the program:
 #    - On Linux/macOS:   `./31_project_main`
-#    - On Windows:       `31_project_main.exe`
+#    - On Windows (WSL): `./31_project_main`
 #
 # 4. To clean up all generated files (the executable and object files):
 #    `make clean`

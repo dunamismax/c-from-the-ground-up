@@ -503,11 +503,11 @@ void delete_line(int line_number)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 25_simple_text_editor 25_simple_text_editor.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 25_simple_text_editor 25_simple_text_editor.c`
  *
  * 4. Run the executable with a file name:
  *    - On Linux/macOS:   `./25_simple_text_editor my_document.txt`
- *    - On Windows:       `25_simple_text_editor.exe my_document.txt`
+ *    - On Windows (WSL): `./25_simple_text_editor my_document.txt`
  *
  * Once inside, try the commands:
  * > a This is the first line.
@@ -525,6 +525,6 @@ void delete_line(int line_number)
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 25_simple_text_editor 25_simple_text_editor.c
+cc -Wall -Wextra -std=c17 -o 25_simple_text_editor 25_simple_text_editor.c
 ./25_simple_text_editor my_document.txt
 ```

@@ -36,7 +36,7 @@ test('a lesson page shows its prose, listing, run panel and navigation', async (
 	// The run panel shows the generated commands, with the link flag.
 	const run = page.locator('#how-to-compile-and-run');
 	await expect(run).toContainText(
-		'cc -Wall -Wextra -std=c11 -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c -pthread'
+		'cc -Wall -Wextra -std=c17 -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c -pthread'
 	);
 
 	// The sidebar marks the current lesson.

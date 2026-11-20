@@ -152,8 +152,8 @@ int g_late_defined_variable = 999;
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 24_static_and_extern_variables 24_static_and_extern_variables.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 24_static_and_extern_variables 24_static_and_extern_variables.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./24_static_and_extern_variables`
- *    - On Windows:       `24_static_and_extern_variables.exe`
+ *    - On Windows (WSL): `./24_static_and_extern_variables`
  */

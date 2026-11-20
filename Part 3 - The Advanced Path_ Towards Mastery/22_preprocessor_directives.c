@@ -136,16 +136,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 22_preprocessor_directives 22_preprocessor_directives.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 22_preprocessor_directives 22_preprocessor_directives.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./22_preprocessor_directives`
- *    - On Windows:       `22_preprocessor_directives.exe`
+ *    - On Windows (WSL): `./22_preprocessor_directives`
  *
  * To see conditional compilation work, try commenting out `#define DEBUG` at the
  * top, then recompile and run. The debug messages will disappear!
  *
  * Alternatively, you can define macros from the command line with the -D flag.
  * Remove `#define DEBUG` from the file, then compile like this:
- * `gcc -Wall -Wextra -std=c11 -DDEBUG -o 22_preprocessor_directives 22_preprocessor_directives.c`
+ * `gcc -Wall -Wextra -std=c17 -DDEBUG -o 22_preprocessor_directives 22_preprocessor_directives.c`
  * The debug messages will reappear!
  */

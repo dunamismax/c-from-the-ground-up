@@ -336,10 +336,10 @@ int main(int argc, char *argv[])
  * the server first.
  *
  * 1. Open a terminal and compile the client:
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_client 26_simple_socket_client.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_client 26_simple_socket_client.c`
  *
  * 2. In a DIFFERENT terminal, compile and run the server (`26_simple_socket_server.c`):
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_server 26_simple_socket_server.c`
  *    `./26_simple_socket_server 8888`
  *
  * 3. Go back to the FIRST terminal (for the client) and run it, providing the
@@ -635,7 +635,7 @@ int main(int argc, char *argv[])
  * This is the SERVER. It must be running BEFORE you run the client.
  *
  * 1. Open a terminal and compile the server:
- *    `gcc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 26_simple_socket_server 26_simple_socket_server.c`
  *
  * 2. Run the server, providing a port number for it to listen on.
  *    A common choice for testing is a high-numbered port like 8888.
@@ -658,8 +658,8 @@ int main(int argc, char *argv[])
 Build both programs:
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 26_simple_socket_server 26_simple_socket_server.c
-cc -Wall -Wextra -std=c11 -o 26_simple_socket_client 26_simple_socket_client.c
+cc -Wall -Wextra -std=c17 -o 26_simple_socket_server 26_simple_socket_server.c
+cc -Wall -Wextra -std=c17 -o 26_simple_socket_client 26_simple_socket_client.c
 ```
 
 Run the server in one terminal:

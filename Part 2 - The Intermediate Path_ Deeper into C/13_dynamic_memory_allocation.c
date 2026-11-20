@@ -162,8 +162,8 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 13_dynamic_memory_allocation 13_dynamic_memory_allocation.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 13_dynamic_memory_allocation 13_dynamic_memory_allocation.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./13_dynamic_memory_allocation`
- *    - On Windows:       `13_dynamic_memory_allocation.exe`
+ *    - On Windows (WSL): `./13_dynamic_memory_allocation`
  */

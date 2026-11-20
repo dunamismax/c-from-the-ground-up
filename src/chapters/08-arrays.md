@@ -169,16 +169,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 8_arrays 8_arrays.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 8_arrays 8_arrays.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./8_arrays`
- *    - On Windows:       `8_arrays.exe`
+ *    - On Windows (WSL): `./8_arrays`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 8_arrays 8_arrays.c
+cc -Wall -Wextra -std=c17 -o 8_arrays 8_arrays.c
 ./8_arrays
 ```

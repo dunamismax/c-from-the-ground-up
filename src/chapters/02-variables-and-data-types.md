@@ -203,16 +203,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 2_variables_and_data_types 2_variables_and_data_types.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 2_variables_and_data_types 2_variables_and_data_types.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./2_variables_and_data_types`
- *    - On Windows:       `2_variables_and_data_types.exe`
+ *    - On Windows (WSL): `./2_variables_and_data_types`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 2_variables_and_data_types 2_variables_and_data_types.c
+cc -Wall -Wextra -std=c17 -o 2_variables_and_data_types 2_variables_and_data_types.c
 ./2_variables_and_data_types
 ```

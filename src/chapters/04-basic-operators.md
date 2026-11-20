@@ -213,16 +213,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 4_basic_operators 4_basic_operators.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 4_basic_operators 4_basic_operators.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./4_basic_operators`
- *    - On Windows:       `4_basic_operators.exe`
+ *    - On Windows (WSL): `./4_basic_operators`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 4_basic_operators 4_basic_operators.c
+cc -Wall -Wextra -std=c17 -o 4_basic_operators 4_basic_operators.c
 ./4_basic_operators
 ```

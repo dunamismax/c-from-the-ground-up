@@ -897,7 +897,7 @@ void cleanup(GameState *game)
  * 2. COMPILE THE PROGRAM:
  *    Open a terminal in the directory containing this file and link `ncurses`:
  *
- *      `cc -Wall -Wextra -std=c11 -o 35_capstone_awesome_text_adventure 35_capstone_awesome_text_adventure.c -lncurses`
+ *      `cc -Wall -Wextra -std=c17 -o 35_capstone_awesome_text_adventure 35_capstone_awesome_text_adventure.c -lncurses`
  *
  * 3. RUN THE GAME:
  *    Execute the program, passing the map file as a command-line argument:

@@ -189,16 +189,16 @@ int main(void)
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 19_recursion 19_recursion.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 19_recursion 19_recursion.c`
  * 4. Run the executable:
  *    - On Linux/macOS:   `./19_recursion`
- *    - On Windows:       `19_recursion.exe`
+ *    - On Windows (WSL): `./19_recursion`
  */
 ```
 
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 19_recursion 19_recursion.c
+cc -Wall -Wextra -std=c17 -o 19_recursion 19_recursion.c
 ./19_recursion
 ```

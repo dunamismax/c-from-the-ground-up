@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
  * the `-pthread` flag to your GCC command.
  *
  * 1. Compile the program:
- *    `gcc -Wall -Wextra -std=c11 -pthread -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c`
+ *    `gcc -Wall -Wextra -std=c17 -pthread -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c`
  *
  * 2. To see the benefit, you need a large file. You can create one with this command
  *    (this creates a ~100MB file of random bytes. Its word and line counts are

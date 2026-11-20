@@ -106,16 +106,16 @@ taught.
 Most lessons are single-file programs. Pick one `.c` file, compile it, and run it:
 
 ```sh
-cc -Wall -Wextra -std=c23 \
+cc -Wall -Wextra -std=c17 \
   "Part 1 - The Beginner Path_ Core Concepts/1_hello_world.c" \
   -o /tmp/1_hello_world
 
 /tmp/1_hello_world
 ```
 
-If your compiler does not support `-std=c23` yet, use `-std=c17`. The site's
-[setup guide](https://cfromthegroundup.com/setup) covers installing a compiler
-on macOS, Linux and Windows.
+The site's [setup guide](https://cfromthegroundup.com/setup) covers installing
+a compiler on macOS, Linux and Windows. On Windows the course runs inside WSL
+(the Windows Subsystem for Linux), which is the supported way to take it there.
 
 Lesson 31 is the exception: it is intentionally split across multiple files and built with its local `Makefile`.
 
@@ -125,13 +125,13 @@ make -C "Part 5 - Expert Systems & Application Development/31_make_files_for_mul
 
 ### Build notes
 
-- The repo-level verification baseline prefers `-std=c23` and falls back to `-std=c17` when a compiler does not yet accept C23.
-- Most lessons compile with `cc -Wall -Wextra -Wpedantic -Wstrict-prototypes -std=c23 lesson.c -o lesson_name`.
+- The lessons teach C17 (`-std=c17`), which every current compiler accepts. CI compiles every lesson with `-std=c17` and again with `-std=c23`, so the course also builds on the newest standard.
+- Most lessons compile with `cc -Wall -Wextra -Wpedantic -Wstrict-prototypes -std=c17 lesson.c -o lesson_name`.
 - CI also turns on `-Wshadow -Wconversion -Wsign-conversion -Wmissing-prototypes` and treats every warning as an error, under both GCC and Clang.
 - Lessons 26 through 30 use POSIX or Unix-style APIs such as sockets, `fork`, `waitpid`, `unistd.h`, and `pthread`.
 - Lesson 30 needs `-pthread`.
 - Lesson 32 needs `-lm`.
-- Lessons 33 and 35 need `-lncurses` or `-lncursesw`, depending on your system, so they are easiest to run on Unix-like systems or inside WSL on Windows.
+- Lessons 33 and 35 need `-lncurses` or `-lncursesw`, depending on your system, so they need macOS, Linux, or WSL on Windows.
 - Several lessons expect runtime input or data files. Read the lesson comments before running them.
 
 ## Working on the project

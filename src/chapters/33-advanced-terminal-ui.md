@@ -248,7 +248,7 @@ WINDOW *draw_ui(void)
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler, adding the `-lncurses` flag AT THE END:
  *
- *    `gcc -Wall -Wextra -std=c11 -o 33_advanced_terminal_ui 33_advanced_terminal_ui.c -lncurses`
+ *    `gcc -Wall -Wextra -std=c17 -o 33_advanced_terminal_ui 33_advanced_terminal_ui.c -lncurses`
  *
  * THE -lncurses FLAG
  * This is the crucial part. `-l` tells the linker to look for a library, and
@@ -268,6 +268,6 @@ WINDOW *draw_ui(void)
 ## How to Compile and Run
 
 ```sh
-cc -Wall -Wextra -std=c11 -o 33_advanced_terminal_ui 33_advanced_terminal_ui.c -lncurses
+cc -Wall -Wextra -std=c17 -o 33_advanced_terminal_ui 33_advanced_terminal_ui.c -lncurses
 ./33_advanced_terminal_ui
 ```

@@ -155,17 +155,17 @@ int main(int argc, char *argv[])
  * 1. Open a terminal or command prompt.
  * 2. Navigate to the directory where you saved this file.
  * 3. Use the GCC compiler to create an executable file:
- *    `gcc -Wall -Wextra -std=c11 -o 15_command_line_arguments 15_command_line_arguments.c`
+ *    `gcc -Wall -Wextra -std=c17 -o 15_command_line_arguments 15_command_line_arguments.c`
  *
  * 4. Run the executable WITH DIFFERENT ARGUMENTS to see what happens:
  *
  *    Try running with no arguments (this will fail our check):
  *    - On Linux/macOS:   `./15_command_line_arguments`
- *    - On Windows:       `15_command_line_arguments.exe`
+ *    - On Windows (WSL): `./15_command_line_arguments`
  *
  *    Try running with the correct arguments:
  *    - On Linux/macOS:   `./15_command_line_arguments Bob 42`
- *    - On Windows:       `15_command_line_arguments.exe Bob 42`
+ *    - On Windows (WSL): `./15_command_line_arguments Bob 42`
  *
  *    Try running with too many arguments:
  *    - On Linux/macOS:   `./15_command_line_arguments Charlie 25 Extra`
