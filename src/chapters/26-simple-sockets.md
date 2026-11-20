@@ -82,8 +82,10 @@ It returns the number of bytes received, 0 if the connection was closed,
 or -1 on error.
 
 The bytes that arrive have no `\0` at the end. Both programs ask `recv` for at
-most `sizeof(buffer) - 1` bytes into a zeroed buffer, so the last byte always
-stays `\0` and the message is a proper string for `%s`.
+most one byte less than the size of a zeroed buffer
+(`sizeof(server_reply) - 1` in the client, `sizeof(client_message) - 1` in the
+server), so the last byte always stays `\0` and the message is a proper string
+for `%s`.
 
 TCP delivers a STREAM of bytes, not separate messages, so one `recv` may
 return only part of what was sent. A short message between two programs on one

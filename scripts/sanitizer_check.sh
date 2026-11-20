@@ -23,8 +23,8 @@
 #   SANITIZERS=thread sh scripts/sanitizer_check.sh
 #   CC=clang-20 SANITIZERS_REQUIRED=1 sh scripts/sanitizer_check.sh
 #
-# Lessons 26 (sockets) and 33 (ncurses) are not run here: 26 is covered by the
-# smoke check's exchange test, and 33 needs a terminal.
+# Lesson 26's server and client run as a pair over a local port. Lesson 33
+# (ncurses) is not run here: it needs a terminal.
 
 set -eu
 
@@ -226,6 +226,50 @@ int main(int argc, char *argv[])
 EOF
 }
 
+# Lesson 26: start the sanitized server, send it one message with the
+# sanitized client, and check both for reports. Skipped (with a message)
+# where the environment cannot bind a local port, as in the smoke check.
+run_socket_pair() {
+    server=$1
+    client=$2
+    log=$BUILD_DIR/server.log
+    for attempt in 1 2 3 4 5; do
+        port=$((35000 + ($$ + attempt + RUNS) % 20000))
+        : > "$log"
+        "$server" "$port" > "$log" 2>&1 &
+        server_pid=$!
+        # Its output is buffered until it exits, so give it time to start
+        # listening, as the smoke check does, rather than waiting for a line.
+        ticks=0
+        while [ "$ticks" -lt 20 ] && kill -0 "$server_pid" 2>/dev/null; do
+            sleep 0.1
+            ticks=$((ticks + 1))
+        done
+        if kill -0 "$server_pid" 2>/dev/null; then
+            run_case "26_simple_socket_client" "$client" '' 127.0.0.1 "$port" "Sanitized hello"
+            status=0
+            wait "$server_pid" || status=$?
+            output=$(cat "$log")
+            case "$output" in
+                *"Sanitizer"*|*"runtime error:"*)
+                    fail "26_simple_socket_server: sanitizer report." "$output"
+                    ;;
+            esac
+            if [ "$status" = "$FOUND" ] || [ "$status" -gt 128 ]; then
+                fail "26_simple_socket_server: exited with status $status." "$output"
+            fi
+            case "$output" in
+                *"Sanitized hello"*) ;;
+                *) fail "26_simple_socket_server: the message did not arrive." "$output" ;;
+            esac
+            return 0
+        fi
+        kill "$server_pid" 2>/dev/null || true
+        wait "$server_pid" 2>/dev/null || true
+    done
+    printf 'Skipping lesson 26 (could not start the server on a local port).\n'
+}
+
 # run_lessons <sanitizer flags...>: build and run every case.
 run_lessons() {
     bin=$BUILD_DIR/bin
@@ -234,7 +278,7 @@ run_lessons() {
 
     for source in "$P1"/*.c "$P2"/*.c "$P3"/*.c "$P4"/*.c "$P5"/*.c; do
         case "$source" in
-            *26_simple_socket_*|*33_advanced_terminal_ui.c|*35_*) continue ;;
+            *33_advanced_terminal_ui.c|*35_*) continue ;;
         esac
         name=$(basename "$source" .c)
         build "$source" "$bin/$name" "$@"
@@ -245,6 +289,9 @@ run_lessons() {
         name=$(basename "$source" .c)
         b=$bin/$name
         case "$name" in
+            26_simple_socket_server)
+                run_socket_pair "$b" "$bin/26_simple_socket_client"
+                ;;
             26_*|33_*|35_*)
                 ;;
             3_user_input)

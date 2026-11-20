@@ -94,10 +94,11 @@ int main(void)
     // 1. ALLOCATE: Request memory from the heap.
     // We want space for `num_students` doubles.
     printf("Allocating memory for %d doubles...\n", num_students);
-    // `malloc` measures sizes in `size_t`, the unsigned type `sizeof` gives
-    // (Lesson 9). `num_students` is an `int`, so we cast it to `size_t`
-    // ourselves. That is safe only because we checked above that it is
-    // positive: a negative `int` would turn into a huge unsigned number.
+    // `malloc` measures sizes in `size_t`, the unsigned type `strlen`
+    // returned in Lesson 9 (`sizeof` gives one too). `num_students` is an
+    // `int`, so we cast it to `size_t` ourselves. That is safe only because
+    // we checked above that it is positive: a negative `int` would turn into
+    // a huge unsigned number.
     gpa_list = (double *)malloc((size_t)num_students * sizeof(double));
 
     // 2. VALIDATE: ALWAYS check if malloc succeeded.

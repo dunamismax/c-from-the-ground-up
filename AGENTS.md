@@ -167,10 +167,11 @@ What `scripts/smoke_check.sh` does:
 What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
 `SANITIZERS_REQUIRED=1`, so nothing may be skipped there):
 
-- Builds every lesson except 26 and 33 with ASan + UBSan (+ LeakSanitizer where
-  the platform has it) and runs each one in a fresh directory with a canned
-  input from the `case` table in `run_lessons()`: valid input, and bad input
-  for the interactive and argument-parsing lessons. Lesson 35's game needs a
+- Builds every lesson except 33 with ASan + UBSan (+ LeakSanitizer where the
+  platform has it) and runs each one in a fresh directory with a canned input
+  from the `case` table in `run_lessons()`: valid input, and bad input for the
+  interactive and argument-parsing lessons. Lesson 26's server and client run
+  as a pair over a local port (`run_socket_pair`). Lesson 35's game needs a
   terminal, so a harness runs its `load_world()` and `cleanup()` on a good map,
   two bad ones and a missing file.
 - Repeats those runs under MemorySanitizer (Clang on Linux only) to catch reads

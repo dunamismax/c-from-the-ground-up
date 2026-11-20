@@ -624,6 +624,15 @@ the lessons it serves.
     found nothing else.)
   - stale claims
   - explanations that no longer match the code
+  - 2026-11-20, automated cross-check of all 35 chapters: every inline code
+    span and fenced snippet in the prose appears in the chapter's lesson
+    sources (one generic `sizeof(buffer) - 1` in chapter 26 now names the
+    real buffers); the 64 prose sentences not found in the lesson comments
+    are text written during later fixes, and the factual ones were checked
+    against the code; every "Lesson N" cross-reference in lessons and
+    chapters names a lesson that teaches what it says (lesson 13's new
+    `size_t` note was corrected). Still open: a human read of each chapter
+    next to its lesson, for tone and order rather than facts.
   - Then consider extending `sync_chapters.py` with a heuristic warning when a
     lesson file changed more recently than its chapter's prose.
 
@@ -636,8 +645,8 @@ the lessons it serves.
       tuned for teaching code. Done 2026-11-20 (see the Done log). It is
       blocking from the start, since it is clean and pinned.
 - [x] **Sanitizers for every lesson.** Done 2026-11-20 (see the Done log).
-      Not covered: 26 (its exchange runs in the smoke check, unsanitized) and
-      33 and 35's game loop, which need a terminal; see the Ideas inbox.
+      Not covered: 33 and 35's game loop, which need a terminal; see the
+      Ideas inbox.
 - [x] **ThreadSanitizer** run for `30_multithreaded_file_analyzer.c`. Done
       2026-11-20.
 - [x] **Leak checking** with LeakSanitizer for every lesson it can run,
@@ -645,8 +654,8 @@ the lessons it serves.
       2026-11-20.
 - [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first. `make analyze`
       and a `continue-on-error` step in the `analyze` CI job (GCC 14) exist
-      since 2026-11-20; GCC 15 and 16 report nothing. Make the step blocking
-      once it has stayed clean on CI for a while.
+      since 2026-11-20; GCC 14 (on CI), 15 and 16 report nothing. Make the
+      step blocking once it has stayed clean on CI for a while.
 - [x] **`compile_commands.json`** or a `.clangd` file. Done 2026-11-20: a
       root `.clangd` adds the smoke check's flags (without `-Werror`).
 - [x] **CI upkeep.** Done 2026-11-20; see the Done log. Review the action
@@ -704,11 +713,10 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
-- **Sanitize the terminal lessons.** Lessons 33 and 35 (ncurses) and the
-  lesson 26 exchange are not in `scripts/sanitizer_check.sh`. 33 and 35 could
-  run under a pseudo-terminal (`script -q -c` on Linux) with scripted keys;
-  26 could reuse the smoke check's server and client exchange with sanitized
-  builds.
+- **Sanitize the terminal lessons.** Lessons 33 and 35's game loop (ncurses)
+  are not in `scripts/sanitizer_check.sh`. They could run under a
+  pseudo-terminal (`script -q -c` on Linux, with `stty rows 24 cols 80`)
+  with scripted keys.
 
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
   (`cg162` in `site/src/lib/compiler-explorer.ts`). Check once a year that the
@@ -813,11 +821,12 @@ pick them up.
 - **2026-11-20:** sanitizer coverage for the lessons.
   `scripts/sanitizer_check.sh` (`make sanitize`, part of `make verify`, and a
   `sanitizers` CI job with `SANITIZERS_REQUIRED=1`) builds every lesson but
-  26 and 33 with ASan, UBSan and LeakSanitizer and runs each with canned valid
-  and bad input (44 runs), repeats them under MemorySanitizer, and runs lesson
-  30 under ThreadSanitizer. Lesson 35 runs through a harness that loads a good
-  map, two bad ones and a missing file and frees them. Every lesson is clean
-  (86 runs on Linux with Clang 19; macOS skips MSan). Checked that it fails on
+  33 with ASan, UBSan and LeakSanitizer and runs each with canned valid and
+  bad input (lesson 26 as a server and client pair), repeats them under
+  MemorySanitizer, and runs lesson 30 under ThreadSanitizer. Lesson 35 runs
+  through a harness that loads a good map, two bad ones and a missing file
+  and frees them. Every lesson is clean (88 runs on Linux with Clang 19;
+  macOS skips MSan). Checked that it fails on
   an injected leak (LeakSanitizer names `create_node` in lesson 20) and on an
   injected uninitialized read (MemorySanitizer names the line and the
   allocation). `make sanitize-linux` runs it in Docker; MSan needs
