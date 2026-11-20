@@ -127,6 +127,7 @@ make -C "Part 5 - Expert Systems & Application Development/31_make_files_for_mul
 
 - The repo-level verification baseline prefers `-std=c23` and falls back to `-std=c17` when a compiler does not yet accept C23.
 - Most lessons compile with `cc -Wall -Wextra -Wpedantic -Wstrict-prototypes -std=c23 lesson.c -o lesson_name`.
+- CI also turns on `-Wshadow -Wconversion -Wsign-conversion -Wmissing-prototypes` and treats every warning as an error, under both GCC and Clang.
 - Lessons 26 through 30 use POSIX or Unix-style APIs such as sockets, `fork`, `waitpid`, `unistd.h`, and `pthread`.
 - Lesson 30 needs `-pthread`.
 - Lesson 32 needs `-lm`.

@@ -89,7 +89,9 @@ int main(int argc, char *argv[])
 
     // Prepare the sockaddr_in structure for the server.
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port); // The port to listen on.
+    // The port to listen on. `htons` takes a 16-bit unsigned value, and the
+    // check above guarantees the port fits in one.
+    server_addr.sin_port = htons((uint16_t)port);
 
     /*
      * INADDR_ANY is a special constant that tells the socket to bind to all

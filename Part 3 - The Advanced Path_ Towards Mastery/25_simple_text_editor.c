@@ -70,6 +70,7 @@ void append_line(const char *text);
 void print_help(void);
 bool parse_line_number(const char *text, int *line_number);
 void discard_rest_of_line(void);
+Line *create_line(const char *text);
 
 // --- Main Function: The Editor's Control Loop ---
 

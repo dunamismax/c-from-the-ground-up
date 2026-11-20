@@ -33,6 +33,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the functions up front gives a summary of the file. Their
+// definitions, with the explanations, follow below.
+// The third parameter of `perform_calculation` is a function pointer; Part 2
+// explains how to read it.
+int add(int a, int b);
+int subtract(int a, int b);
+void perform_calculation(int x, int y, int (*operation_func)(int, int));
+
 // --- Part 1: The Functions We'll Point To ---
 // Let's define two simple functions. It's crucial that they have the
 // exact same SIGNATURE (return type and parameter types).

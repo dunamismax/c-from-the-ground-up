@@ -38,6 +38,9 @@
 #include <stdio.h>
 #include <stdint.h> // For uint8_t, an unsigned 8-bit integer type.
 
+// --- Function Prototypes (Lesson 7) ---
+void print_binary(uint8_t byte);
+
 // --- A Helper Function to Visualize Bits ---
 // To understand bit manipulation, you need to SEE the bits. This function
 // will print the binary representation of a byte (an 8-bit number).
@@ -87,7 +90,14 @@ int main(void)
     printf("\n");
 
     // Bitwise NOT
-    uint8_t result_not_a = ~a; // ~00000101 = 11111010 (250)
+    // INTEGER PROMOTION: C does arithmetic and bitwise operations on values
+    // at least as wide as `int`, so `a` is widened to an `int` before `~`
+    // flips its bits. That flips every bit of the `int` (32 on most systems),
+    // not just 8, and the result (-6 as an `int`) does not fit in a `uint8_t`.
+    // The cast keeps the low 8 bits, which are exactly the 8 bits we wanted.
+    // Writing the cast also tells the compiler (and the reader) that dropping
+    // the rest is intended; `-Wconversion` warns when it is left out.
+    uint8_t result_not_a = (uint8_t)~a; // ~00000101 = 11111010 (250)
     printf("  ~a  = %3d = ", result_not_a);
     print_binary(result_not_a);
     printf("\n\n");
@@ -101,7 +111,9 @@ int main(void)
     printf("\n");
 
     // Left Shift (equivalent to multiplying by 2^n)
-    uint8_t left_shifted = c << 2; // 12 * 2^2 = 12 * 4 = 48 (00110000)
+    // `c` is promoted to `int` here too, so bits shifted past bit 7 are not
+    // lost until the cast back to `uint8_t` drops them.
+    uint8_t left_shifted = (uint8_t)(c << 2); // 12 * 2^2 = 12 * 4 = 48 (00110000)
     printf("c << 2 = %2d = ", left_shifted);
     print_binary(left_shifted);
     printf("\n");
@@ -182,6 +194,9 @@ int main(void)
  *     - Toggle bit:   `flags = flags ^ MASK;`
  * 4.  Shift operators provide a very fast way to perform multiplication and
  *     division by powers of two.
+ * 5.  Small types like `uint8_t` are promoted to `int` before any operator
+ *     works on them. Cast the result back (`(uint8_t)~a`) when you store it in
+ *     the small type again.
  *
  * This is a low-level but essential skill for any serious C programmer.
  *

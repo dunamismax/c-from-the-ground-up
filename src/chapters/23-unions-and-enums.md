@@ -91,6 +91,9 @@ typedef struct
     DataValue value; // The union holding the actual data
 } TaggedValue;
 
+// --- Function Prototypes (Lesson 7) ---
+void print_tagged_value(TaggedValue tv);
+
 // A helper function to print our tagged union safely.
 void print_tagged_value(TaggedValue tv)
 {

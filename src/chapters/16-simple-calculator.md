@@ -67,6 +67,11 @@ SKILLS WE WILL USE:
 #include <stdlib.h> // Required for strtod() and exit()
 #include <string.h> // Required for strcmp()
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the function up front gives a summary of the file. Its
+// definition, with the explanation, follows below.
+int parse_number(const char *text, double *result);
+
 /**
  * @brief Converts a string such as "10.5" to a double.
  * @param text The string to convert.

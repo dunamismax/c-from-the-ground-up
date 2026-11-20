@@ -38,6 +38,12 @@
 
 #include <stdio.h>
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the functions up front gives a summary of the file. Their
+// definitions, with the explanations, follow below.
+void countdown(int n);
+long long factorial(int n);
+
 // --- Part 1: A Simple Recursive Countdown ---
 // This function will count down from a number `n` to 1, then print "Blastoff!".
 // It's a simple way to see the base case and recursive step in action.

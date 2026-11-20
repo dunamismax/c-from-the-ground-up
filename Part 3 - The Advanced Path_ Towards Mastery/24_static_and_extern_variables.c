@@ -34,6 +34,12 @@
 
 #include <stdio.h>
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the functions up front gives a summary of the file. Their
+// definitions, with the explanations, follow below.
+void regular_counter(void);
+void static_counter(void);
+
 // --- Part 1: `static` Inside a Function (Controlling LIFETIME) ---
 // When used inside a function, `static` changes a variable's storage duration.
 // - A normal (auto) local variable is created on the stack when the function is

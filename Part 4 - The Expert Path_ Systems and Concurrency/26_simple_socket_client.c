@@ -142,7 +142,9 @@ int main(int argc, char *argv[])
      *   error apart from the real address 255.255.255.255.)
      */
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
+    // `htons` takes a 16-bit unsigned value (`uint16_t`). We checked above
+    // that the port is 1-65535, so the cast keeps every possible port intact.
+    server_addr.sin_port = htons((uint16_t)port);
     if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1)
     {
         fprintf(stderr, "Error: '%s' is not a valid IPv4 address.\n", server_ip);

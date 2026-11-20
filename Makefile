@@ -7,16 +7,17 @@
 #   make sync               copy lesson sources into the book chapters
 #   make serve              live-preview the book at http://localhost:3000
 #   make smoke CC=gcc-15    smoke check with a specific compiler
+#   make smoke-linux        smoke check on Linux (Docker), with GCC and Clang
 #   make site-verify        website gate: npm ci, check, lint, test, build
 #   make site-e2e           website Playwright tests (needs the site database)
 
 CC ?= cc
 PYTHON ?= python3
 
-.PHONY: help verify sync check-sync book serve smoke smoke-all site-verify site-e2e clean
+.PHONY: help verify sync check-sync book serve smoke smoke-all smoke-linux site-verify site-e2e clean
 
 help:
-	@sed -n '3,12p' Makefile
+	@sed -n '3,13p' Makefile
 
 verify: check-sync book smoke-all site-verify
 
@@ -28,6 +29,7 @@ check-sync:
 
 book: check-sync
 	mdbook build
+	$(PYTHON) scripts/check_book_links.py
 
 serve:
 	mdbook serve --open
@@ -41,6 +43,21 @@ GCC ?= gcc
 smoke-all:
 	CC=clang sh scripts/smoke_check.sh
 	CC=$(GCC) sh scripts/smoke_check.sh
+
+# The smoke check under glibc, as CI runs it. macOS headers expose names that
+# glibc hides in strict -std= modes (lesson 32's M_PI once passed locally and
+# failed CI), so run this before pushing lesson changes from a Mac. Needs
+# Docker. The sources are piped in with tar because bind mounts of some
+# directories do not work with Docker Desktop.
+LINUX_IMAGE ?= gcc:15
+smoke-linux:
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts | \
+		docker run --rm -i $(LINUX_IMAGE) sh -c '\
+			set -e; mkdir /r; cd /r; tar xf -; \
+			apt-get update -qq >/dev/null; \
+			apt-get install -y -qq libncurses-dev clang >/dev/null 2>&1; \
+			CC=gcc sh scripts/smoke_check.sh; \
+			CC=clang sh scripts/smoke_check.sh'
 
 # The course website in site/ (SvelteKit). Needs Node 24+ and npm.
 site-verify:

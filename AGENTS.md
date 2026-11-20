@@ -74,11 +74,12 @@ src/index.md                                        book introduction page
 src/chapters/NN-slug.md                             one chapter per lesson (26 covers server + client)
 scripts/sync_chapters.py                            copies lesson sources into chapters; --check for CI
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
+scripts/check_book_links.py                         checks internal links and anchors in the built book/
 Makefile                                            maintainer entry points (not a lesson)
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
-.github/workflows/verify.yml                        CI: listing check, mdbook build, smoke check (clang + gcc), site
-.github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main
+.github/workflows/verify.yml                        CI: listing check, mdbook build, link check, smoke check (clang + gcc), site
+.github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main (or run by hand)
 assets/images/                                      images (not yet used in the book)
 site/                                               the course website, cfromthegroundup.com (see below)
 ```
@@ -116,18 +117,20 @@ block:
 ## Verification
 
 ```sh
-make verify              # check-sync + mdbook build + smoke check under clang and $(GCC) + site-verify
+make verify              # check-sync + mdbook build + book link check + smoke check under clang and $(GCC) + site-verify
 make site-verify         # website only: npm ci, check, lint, test, build
 make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
 make smoke CC=clang      # one compiler only
+make smoke-linux         # smoke check under glibc in Docker (GCC and Clang)
 make serve               # live preview at http://localhost:3000
 ```
 
 What `scripts/smoke_check.sh` does:
 
 - Compiles every single-file lesson with
-  `-Wall -Wextra -Wpedantic -Wstrict-prototypes -Werror` plus `-std=c23`, falling
+  `-Wall -Wextra -Wpedantic -Wstrict-prototypes -Wshadow -Wconversion
+  -Wsign-conversion -Wmissing-prototypes -Werror` plus `-std=c23`, falling
   back to `-std=c17`. Warnings are errors.
 - Adds per-lesson link flags in `compile_lesson()`: `-pthread` (30), `-lm` (32),
   ncurses (33, 35). **A new lesson that needs a library must be added there.**
@@ -326,8 +329,14 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
   symbols such as "Pi". Use LF line endings with a trailing newline (see
   `.editorconfig`).
 - Each lesson compiles cleanly as one translation unit with the smoke-check flags
-  under both Clang and GCC. Lessons 26-30 may use POSIX; everything earlier must
-  stay ISO C plus the standard library.
+  under both Clang and GCC, on macOS and Linux (`make smoke-linux` checks glibc
+  from a Mac). Those flags include `-Wmissing-prototypes`, so every function
+  other than `main` needs a prototype (lesson 7 teaches them; lessons list them
+  under `// --- Function Prototypes ---`) or, from lesson 24 on, can be
+  `static`. `-Wconversion` and `-Wsign-conversion` need narrowing conversions
+  written as casts; add a comment saying why the value fits.
+- Lessons 26-30 may use POSIX; everything earlier must stay ISO C plus the
+  standard library.
 - Interactive lessons must not hang when stdin hits EOF or the user types
   garbage. Always check `scanf` (`!= 1`) and `fgets` (`== NULL`) return values,
   and initialize variables that `scanf` fills. Lessons 3 and 6 teach the

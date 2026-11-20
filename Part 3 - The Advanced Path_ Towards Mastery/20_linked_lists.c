@@ -47,6 +47,14 @@ typedef struct Node
     struct Node *next; // A pointer to the next node in the list
 } Node;
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the functions up front gives a summary of the file. Their
+// definitions, with the explanations, follow below.
+Node *create_node(int data);
+void insert_at_beginning(Node **head_ref, int data);
+void print_list(Node *head);
+void free_list(Node **head_ref);
+
 // --- Part 2: Core List Operations ---
 // We will write functions to handle the list's main operations.
 

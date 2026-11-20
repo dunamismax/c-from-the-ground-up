@@ -3,7 +3,7 @@
 set -eu
 
 CC=${CC:-cc}
-BASE_CFLAGS=${CFLAGS:--Wall -Wextra -Wpedantic -Wstrict-prototypes -Werror}
+BASE_CFLAGS=${CFLAGS:--Wall -Wextra -Wpedantic -Wstrict-prototypes -Wshadow -Wconversion -Wsign-conversion -Wmissing-prototypes -Werror}
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cftgu-smoke.XXXXXX")
@@ -454,6 +454,7 @@ run_sanitizer_regressions() {
 #include <string.h>
 
 #define main capstone_lesson_main
+int capstone_lesson_main(int argc, char *argv[]);
 #include "$ROOT_DIR/Part 5 - Expert Systems & Application Development/35_capstone_awesome_text_adventure.c"
 #undef main
 

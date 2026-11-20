@@ -193,7 +193,9 @@ int read_line_from_stream(FILE *stream, char *buffer, size_t size)
 {
     size_t length;
 
-    if (fgets(buffer, size, stream) == NULL)
+    // `fgets` takes its size as an `int`, while sizes are `size_t`. Our
+    // buffers hold at most 256 bytes, so the cast cannot lose anything.
+    if (fgets(buffer, (int)size, stream) == NULL)
     {
         return 0;
     }

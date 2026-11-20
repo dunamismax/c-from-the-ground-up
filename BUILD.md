@@ -33,9 +33,11 @@ first for conventions and the verification workflow.
 - `make verify` is green locally (Clang 23, Apple `gcc`) and in CI (Ubuntu Clang
   and GCC). It covers:
   - the listing sync check
-  - `mdbook build`
+  - `mdbook build`, then a check of every internal link and anchor in the
+    built book (`scripts/check_book_links.py`)
   - a compile of every lesson with `-Wall -Wextra -Wpedantic -Wstrict-prototypes
-    -Werror -std=c23`
+    -Wshadow -Wconversion -Wsign-conversion -Wmissing-prototypes -Werror
+    -std=c23` (`make smoke-linux` runs it under glibc from a Mac)
   - behavioural checks for lessons 3, 5, 6, 13, 15, 16, 17, 25, 26, 28, 29
     and 30. The interactive lessons are fed valid input, garbage and EOF under
     a 5-second timeout and a 1 MiB output cap; the argument-parsing lessons
@@ -57,8 +59,9 @@ first for conventions and the verification workflow.
   D7's default (GitHub sign-in only): accounts, synced progress, rate limits,
   the account and privacy pages. Accounts stay off in production until the
   maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
-  Graph images, the README link and the book banners (D6's default); open are
-  the repo homepage setting and the launch check on the production URL.
+  Graph images, the README link, the book banners (D6's default) and an
+  automated launch check of the production URL (links, axe, Lighthouse);
+  open are the repo homepage setting and a manual screen-reader pass.
 - **Live:** https://cfromthegroundup.com serves commit `a14e994` (W2-W6, most
   of W7, and the lesson correctness fixes) from `ubuntu-vm`, deployed
   2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are
@@ -478,8 +481,20 @@ runbook.
       page links to `/lessons/NN-slug`. Chapter file names are the lesson
       slugs, which the site's content tests enforce. If D6 becomes "redirect",
       the same mapping can redirect instead.
-- [ ] Final launch check: accessibility, performance and broken-link passes on
-      the production URL.
+- [x] Final launch check: accessibility, performance and broken-link passes on
+      the production URL. Done 2026-11-20 against commit `a14e994`:
+  - links: every page in `sitemap.xml` (45) returns 200, and so do all 288
+    distinct same-origin links and assets on them, with every `#anchor`
+    present; all 45 distinct external URLs return 200
+  - accessibility: axe-core (WCAG 2.2 AA tags) on all 45 pages plus a 404, in
+    both themes: no violations and no console errors
+  - performance: Lighthouse 12.8 mobile on `/`, `/lessons`, lesson 1 and
+    lesson 35 scores 100 for performance, accessibility, best practices and
+    SEO (a cold first run of `/` scored 79 on total blocking time; three
+    re-runs scored 100)
+- [ ] Manual screen-reader pass (VoiceOver or NVDA) over the landing page, a
+      lesson page, search and the run panel. Needs a person; automated checks
+      cannot judge it.
 - **Done when:** the site is the documented primary way to take the course.
 
 #### W8+. Beyond parity (triage into milestones when W7 is done)
@@ -613,11 +628,7 @@ the lessons it serves.
 
 ### Next (P2): tooling and quality gates
 
-- [ ] **Stricter warnings.** `-Wshadow -Wconversion -Wsign-conversion
-      -Wmissing-prototypes` currently produce 35 Clang warnings across 15 lessons.
-      The worst is `28_hash_table_implementation.c` with 10. Fix them without
-      making beginner lessons harder to read (an explicit cast with a comment is
-      fine), then add the flags to `BASE_CFLAGS` in `scripts/smoke_check.sh`.
+- [x] **Stricter warnings.** Done 2026-11-20; see the Done log.
 - [ ] **`.clang-format`** that reproduces the existing style: 4 spaces, Allman
       braces, and aligned trailing comments. Adopt it only if
       `clang-format --dry-run` produces a small diff. Then add a `make format` and
@@ -633,17 +644,9 @@ the lessons it serves.
 - [ ] **GCC `-fanalyzer`** pass in CI, non-blocking at first.
 - [ ] **`compile_commands.json`** or a `.clangd` file, so editors understand the
       lesson files out of the box.
-- [ ] **CI upkeep.** Review the action versions (`actions/checkout@v4`,
-      `actions/setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`,
-      `deploy-pages@v4`). Make
-      `deploy.yml` run the sync check before publishing. Add
-      `workflow_dispatch` to it as well: when `deploy-pages` fails with "No
-      artifacts named github-pages" (GitHub's artifact listing lagging, seen
-      at `395b7b3` and `a14e994`), re-running the job then fails with
-      "Multiple artifacts", so today only a new push publishes the book.
-- [ ] **Book link checking.** Verify internal links and anchors. First check
-      whether a link-check preprocessor supports mdBook 0.5.x; if not, write a
-      small script.
+- [x] **CI upkeep.** Done 2026-11-20; see the Done log. Review the action
+      versions again once a year.
+- [x] **Book link checking.** Done 2026-11-20; see the Done log.
 
 ### Later (P3): book and reader experience
 
@@ -719,16 +722,6 @@ pick them up.
   the file. The lesson now says so; a `realloc`-based reader would fix it
   but adds code to a Part 3 capstone.
 
-- **Linux smoke check from macOS.** Add a `make smoke-linux` target that runs
-  `scripts/smoke_check.sh` in a Docker image (for example `gcc:15` plus
-  `libncurses-dev` and `clang`). macOS headers define things glibc hides in
-  strict `-std=` modes (lesson 32's `M_PI` passed locally but failed CI for
-  several commits), so a local Linux run would catch that before pushing.
-  This works today without a target (2026-11-20): `COPYFILE_DISABLE=1 tar
-  --no-xattrs -cf - Part* scripts | docker run --rm -i gcc:15 sh -c 'mkdir
-  /r && cd /r && tar xf - && apt-get update && apt-get install -y
-  libncurses-dev clang && CC=gcc sh scripts/smoke_check.sh'` (a bind mount
-  of the scratch directory did not work with Docker Desktop).
 
 ---
 
@@ -784,6 +777,36 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** stricter warnings, CI upkeep, book link checking, a Linux
+  smoke target, and the automated part of the W7 launch check.
+  - Stricter warnings: `-Wshadow -Wconversion -Wsign-conversion
+    -Wmissing-prototypes` are in `BASE_CFLAGS`. The 33 Clang warnings (plus
+    GCC's `htons` ones) are fixed: lessons 16, 18-21, 23-25 and 28-30 gained
+    a `// --- Function Prototypes (Lesson 7) ---` block, and each narrowing
+    conversion is a cast with a comment saying why the value fits (13, 17,
+    21, 26, 28, 35). Lesson 21 now teaches INTEGER PROMOTION where `~a` and
+    `c << 2` need a cast back to `uint8_t`, and chapter 21 has a matching
+    section (its operator list, which rendered as one paragraph, is a real
+    list now). The lesson 35 harness declares its renamed `main`. Checked
+    with Clang and GCC 16 on macOS and GCC 15 and Clang on Linux.
+  - `make smoke-linux` runs the smoke check under glibc in Docker (`gcc:15`
+    with Clang added), from the Ideas inbox.
+  - CI: `actions/checkout@v7`, `setup-node@v7`, `configure-pages@v6`,
+    `upload-pages-artifact@v5`, `deploy-pages@v5` (all Node 24; the only
+    breaking change that touches us is upload-pages-artifact dropping
+    dotfiles since v4, and the book's one dotfile, `.nojekyll`, is not
+    needed for an Actions deploy). `deploy.yml` checks the listings before
+    publishing and can be run by hand (`workflow_dispatch`).
+  - `scripts/check_book_links.py` checks every internal link, asset and
+    `#anchor` in the built book (1049 links in 37 pages, all fine), runs in
+    `make book` and CI, and was checked to fail on a missing file and on
+    missing anchors. No mdBook 0.5 link-check preprocessor is maintained.
+  - W7 launch check on production: links, axe and Lighthouse all clean (see
+    W7). Only a manual screen-reader pass is left.
+  - The Caddy e2e test (`healthz/address/address.e2e.ts`) could fail with
+    ENOTEMPTY when it deleted Caddy's data directory while Caddy was still
+    exiting; it now waits for the exit (20 repeated runs pass).
 
 - **2026-11-20:** fifth production deploy, commit `a14e994` (chapter 6's
   opening `printf` example in a code fence). Prepare and cutover passed on

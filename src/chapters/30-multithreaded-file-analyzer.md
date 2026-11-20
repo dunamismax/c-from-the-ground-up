@@ -149,6 +149,9 @@ typedef struct
     int starts_inside_word; // True when this chunk begins in the middle of a word
 } ThreadData;
 
+// --- Function Prototypes (Lesson 7) ---
+void *analyze_chunk(void *arg);
+
 // --- The Worker Function ---
 // This is the function that each thread will execute.
 void *analyze_chunk(void *arg)

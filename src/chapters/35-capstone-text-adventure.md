@@ -195,7 +195,8 @@ int read_world_line(FILE *file, char *buffer, size_t size)
 {
     size_t length;
 
-    if (fgets(buffer, size, file) == NULL)
+    // `fgets` takes an `int` size; our line buffer is small enough to fit.
+    if (fgets(buffer, (int)size, file) == NULL)
     {
         return 0;
     }
@@ -665,7 +666,9 @@ void handle_look(GameState *game, char *argument)
     {
         if (room->exits[i])
         {
-            strcat(exits_str, direction_to_string(i));
+            // `i` is an `int`; the cast says we mean it as a `Direction`
+            // (the enum values are 0 to MAX_DIRECTIONS - 1).
+            strcat(exits_str, direction_to_string((Direction)i));
             strcat(exits_str, " ");
             found_exit = 1;
         }

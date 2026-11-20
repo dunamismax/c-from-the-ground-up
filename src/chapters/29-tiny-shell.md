@@ -111,6 +111,10 @@ Let's build our own `bash`!
 #define MAX_LINE 80 // The maximum length of a command
 #define MAX_ARGS 20 // The maximum number of arguments
 
+// --- Function Prototypes (Lesson 7) ---
+void parse_input(char *line, char **args);
+void discard_remaining_input(void);
+
 // --- Function to Parse Input ---
 // This function takes a raw command line string and breaks it into tokens.
 // It populates the `args` array and is a crucial pre-processing step.

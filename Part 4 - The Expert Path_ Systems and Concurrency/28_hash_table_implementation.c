@@ -82,6 +82,19 @@ typedef struct HashTable
     Entry **entries;
 } HashTable;
 
+// --- Function Prototypes (Lesson 7) ---
+// Declaring the functions up front gives a summary of the file. Their
+// definitions, with the explanations, follow below.
+unsigned int hash_function(const char *key);
+HashTable *ht_create(void);
+char *copy_string(const char *text);
+Entry *create_entry(const char *key, const char *value);
+void ht_insert(HashTable *hashtable, const char *key, const char *value);
+char *ht_search(HashTable *hashtable, const char *key);
+void ht_delete(HashTable *hashtable, const char *key);
+void ht_free(HashTable *hashtable);
+void ht_print(HashTable *hashtable);
+
 // --- Part 2: The Hash Function ---
 
 /*
@@ -113,8 +126,10 @@ unsigned int hash_function(const char *key)
         value = value * 37 + (unsigned char)key[i];
     }
 
-    // Return the value modulo the table size
-    return value % TABLE_SIZE;
+    // Return the value modulo the table size. The result is always less
+    // than TABLE_SIZE, so converting it to `unsigned int` loses nothing; the
+    // cast says so.
+    return (unsigned int)(value % TABLE_SIZE);
 }
 
 // --- Part 3: Core Hash Table Operations ---

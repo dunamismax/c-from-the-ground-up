@@ -143,7 +143,14 @@ test('through Caddy, a spoofed X-Forwarded-For is ignored', async () => {
 		expect(await addressAt(url)).toBe('127.0.0.1');
 		expect(await addressAt(url, { 'x-forwarded-for': '203.0.113.7' })).toBe('127.0.0.1');
 	} finally {
-		proxy.kill();
-		rmSync(dir, { recursive: true, force: true });
+		// Wait for Caddy to exit before deleting its data directory: it can
+		// still be writing there while it shuts down, and rmSync then fails
+		// with ENOTEMPTY.
+		if (proxy.exitCode === null && proxy.signalCode === null) {
+			const exited = new Promise((resolve) => proxy.once('exit', resolve));
+			proxy.kill();
+			await exited;
+		}
+		rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
 	}
 });
