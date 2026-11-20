@@ -170,6 +170,9 @@ site/src/routes/healthz/+server.ts health probe: 200 when the database answers `
 site/src/lib/                      shared code, imported as #lib/...
 site/src/lib/server/               server-only code (never shipped to the browser)
 site/src/lib/server/db/            Drizzle: schema.ts (tables) and index.ts (getDb(), lazy postgres.js client)
+site/src/lib/server/content/       build-time content loader: SUMMARY.md + chapters + lesson files -> Lesson objects
+site/src/lib/server/content/metadata.ts  per-lesson link flags, platform, example args; generates compile commands
+site/src/lib/content/types.ts      Course / Lesson / Segment types shared with pages and components
 site/drizzle/                      generated migrations (committed; created by the first db:generate)
 site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
 site/.env.example                  copy to site/.env (git-ignored) for local development
@@ -213,6 +216,14 @@ Conventions:
   lazily so builds never need a database.
 - **Database holds learner state only.** Course content comes from the lesson
   and chapter files at build time; never copy it into `site/`.
+- **Content loader:** pages get content through `getCourse()` / `getLesson()`
+  from `#lib/server/content/index.js`, only in prerendered routes (the
+  production server has no repository to read). A chapter body arrives as
+  ordered `segments`: HTML, a source listing (index into `sources`), or the
+  compile-and-run section (render `commands` from the metadata, plus
+  `runNotesHtml`). A new lesson that needs link flags, arguments or stdin
+  needs an entry in `metadata.ts`, and `metadata.spec.ts` fails if its flags
+  disagree with `compile_lesson()` in the smoke check.
 - **Formatting:** Prettier (tabs, single quotes, width 100) and ESLint with
   type-checked typescript-eslint rules. Run `npm run format` before committing;
   `npm run lint` must pass.

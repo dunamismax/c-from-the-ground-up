@@ -45,7 +45,9 @@ first for conventions and the verification workflow.
 - **Website:** the domain `cfromthegroundup.com` is registered, and its DNS in
   Cloudflare points at the maintainer's self-hosted Ubuntu server. W1 is done:
   `site/` holds a SvelteKit 3 scaffold with a placeholder home page and
-  `/healthz`, wired into `make verify` and CI. Continue at milestone W2.
+  `/healthz`, wired into `make verify` and CI. W2 is done: the content loader
+  in `site/src/lib/server/content/` turns the chapters and lesson files into
+  typed, highlighted `Lesson` objects. Continue at milestone W3.
 - **Live:** https://cfromthegroundup.com serves the W1 placeholder from
   `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
   remaining items are listed there.
@@ -196,26 +198,32 @@ before relying on memory. In particular:
 
 #### W2. Course content pipeline
 
-- [ ] Write a content loader in `site/src/lib/server/content/`. It parses
+- [x] Write a content loader in `site/src/lib/server/content/`. It parses
       `src/SUMMARY.md` into parts and lessons, loads each chapter, resolves the
-      source markers and returns typed `Lesson` objects with these fields:
+      source markers and returns typed `Lesson` objects (types in
+      `site/src/lib/content/types.ts`) with these fields:
   - number, slug, title and part
   - prose HTML and a table of contents
   - source files, each with path, language and contents
   - compile and run instructions
   - previous and next lesson
-- [ ] Render the markdown to HTML at build time with the unified and Shiki
+- [x] Render the markdown to HTML at build time with the unified and Shiki
       pipeline. Give headings anchors, and render the "Full Source" listings with
-      file names.
-- [ ] Add a small per-lesson metadata table in code covering:
+      file names. The body comes back as ordered segments (HTML, source listing,
+      compile-and-run section) so the lesson page can render listings and the
+      run panel as components; each source carries its name, highlighted HTML
+      and GitHub links.
+- [x] Add a small per-lesson metadata table in code
+      (`site/src/lib/server/content/metadata.ts`) covering:
   - required link flags (`-pthread`, `-lm`, ncurses)
   - whether the lesson needs command-line arguments or stdin
   - platform: portable C, POSIX, or ncurses
-  The UI uses it for compile commands and badges. A test must assert that the
-  flags agree with `compile_lesson()` in `scripts/smoke_check.sh`.
-- [ ] Generate compile commands from that metadata rather than copying them
-      from prose, so resolving D1 later is a one-line change.
-- [ ] Add Vitest tests that check:
+  The UI uses it for compile commands and badges. `metadata.spec.ts` asserts
+  that the flags agree with `compile_lesson()` in `scripts/smoke_check.sh`.
+- [x] Generate compile commands from that metadata rather than copying them
+      from prose, so resolving D1 later is a one-line change (`C_STANDARD` in
+      `metadata.ts`).
+- [x] Add Vitest tests that check:
   - every chapter in `SUMMARY.md` yields a lesson
   - slugs are unique and match the chapter file names
   - every embedded source equals the file on disk
@@ -223,6 +231,7 @@ before relying on memory. In particular:
 - **Done when:** all 35 chapters (36 source pages, counting both files of
   lesson 26) load through the loader with passing tests, and the content changes
   automatically when a `.c` file changes and `make sync` runs.
+- **Status:** done 2026-11-20 (see the Done log).
 
 #### W3. Design system and core pages
 
@@ -629,6 +638,20 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** milestone W2, course content pipeline.
+  - `site/src/lib/server/content/`: `summary.ts` parses `src/SUMMARY.md`,
+    `chapter.ts` renders a chapter with unified (remark-gfm, rehype-slug,
+    rehype-autolink-headings) and splits it into HTML, listing and run
+    segments, `highlight.ts` runs Shiki at build time (`c`, `makefile`, `sh`;
+    `github-light` / `github-dark` as CSS variables), and `index.ts`
+    (`getCourse()`, `getLesson()`) assembles the typed `Course`.
+  - Listings are read from the lesson files themselves, not the chapter copy.
+  - `metadata.ts` holds link flags, platform, interactivity and example
+    arguments, and generates the compile and run commands.
+  - Tests: summary parsing, chapter rendering, the whole real course (35
+    lessons, every lesson file embedded once and in sync, TOC ids, prev/next),
+    and agreement with `compile_lesson()` in the smoke check.
 
 - **2026-11-20:** first production deploy (most of W5). `site/deploy/` holds
   the Caddy site, the hardened systemd unit, `provision.sh` (database, roles,
