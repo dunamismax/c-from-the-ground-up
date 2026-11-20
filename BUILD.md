@@ -59,10 +59,10 @@ first for conventions and the verification workflow.
   maintainer creates the GitHub OAuth app (W0). W7 has its SEO basics, Open
   Graph images, the README link and the book banners (D6's default); open are
   the repo homepage setting and the launch check on the production URL.
-- **Live:** https://cfromthegroundup.com serves commit `de586a7` (W2-W6 and
-  most of W7) from `ubuntu-vm`, deployed 2026-11-20 with `site/deploy/`. The
-  database has the W6 tables; accounts are off until the GitHub OAuth app
-  exists (W0).
+- **Live:** https://cfromthegroundup.com serves commit `9412c1b` (W2-W6, most
+  of W7, and the lesson correctness fixes) from `ubuntu-vm`, deployed
+  2026-11-20 with `site/deploy/`. The database has the W6 tables; accounts are
+  off until the GitHub OAuth app exists (W0).
 
 ---
 
@@ -603,7 +603,9 @@ the lessons it serves.
     for their syntax examples, 17, 20 and 35 lost stray half-sentences, and
     34's banner line became a heading. A scan for unfenced code and fragment
     paragraphs is clean now, but no chapter has been read side by side with
-    its lesson yet.)
+    its lesson yet. The scan missed one: chapter 6 opens with five
+    `printf("Hello!\n");` lines as plain prose, so they run together on the
+    page; they need a code fence.)
   - stale claims
   - explanations that no longer match the code
   - Then consider extending `sync_chapters.py` with a heuristic warning when a
@@ -778,6 +780,20 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** fourth production deploy, commit `9412c1b` (the lesson
+  correctness fixes from `46208f2`). The first attempt, at `46208f2`, failed
+  cutover's home-page check and rolled itself back to `de586a7` with the site
+  up throughout: the check piped curl into `grep -q` under `pipefail`, so
+  when grep exited at the match curl failed writing (error 23) and
+  `local_get` retried until it gave up. `9412c1b` fetches pages in full before
+  matching (`cutover.sh` and `prepare.sh`). Its prepare and cutover passed,
+  including all of cutover's checks (no new migrations; backup taken).
+  Checked from outside: `/version.txt`, `/healthz`, `/api/account` (off), the
+  client address with a spoofed `X-Forwarded-For`, the `www` redirect, every
+  page type, the search index, sitemap, zip and file downloads, an Open Graph
+  image, a runtime 404, the new lesson text, and no console errors on a
+  lesson page.
 
 - **2026-11-20:** lesson correctness review of all 35 lessons, and the
   unsafe-API audit.
