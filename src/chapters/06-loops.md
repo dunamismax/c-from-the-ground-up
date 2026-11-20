@@ -1,11 +1,14 @@
 # Loops
 
 Imagine you needed to print "Hello!" five times. You could write:
+
+```c
 printf("Hello!\n");
 printf("Hello!\n");
 printf("Hello!\n");
 printf("Hello!\n");
 printf("Hello!\n");
+```
 
 This is tedious and not scalable. What if you needed to do it 500 times?
 This is where LOOPS come in. A LOOP is a programming structure that repeats a

@@ -603,9 +603,9 @@ the lessons it serves.
     for their syntax examples, 17, 20 and 35 lost stray half-sentences, and
     34's banner line became a heading. A scan for unfenced code and fragment
     paragraphs is clean now, but no chapter has been read side by side with
-    its lesson yet. The scan missed one: chapter 6 opens with five
-    `printf("Hello!\n");` lines as plain prose, so they run together on the
-    page; they need a code fence.)
+    its lesson yet. The scan first missed chapter 6's opening `printf`
+    example, which is fenced now too; a second scan for bare statement lines
+    found nothing else.)
   - stale claims
   - explanations that no longer match the code
   - Then consider extending `sync_chapters.py` with a heuristic warning when a
