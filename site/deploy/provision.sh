@@ -88,10 +88,12 @@ chmod 0600 "$WEB_ENV.next" "$MIGRATION_ENV.next"
 mv -f "$WEB_ENV.next" "$WEB_ENV"
 mv -f "$MIGRATION_ENV.next" "$MIGRATION_ENV"
 
-# Prove both roles can log in over TCP with the stored credentials.
+# Prove both roles can log in over TCP with the stored credentials. Use the
+# real psql: /usr/bin/psql is a wrapper that inspects the cluster, which an
+# unprivileged user cannot.
 for env_file in "$WEB_ENV" "$MIGRATION_ENV"; do
   url=$(sed -nE 's/^DATABASE_URL=//p' "$env_file")
-  PGCONNECT_TIMEOUT=5 runuser -u nobody -- env "DATABASE_URL=$url" sh -c 'psql -X -At "$DATABASE_URL" -c "select current_user"' \
+  PGCONNECT_TIMEOUT=5 runuser -u nobody -- env "DATABASE_URL=$url" sh -c '/usr/lib/postgresql/18/bin/psql -X -At "$DATABASE_URL" -c "select current_user"' \
     || die "cannot connect with $env_file"
 done
 
