@@ -1,16 +1,43 @@
 <script lang="ts">
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import favicon from '#lib/assets/favicon.svg';
+	import SearchDialog from '#lib/components/SearchDialog.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import SiteHeader from '#lib/components/SiteHeader.svelte';
+	import { localStorageBackend } from '#lib/progress/progress.js';
+	import { progress } from '#lib/progress/progress.svelte.js';
+	import { searchUi } from '#lib/search-ui.svelte.js';
+	import { isTypingTarget } from '#lib/shortcuts.js';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+
+	// Learner progress lives in this browser (milestone W4). Pages render
+	// without it and fill in once it is read.
+	onMount(() => {
+		const disconnect = progress.connect(localStorageBackend(window.localStorage, window));
+		// Lets end-to-end tests wait until the page is interactive.
+		document.documentElement.dataset.hydrated = '';
+		return disconnect;
+	});
+
+	function onKeydown(event: KeyboardEvent) {
+		if (event.defaultPrevented || isTypingTarget(event.target)) return;
+		const slash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey;
+		const commandK = event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey);
+		if (slash || commandK) {
+			event.preventDefault();
+			searchUi.open = true;
+		}
+	}
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} type="image/svg+xml" />
 </svelte:head>
+
+<svelte:window onkeydown={onKeydown} />
 
 <a
 	href="#main"
@@ -26,3 +53,5 @@
 	</main>
 	<SiteFooter />
 </div>
+
+<SearchDialog />

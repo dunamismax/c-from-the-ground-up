@@ -69,9 +69,28 @@ describe('lesson metadata', () => {
 		const hello = lessonMeta(1, ['1_hello_world.c']);
 		expect(lessonCommands(hello)).toEqual({
 			build: ['cc -Wall -Wextra -std=c11 -o 1_hello_world 1_hello_world.c'],
-			run: ['./1_hello_world']
+			run: ['./1_hello_world'],
+			onlineOptions: '-std=c11 -Wall -Wextra'
 		});
-		expect(hello).toMatchObject({ platform: 'portable', interactive: false, needsArgs: false });
+		expect(hello).toMatchObject({
+			platform: 'portable',
+			interactive: false,
+			needsArgs: false,
+			online: true
+		});
+		expect(lessonCommands(lessonMeta(32, ['32_linking_external_libraries.c'])).onlineOptions).toBe(
+			'-std=c11 -Wall -Wextra -lm'
+		);
+		// Lessons that need files, POSIX or several files run locally only.
+		for (const [lesson, files] of [
+			[14, ['14_file_io.c']],
+			[29, ['29_tiny_shell.c']],
+			[33, ['33_advanced_terminal_ui.c']]
+		] as const) {
+			const meta = lessonMeta(lesson, [...files]);
+			expect(meta.online, `lesson ${lesson}`).toBe(false);
+			expect(lessonCommands(meta).onlineOptions).toBeNull();
+		}
 
 		const threads = lessonMeta(30, ['30_multithreaded_file_analyzer.c']);
 		expect(lessonCommands(threads).build).toEqual([
@@ -86,7 +105,11 @@ describe('lesson metadata', () => {
 		]);
 
 		const make = lessonMeta(31, ['helper.h', 'helper.c', 'main.c', 'Makefile']);
-		expect(lessonCommands(make)).toEqual({ build: ['make'], run: ['./31_project_main'] });
+		expect(lessonCommands(make)).toEqual({
+			build: ['make'],
+			run: ['./31_project_main'],
+			onlineOptions: null
+		});
 	});
 
 	it('puts link flags after the source file', () => {

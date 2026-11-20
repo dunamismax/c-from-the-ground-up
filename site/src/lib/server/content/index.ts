@@ -77,6 +77,7 @@ export async function loadCourse(root: string = courseRoot()): Promise<Course> {
 				description: rendered.description,
 				segments: rendered.segments,
 				toc: rendered.toc,
+				searchSections: rendered.sections,
 				sources,
 				runNotesHtml: rendered.runNotesHtml,
 				meta,

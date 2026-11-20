@@ -1,16 +1,39 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CodeBlock from '#lib/components/CodeBlock.svelte';
+	import CompleteToggle from '#lib/components/CompleteToggle.svelte';
 	import CourseSidebar from '#lib/components/CourseSidebar.svelte';
 	import LessonBadges from '#lib/components/LessonBadges.svelte';
 	import PageMeta from '#lib/components/PageMeta.svelte';
 	import PrevNext from '#lib/components/PrevNext.svelte';
 	import RunPanel from '#lib/components/RunPanel.svelte';
 	import TableOfContents from '#lib/components/TableOfContents.svelte';
+	import { progress } from '#lib/progress/progress.svelte.js';
+	import { lessonShortcut } from '#lib/shortcuts.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	const lesson = $derived(data.lesson);
+
+	// Remember the lesson being read, for "Continue where you left off".
+	// (untrack: view() reads the progress it writes, which must not re-run this.)
+	$effect(() => {
+		const slug = lesson.slug;
+		if (progress.ready) untrack(() => progress.view(slug));
+	});
+
+	function onKeydown(event: KeyboardEvent) {
+		const shortcut = lessonShortcut(event);
+		const target = shortcut === 'next' ? lesson.next : shortcut === 'prev' ? lesson.prev : null;
+		if (!target) return;
+		event.preventDefault();
+		void goto(resolve('/lessons/[slug]', { slug: target.slug }));
+	}
 </script>
+
+<svelte:window onkeydown={onKeydown} />
 
 <PageMeta title="Lesson {lesson.number}: {lesson.title}" description={data.summary} />
 
@@ -61,11 +84,18 @@
 					downloadHref="/lessons/{lesson.slug}/files/{lesson.sources[segment.index].name}"
 				/>
 			{:else}
-				<RunPanel meta={lesson.meta} commands={lesson.commands} notesHtml={lesson.runNotesHtml} />
+				<RunPanel
+					slug={lesson.slug}
+					meta={lesson.meta}
+					commands={lesson.commands}
+					notesHtml={lesson.runNotesHtml}
+					fileCount={lesson.sources.length}
+				/>
 			{/if}
 		{/each}
 
 		<div class="max-w-prose">
+			<CompleteToggle slug={lesson.slug} />
 			<PrevNext prev={lesson.prev} next={lesson.next} />
 		</div>
 	</article>

@@ -170,6 +170,10 @@ site/src/routes/lessons/[slug]/    lesson page; files/[name] serves each lesson 
 site/src/routes/*.e2e.ts           Playwright tests, including a11y.e2e.ts (axe-core, WCAG 2.2 AA, both themes)
 site/src/lib/components/           Svelte components (CodeBlock, RunPanel, CourseSidebar, ...)
 site/src/lib/site.ts               site-wide constants (name, URLs)
+site/src/lib/progress/             learner progress: snapshot logic, ProgressBackend (localStorage now, database in W6)
+site/src/lib/search.ts             search index options shared by /search-index.json and SearchDialog.svelte
+site/src/lib/compiler-explorer.ts  "Try it online" (Compiler Explorer client state and shortener call)
+site/src/routes/downloads/         prerendered zip downloads (per lesson and the whole course)
 site/src/routes/healthz/+server.ts health probe: 200 when the database answers `select 1`, else 503
 site/src/lib/                      shared code, imported as #lib/...
 site/src/lib/server/               server-only code (never shipped to the browser)
@@ -218,6 +222,12 @@ Conventions:
   `text-muted`, `border-line`, `text-accent`, ...) rather than raw colors or
   `dark:` variants. The theme is `data-theme` on `<html>`, set before paint by
   the script in `app.html`. Code blocks are dark in both themes.
+- **Learner state in the browser.** Progress goes through the `progress`
+  store (`#lib/progress/progress.svelte.js`); it is empty during prerendering
+  and fills in after hydration, so render progress UI only when
+  `progress.ready`. Inside an `$effect`, wrap progress writes in `untrack`.
+  Tests that press keys right after loading must wait for
+  `html[data-hydrated]`.
 - **Accessibility is tested.** `a11y.e2e.ts` fails on any axe-core WCAG 2.2 AA
   violation. Keep text at AA contrast (do not dim text with `opacity`), give
   every scrollable `pre` `tabindex="0"`, and keep focus rings visible.

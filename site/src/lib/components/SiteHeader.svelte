@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { searchUi } from '#lib/search-ui.svelte.js';
 	import { GITHUB_URL } from '#lib/site.js';
 	import Logo from './Logo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
@@ -32,6 +33,31 @@
 					{link.label}
 				</a>
 			{/each}
+			<button
+				type="button"
+				class="inline-flex h-9 items-center gap-2 rounded-lg border border-line px-2.5 text-muted hover:border-line-strong hover:text-ink"
+				aria-label="Search the course"
+				aria-keyshortcuts="/"
+				onclick={() => (searchUi.open = true)}
+			>
+				<svg
+					class="size-4"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					aria-hidden="true"
+				>
+					<circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" stroke-linecap="round" />
+				</svg>
+				<span class="hidden md:inline">Search</span>
+				<kbd
+					class="hidden rounded border border-line px-1.5 font-mono text-xs md:inline"
+					aria-hidden="true"
+				>
+					/
+				</kbd>
+			</button>
 			<a
 				href={GITHUB_URL}
 				class="inline-flex size-9 items-center justify-center rounded-lg text-muted hover:bg-sunken hover:text-ink"

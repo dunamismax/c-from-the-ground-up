@@ -17,6 +17,15 @@ export const C_STANDARD = 'c11';
 export const COMPILER = 'cc';
 export const WARNING_FLAGS = ['-Wall', '-Wextra'];
 
+/** The compiler and flags "Try it online" opens a lesson with in Compiler Explorer. */
+export function onlineCompilerOptions(libraries: Library[]): string {
+	return [
+		`-std=${C_STANDARD}`,
+		...WARNING_FLAGS,
+		...libraries.map((library) => LINK_FLAGS[library])
+	].join(' ');
+}
+
 export const LINK_FLAGS: Record<Library, string> = {
 	pthread: '-pthread',
 	m: '-lm',
@@ -29,6 +38,8 @@ interface MetaEntry {
 	libraries?: Library[];
 	build?: 'single' | 'make';
 	interactive?: boolean;
+	/** Reads or writes files in its working folder. */
+	usesFiles?: boolean;
 	/** Example arguments for a single-program lesson. */
 	args?: string;
 	/** Explicit programs, in the order a learner should start them. */
@@ -41,10 +52,11 @@ const TABLE: Record<number, MetaEntry> = {
 	5: { interactive: true },
 	6: { interactive: true },
 	13: { interactive: true },
+	14: { usesFiles: true },
 	15: { args: 'Bob 42' },
 	16: { args: '5 + 3' },
-	17: { interactive: true },
-	25: { interactive: true, args: 'my_document.txt' },
+	17: { interactive: true, usesFiles: true },
+	25: { interactive: true, usesFiles: true, args: 'my_document.txt' },
 	26: {
 		platform: 'posix',
 		programs: [
@@ -56,11 +68,12 @@ const TABLE: Record<number, MetaEntry> = {
 			}
 		]
 	},
-	27: { args: 'main 27_build_your_own_grep.c' },
+	27: { usesFiles: true, args: 'main 27_build_your_own_grep.c' },
 	29: { platform: 'posix', interactive: true },
 	30: {
 		platform: 'posix',
 		libraries: ['pthread'],
+		usesFiles: true,
 		args: '30_multithreaded_file_analyzer.c'
 	},
 	31: {
@@ -69,8 +82,14 @@ const TABLE: Record<number, MetaEntry> = {
 	},
 	32: { libraries: ['m'] },
 	33: { platform: 'ncurses', libraries: ['ncurses'], interactive: true },
-	34: { args: 'users.dat' },
-	35: { platform: 'ncurses', libraries: ['ncurses'], interactive: true, args: 'world.map' }
+	34: { usesFiles: true, args: 'users.dat' },
+	35: {
+		platform: 'ncurses',
+		libraries: ['ncurses'],
+		interactive: true,
+		usesFiles: true,
+		args: 'world.map'
+	}
 };
 
 /** Every lesson's declared libraries, for the smoke-check agreement test. */
@@ -102,12 +121,16 @@ export function lessonMeta(lesson: number, sourceNames: string[]): LessonMeta {
 			throw new Error(`lesson ${lesson}: metadata names ${program.source}, not in the chapter`);
 		}
 	}
+	const platform = entry.platform ?? 'portable';
+	const usesFiles = entry.usesFiles ?? false;
 	return {
-		platform: entry.platform ?? 'portable',
+		platform,
 		libraries: entry.libraries ?? [],
 		build,
 		interactive: entry.interactive ?? false,
 		needsArgs: programs.some((program) => program.args !== ''),
+		usesFiles,
+		online: platform === 'portable' && build === 'single' && programs.length === 1 && !usesFiles,
 		programs
 	};
 }
@@ -134,5 +157,9 @@ export function lessonCommands(meta: LessonMeta): Commands {
 		meta.build === 'make'
 			? ['make']
 			: meta.programs.map((program) => compileCommand(program, meta.libraries));
-	return { build, run: meta.programs.map(runCommand) };
+	return {
+		build,
+		run: meta.programs.map(runCommand),
+		onlineOptions: meta.online ? onlineCompilerOptions(meta.libraries) : null
+	};
 }

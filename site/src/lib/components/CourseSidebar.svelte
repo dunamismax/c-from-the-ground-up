@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Part } from '#lib/content/types.js';
+	import { progress } from '#lib/progress/progress.svelte.js';
 
 	// The course outline: every part and lesson, with the current one marked.
 	// On small screens it folds behind a button above the lesson.
@@ -53,6 +54,14 @@
 				<a href="/parts/{part.number}" class="hover:text-ink">Part {part.number}</a>
 			</p>
 			<p class="mb-2 px-2 text-xs text-muted">{part.title}</p>
+			{#if progress.ready}
+				{@const partProgress = progress.progressFor(part.lessons.map((lesson) => lesson.slug))}
+				{#if partProgress.done > 0}
+					<div class="mx-2 mb-2 h-1 overflow-hidden rounded-full bg-sunken" aria-hidden="true">
+						<div class="h-full bg-success" style:width="{partProgress.percent}%"></div>
+					</div>
+				{/if}
+			{/if}
 			<ol>
 				{#each part.lessons as lesson (lesson.slug)}
 					<li>
@@ -62,7 +71,20 @@
 							aria-current={lesson.slug === current ? 'page' : undefined}
 						>
 							<span class="w-5 shrink-0 text-right tabular-nums">{lesson.number}</span>
-							<span>{lesson.title}</span>
+							<span class="flex-1">{lesson.title}</span>
+							{#if progress.isComplete(lesson.slug)}
+								<svg
+									class="mt-0.5 size-4 shrink-0 text-success"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2.5"
+									aria-hidden="true"
+								>
+									<path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+								</svg>
+								<span class="sr-only">(complete)</span>
+							{/if}
 						</a>
 					</li>
 				{/each}

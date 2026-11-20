@@ -2,11 +2,36 @@
 	import { onMount } from 'svelte';
 	import type { Commands, LessonMeta } from '#lib/content/types.js';
 	import CopyButton from './CopyButton.svelte';
+	import TryOnline from './TryOnline.svelte';
 
 	// "How to Compile and Run": one-time setup per operating system, then the
 	// build and run commands generated from the lesson metadata.
-	let { meta, commands, notesHtml }: { meta: LessonMeta; commands: Commands; notesHtml: string } =
-		$props();
+	let {
+		slug,
+		meta,
+		commands,
+		notesHtml,
+		fileCount
+	}: {
+		slug: string;
+		meta: LessonMeta;
+		commands: Commands;
+		notesHtml: string;
+		fileCount: number;
+	} = $props();
+
+	// Why a lesson cannot run in Compiler Explorer, if it cannot.
+	const localReason = $derived(
+		meta.platform === 'posix'
+			? 'It uses POSIX system calls'
+			: meta.platform === 'ncurses'
+				? 'It draws a full-screen terminal interface with ncurses'
+				: meta.build === 'make'
+					? 'It is several files built with make'
+					: meta.usesFiles
+						? 'It reads or writes files'
+						: null
+	);
 
 	type Os = 'macos' | 'linux' | 'windows';
 	const tabs: { id: Os; label: string }[] = [
@@ -68,7 +93,22 @@
 		<a class="hover:underline" href="#how-to-compile-and-run">How to Compile and Run</a>
 	</h2>
 
-	<div class="mt-4 overflow-hidden rounded-xl border border-line bg-raised">
+	<div class="mt-4 mb-6">
+		{#if commands.onlineOptions}
+			<TryOnline
+				fileHref="/lessons/{slug}/files/{meta.programs[0].source}"
+				options={commands.onlineOptions}
+				args={meta.programs[0].args}
+			/>
+		{:else if localReason}
+			<p class="text-sm text-muted">
+				{localReason}, so run this lesson on your own machine (macOS, Linux or WSL) rather than
+				online.
+			</p>
+		{/if}
+	</div>
+
+	<div class="overflow-hidden rounded-xl border border-line bg-raised">
 		<div
 			role="tablist"
 			aria-label="Operating system"
@@ -145,7 +185,14 @@
 			)}
 
 			<ul class="list-disc space-y-1 pl-5 text-muted marker:text-line-strong">
-				<li>Run these commands in the folder that holds the lesson's files.</li>
+				<li>
+					Run these commands in the folder that holds the lesson's {fileCount > 1
+						? 'files'
+						: 'file'}.
+					<a class="font-medium text-accent hover:underline" href="/downloads/{slug}.zip">
+						Download {fileCount > 1 ? 'them' : 'it'} as a zip
+					</a>.
+				</li>
 				{#if meta.interactive}
 					<li>The program waits for your input: type an answer and press Enter.</li>
 				{/if}

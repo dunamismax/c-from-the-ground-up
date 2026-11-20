@@ -82,5 +82,12 @@ describe('renderChapter', () => {
 		);
 		expect(first.kind === 'html' && first.html).toContain('class="shiki');
 		expect(rendered.runNotesHtml).toBe('<p>Try changing it.</p>');
+		expect(rendered.sections).toEqual([
+			{ id: '', heading: '', text: 'First paragraph with code.' },
+			{ id: 'topic', heading: 'Topic', text: '' },
+			{ id: 'full-source', heading: 'Full Source', text: '' },
+			{ id: 'how-to-compile-and-run', heading: 'How to Compile and Run', text: '' },
+			{ id: 'key-takeaways', heading: 'Key Takeaways', text: 'One' }
+		]);
 	});
 });

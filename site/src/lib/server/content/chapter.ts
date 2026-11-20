@@ -20,7 +20,7 @@ import { toString as hastToString } from 'hast-util-to-string';
 import type { Highlighter } from 'shiki';
 import type { Element, Root as HastRoot, RootContent as HastContent } from 'hast';
 import type { Root as MdRoot, RootContent as MdContent, Paragraph } from 'mdast';
-import type { Segment, TocEntry } from '#lib/content/types.js';
+import type { SearchSection, Segment, TocEntry } from '#lib/content/types.js';
 import { rehypeShiki } from './highlight.js';
 
 const MARKER_RE = /^<!-- source: (.+?) -->$/;
@@ -47,6 +47,8 @@ export interface ParsedChapter {
 export interface RenderedChapter {
 	segments: Segment[];
 	toc: TocEntry[];
+	/** The prose split at h2/h3 headings, as plain text, for the search index. */
+	sections: SearchSection[];
 	description: string;
 	runNotesHtml: string;
 }
@@ -147,6 +149,13 @@ export async function renderChapter(
 	const toc: TocEntry[] = [];
 	let buffer: HastContent[] = [];
 	let description = '';
+	const sections: SearchSection[] = [];
+	let section: SearchSection = { id: '', heading: '', text: '' };
+	const startSection = (next: SearchSection) => {
+		section.text = section.text.replace(/\s+/g, ' ').trim();
+		if (section.text || section.heading) sections.push(section);
+		section = next;
+	};
 
 	const flush = () => {
 		const html = toHtml({ type: 'root', children: buffer }).trim();
@@ -165,14 +174,20 @@ export async function renderChapter(
 			flush();
 			segments.push({ kind: 'run' });
 			toc.push({ depth: 2, id: RUN_ID, text: RUN_HEADING });
+			startSection({ id: RUN_ID, heading: RUN_HEADING, text: '' });
 			continue;
 		}
 		if (element && (element.tagName === 'h2' || element.tagName === 'h3')) {
-			toc.push({
+			const entry: TocEntry = {
 				depth: element.tagName === 'h2' ? 2 : 3,
 				id: String(element.properties.id),
 				text: hastToString(element)
-			});
+			};
+			toc.push(entry);
+			startSection({ id: entry.id, heading: entry.text, text: '' });
+		} else if (element && element.tagName !== 'pre') {
+			// Prose only: code examples would flood the index with C keywords.
+			section.text += ` ${hastToString(element)}`;
 		}
 		if (!description && element?.tagName === 'p') {
 			description = hastToString(element).replace(/\s+/g, ' ').trim();
@@ -180,6 +195,7 @@ export async function renderChapter(
 		buffer.push(node);
 	}
 	flush();
+	startSection({ id: '', heading: '', text: '' });
 
 	let runNotesHtml = '';
 	if (chapter.run) {
@@ -187,5 +203,5 @@ export async function renderChapter(
 		runNotesHtml = toHtml(notes).trim();
 	}
 
-	return { segments, toc, description, runNotesHtml };
+	return { segments, toc, sections, description, runNotesHtml };
 }

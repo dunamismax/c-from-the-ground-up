@@ -19,6 +19,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	return {
 		lesson: {
 			...lesson,
+			// The search index carries the prose text; the page does not need it.
+			searchSections: [],
 			// The code is already in the highlighted HTML; do not ship it twice.
 			sources: lesson.sources.map(({ contents, ...source }) => source)
 		},

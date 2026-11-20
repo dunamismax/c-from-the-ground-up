@@ -27,6 +27,13 @@ export interface LessonMeta {
 	interactive: boolean;
 	/** The program needs command-line arguments. */
 	needsArgs: boolean;
+	/** The program reads or writes files in its working folder. */
+	usesFiles: boolean;
+	/**
+	 * The lesson can be compiled and run in Compiler Explorer: portable C,
+	 * one file, and no files to read or write.
+	 */
+	online: boolean;
 	programs: Program[];
 }
 
@@ -34,6 +41,8 @@ export interface LessonMeta {
 export interface Commands {
 	build: string[];
 	run: string[];
+	/** Compiler flags for Compiler Explorer, or null when the lesson cannot run there. */
+	onlineOptions: string | null;
 }
 
 export interface SourceFile {
@@ -52,6 +61,14 @@ export interface SourceFile {
 	githubUrl: string;
 	/** The raw file, for downloading. */
 	rawUrl: string;
+}
+
+/** One part of a chapter's prose, between headings, for the search index. */
+export interface SearchSection {
+	/** Heading anchor id, or '' for the text before the first heading. */
+	id: string;
+	heading: string;
+	text: string;
 }
 
 export interface TocEntry {
@@ -86,6 +103,8 @@ export interface Lesson extends LessonRef {
 	description: string;
 	segments: Segment[];
 	toc: TocEntry[];
+	/** Plain-text prose by section, for the search index; not sent to pages. */
+	searchSections: SearchSection[];
 	sources: SourceFile[];
 	/**
 	 * Extra advice from the chapter's "How to Compile and Run" section, rendered,

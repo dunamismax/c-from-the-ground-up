@@ -49,7 +49,10 @@ first for conventions and the verification workflow.
   in `site/src/lib/server/content/` turns the chapters and lesson files into
   typed, highlighted `Lesson` objects. W3 is done except a Lighthouse run: the
   design system, landing, course overview, part, lesson, setup, about and 404
-  pages, all prerendered. Continue at milestone W4.
+  pages, all prerendered. W4 is done: progress in the browser, search,
+  "Try it online" through Compiler Explorer, keyboard shortcuts and zip
+  downloads. Next: the open W5 items (CSP, client-IP test, migrator), then
+  W6, which needs decision D7.
 - **Live:** https://cfromthegroundup.com serves the W1 placeholder from
   `ubuntu-vm` (deployed 2026-11-20 with `site/deploy/`). Most of W5 is done; its
   remaining items are listed there.
@@ -285,23 +288,33 @@ before relying on memory. In particular:
 
 #### W4. Learner experience (no accounts yet)
 
-- [ ] Progress tracking in `localStorage`, behind a small progress-store
-      interface so W6 can swap in the database:
+- [x] Progress tracking in `localStorage`, behind a small progress-store
+      interface so W6 can swap in the database
+      (`site/src/lib/progress/progress.ts`: `ProgressSnapshot` and
+      `ProgressBackend`; `progress.svelte.ts` is the reactive store):
   - mark a lesson complete
   - per-part progress bars
   - "Continue where you left off" on the landing page and the course overview
-- [ ] Site search over lesson titles, headings and prose, using a client-side
-      index generated at build time (MiniSearch or FlexSearch).
-- [ ] "Try it online" button for portable lessons. It opens the lesson in
+- [x] Site search over lesson titles, headings and prose, using a client-side
+      index generated at build time (MiniSearch, `/search-index.json`, 34 KB
+      with Brotli, loaded when search first opens). It also indexes each
+      source file's comments, since those are the lesson.
+- [x] "Try it online" button for portable lessons. It opens the lesson in
       Compiler Explorer (godbolt.org) with the source and flags preloaded and
-      execution enabled. POSIX and ncurses lessons instead say to run locally,
-      with a link to `/setup`. Native in-browser execution is D8.
-- [ ] Keyboard shortcuts: `j` / `k` or arrow keys for previous and next lesson,
-      and `/` for search.
-- [ ] Downloads: each lesson's source files, and a zip of the whole course.
+      execution enabled (GCC 16.2, `cg162`, through Compiler Explorer's
+      shortener API, called from the browser only on click). POSIX, ncurses,
+      multi-file and file-reading lessons instead say to run locally, with a
+      link to `/setup`. Native in-browser execution is D8.
+- [x] Keyboard shortcuts: `j` / `k` or arrow keys for previous and next lesson,
+      and `/` (or Ctrl/Cmd+K) for search.
+- [x] Downloads: each lesson's source files, a zip per lesson
+      (`/downloads/<slug>.zip`) and a zip of the whole course
+      (`/downloads/c-from-the-ground-up.zip`), built reproducibly at build
+      time with fflate.
 - **Done when:** a learner can work through the course from start to finish
   with persistent progress in one browser, find any topic by search, and run
   portable lessons without installing anything.
+- **Status:** done 2026-11-20 (see the Done log).
 
 #### W5. Production deployment
 
@@ -604,6 +617,9 @@ follows the "Adding a new lesson" checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
+- **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
+  (`cg162` in `site/src/lib/compiler-explorer.ts`). Check once a year that the
+  id still exists on godbolt.org and move to a newer GCC.
 - **Content type for lesson downloads.** Prerendered files under
   `/lessons/<slug>/files/` are served by adapter-node without a
   `Content-Type` for `.c`, `.h` and `Makefile` (the download links still
@@ -667,6 +683,27 @@ pick them up.
   GitHub Pages.
 
 ## Done log
+
+- **2026-11-20:** milestone W4, learner experience.
+  - Progress: `site/src/lib/progress/` (pure snapshot logic and a
+    `localStorage` backend that syncs across tabs, behind `ProgressBackend`),
+    a reactive store connected in the root layout, "Mark complete" on each
+    lesson, checkmarks and per-part bars in the sidebar, progress bars on the
+    overview and part pages, and "Continue where you left off" / "Up next" on
+    the landing page and overview.
+  - Search: `/search-index.json` (MiniSearch) over prose sections and source
+    comments; a modal combobox dialog opened by the header button, `/` or
+    Ctrl/Cmd+K, with arrow-key selection.
+  - "Try it online": `site/src/lib/compiler-explorer.ts` builds Compiler
+    Explorer client state and posts it to the shortener on click; lesson
+    metadata gained `usesFiles` and `online`.
+  - `j`/`k` and arrow keys move between lessons (`site/src/lib/shortcuts.ts`
+    keeps them away from text fields, code blocks and tabs).
+  - Zip downloads per lesson and for the whole course.
+  - Tests: unit tests for progress, search, comments, zips and the Compiler
+    Explorer client; e2e for each feature (Compiler Explorer is intercepted),
+    and axe checks on the open search dialog and on progress UI in both
+    themes. 39 e2e tests in all.
 
 - **2026-11-20:** milestone W3, design system and core pages (Lighthouse
   measurement still open).

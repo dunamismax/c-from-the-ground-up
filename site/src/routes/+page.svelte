@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ContinueCard from '#lib/components/ContinueCard.svelte';
 	import PageMeta from '#lib/components/PageMeta.svelte';
 	import { BOOK_URL, GITHUB_URL } from '#lib/site.js';
 	import type { PageProps } from './$types';
@@ -56,6 +57,7 @@
 					Browse the course
 				</a>
 			</div>
+			<ContinueCard class="mt-6 max-w-md" lessons={data.parts.flatMap((part) => part.lessons)} />
 		</div>
 
 		<figure

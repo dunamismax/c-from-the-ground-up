@@ -1,6 +1,8 @@
 <script lang="ts">
 	import LessonCard from '#lib/components/LessonCard.svelte';
 	import PageMeta from '#lib/components/PageMeta.svelte';
+	import ProgressBar from '#lib/components/ProgressBar.svelte';
+	import { progress } from '#lib/progress/progress.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -21,6 +23,17 @@
 		<p class="font-mono text-sm font-semibold text-ember">Part {part.number}</p>
 		<h1 class="mt-1 text-title font-bold">{part.title}</h1>
 		<p class="mt-4 text-lg text-muted">{part.summary}.</p>
+		{#if progress.ready}
+			{@const partProgress = progress.progressFor(data.lessons.map((lesson) => lesson.slug))}
+			{#if partProgress.done > 0}
+				<ProgressBar
+					class="mt-6 max-w-sm"
+					done={partProgress.done}
+					total={partProgress.total}
+					label="Part {part.number} progress"
+				/>
+			{/if}
+		{/if}
 	</header>
 	<ol class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 		{#each data.lessons as lesson (lesson.slug)}
