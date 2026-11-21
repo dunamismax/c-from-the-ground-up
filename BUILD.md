@@ -10,9 +10,9 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
 | **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. (4) Umami on Node 26: `site/deploy/umami/` still builds and runs Umami with the Node 24 runtime and its corepack (Node 26 has none), so `bin/web-conformance` reports those two files. Moving Umami is a host-wide change for the maintainer to decide. |
-| **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC with the new fix-forward cutover: Node 26.13.1, pnpm-built, `pg` driver. Umami v3.4.1 runs on the same host (127.0.0.1:4321, still on the Node 24 runtime) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
-| **`main`** | On 2026-11-21 under Node 26.13.1: `make site-verify` and the 72 e2e tests against `cfromthegroundup_test` on the server, and the C, book and fuzz targets of `make verify` on the Mac. CI has not yet run with pnpm. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
+| **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC with the new fix-forward cutover: Node 26.13.1, pnpm-built, `pg` driver. Umami v3.4.1 runs on the same host (127.0.0.1:4321, on Node 26.13.1 since 2026-11-21 18:29 UTC) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
+| **`main`** | On 2026-11-21 under Node 26.13.1: `make site-verify` and the 72 e2e tests against `cfromthegroundup_test` on the server, and the C, book and fuzz targets of `make verify` on the Mac. For the Umami move the same day: every target but `tidy` and `book` on the server (its clang-tidy is 21 and it has no mdBook), and those two on the Mac. CI has not yet run with pnpm. |
 | **Last updated** | 2026-11-21 |
 
 ### Milestones at a glance
@@ -890,6 +890,19 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-21:** Umami moved to Node 26, the last process on the host's
+  Node 24 runtime, so that runtime could be removed. `umami.service` now
+  starts `/opt/node-26/bin/node`, and `install.sh` builds with that Node and
+  the host's pnpm 12.18.0 instead of Node 24's corepack and pnpm 12.3.4
+  (Umami v3.4.1 names 12.3.4 in `engines.pnpm`; 12.18.0 installs its lockfile
+  unchanged). Checked before the switch: the existing v3.4.1 build started on
+  Node 26 as a candidate unit on port 4471 (tracker script, heartbeat, login
+  page, and a database query through the collect endpoint), and a scratch
+  clone built from source on Node 26 with the new commands. Then the unit was
+  installed under the deploy lock and Umami restarted: active on
+  `/opt/node-v26.13.1-linux-x64/bin/node`, `/stats/script.js` 200 through
+  Caddy. The release on disk is the one built on 2026-11-20; no data, role or
+  password changed. `bin/web-conformance` passes for this repository.
 - **2026-11-21:** tenth production deploy, commit `4112094` (the platform
   move below), with the new cutover on its first run: pre-migration dump,
   the migrator moved the one bookkeeping row to `drizzle` and applied

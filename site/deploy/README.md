@@ -171,8 +171,7 @@ loads the tracker only when `UMAMI_WEBSITE_ID` in
 `site/src/lib/analytics.ts` is set, so it is off until the steps below are
 done. If Umami is down, the tracker fails quietly and the site is unaffected.
 
-To set it up (or update it after changing `UMAMI_VERSION`, and `UMAMI_PNPM` to
-the pnpm version that release's `package.json` requires, in `install.sh`):
+To set it up (or update it after changing `UMAMI_VERSION` in `install.sh`):
 
 1. As root, from a checkout of the repository on the server:
 
@@ -204,11 +203,10 @@ the pnpm version that release's `package.json` requires, in `install.sh`):
    curl -sI https://cfromthegroundup.com/stats/script.js | head -1   # HTTP/2 200
    ```
 
-Umami is the one part of this site still on the host's Node 24 runtime
-(`/opt/node-runtime`): `install.sh` builds it with that runtime's corepack and
-the pnpm version Umami pins, and Node 26 ships no corepack. Moving it to
-`/opt/node-26` changes how it is built and is a host-wide decision for the
-maintainer; until then this site's conformance check reports these two files.
+Umami runs on the host's pinned toolchain like the site: `umami.service`
+starts it with `/opt/node-26/bin/node`, and `install.sh` builds it with that
+Node and the host's pnpm (`/opt/pnpm`). Umami v3.4.1 asks for pnpm 12.3.4 in
+`engines.pnpm`; the host's 12.18.0 builds it from its lockfile unchanged.
 
 To turn analytics off, set `UMAMI_WEBSITE_ID` back to `''` and deploy; to
 remove Umami, `systemctl disable --now umami` as well. The `umami` database

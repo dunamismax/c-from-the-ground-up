@@ -25,12 +25,12 @@ source "$here/../common.sh"
 require_lock
 
 UMAMI_VERSION=v3.4.1
-# The exact pnpm that release's package.json requires (`engines.pnpm`). It has
-# no `packageManager` field, so corepack would otherwise pick the newest pnpm
-# and pnpm would refuse to run, including where Umami's own build scripts call
-# plain `pnpm`. The build makes this version corepack's default for the build
-# user and turns off "default to latest". Update both together.
-UMAMI_PNPM=12.3.4
+# Umami is built and run with the host's pinned web toolchain: Node 26 in
+# /opt/node-26 and pnpm in /opt/pnpm (ubuntu-vm-backup, docs/web-platform.md).
+# Umami's own build scripts call plain `pnpm`, so both are on the build PATH.
+# v3.4.1 names pnpm 12.3.4 in `engines.pnpm`; the host's pnpm 12.18.0 installs
+# its lockfile unchanged and builds it (checked 2026-11-21). When changing
+# UMAMI_VERSION, check that release's `engines` against the host toolchain.
 UMAMI_ROOT=/srv/www/umami
 UMAMI_ENV_DIR=/etc/web-apps/umami
 UMAMI_ENV=$UMAMI_ENV_DIR/umami.env
@@ -99,14 +99,12 @@ if [[ ! -f $release/.built ]]; then
   rm -rf "$work"
   install -d -o umami -g umami -m 0750 "$work"
   as_umami() {
-    runuser -u umami -- env -i HOME="$work/.home" PATH=/opt/node-runtime/bin:/usr/bin:/bin \
-      COREPACK_ENABLE_DOWNLOAD_PROMPT=0 COREPACK_DEFAULT_TO_LATEST=0 DISABLE_TELEMETRY=1 \
-      DATABASE_URL="$database_url" APP_SECRET="$secret" "$@"
+    runuser -u umami -- env -i HOME="$work/.home" PATH=/opt/node-26/bin:/opt/pnpm:/usr/bin:/bin \
+      DISABLE_TELEMETRY=1 DATABASE_URL="$database_url" APP_SECRET="$secret" "$@"
   }
   as_umami git clone --quiet --depth 1 --branch "$UMAMI_VERSION" https://github.com/umami-software/umami.git "$work/app"
-  as_umami corepack install --global "pnpm@$UMAMI_PNPM"
   # The first build creates Umami's tables (and the admin / umami login).
-  ( cd "$work/app" && as_umami corepack "pnpm@$UMAMI_PNPM" install --frozen-lockfile && as_umami corepack "pnpm@$UMAMI_PNPM" build ) \
+  ( cd "$work/app" && as_umami pnpm install --frozen-lockfile && as_umami pnpm build ) \
     || die "building Umami $UMAMI_VERSION failed; $work is kept for inspection"
   rm -rf "$work/app/.next/cache"
   ln -s /var/cache/umami "$work/app/.next/cache"
