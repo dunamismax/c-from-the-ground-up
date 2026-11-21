@@ -14,7 +14,11 @@ game you build yourself.**
 [Browse all 38 lessons](https://cfromthegroundup.com/lessons) &middot;
 [Set up a compiler](https://cfromthegroundup.com/setup)
 
-Free &middot; Open source &middot; No sign-up &middot; No ads or trackers
+Free &middot; Open source &middot; No sign-up &middot; No ads or third-party trackers
+
+Analytics, when it is switched on, is the site's own copy of [Umami](https://umami.is): it
+counts page views, sets no cookies and stores no IP addresses. The
+[privacy policy](https://cfromthegroundup.com/privacy) lists exactly what the site records.
 
 <br>
 
@@ -166,7 +170,7 @@ usually Clang under another name. The website's end-to-end tests run with
 `make site-e2e`.
 
 You need a C compiler, `make`, Python 3, mdBook 0.5.4, clang-format and
-clang-tidy 23, the ncurses headers, and Node 24 with npm.
+clang-tidy 23, the ncurses headers, and Node 26.13.1 with pnpm 12.18.0.
 [AGENTS.md](AGENTS.md#verification) lists the exact versions and how to install
 them.
 

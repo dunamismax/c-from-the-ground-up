@@ -8,7 +8,7 @@
 // creates it, owned by cfromthegroundup_owner, and the web role may only use
 // that schema; locally the first migration creates it.
 //
-// After changing this file, run `npm run db:generate` and commit the new
+// After changing this file, run `pnpm run db:generate` and commit the new
 // migration under site/drizzle/.
 
 import { boolean, index, pgSchema, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';

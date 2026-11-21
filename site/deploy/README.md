@@ -1,20 +1,25 @@
 # Deploying cfromthegroundup.com
 
 The site runs on `ubuntu-vm` alongside the host's other sites and follows the
-same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
-(`/opt/node-runtime`), the shared PostgreSQL 18, and the host-wide deploy lock
-(`/usr/local/sbin/with-deploy-lock`).
+host's web platform contract (`docs/web-platform.md` in `ubuntu-vm-backup`):
+Caddy (`/etc/caddy/sites/*.caddy`, changed only through `caddy-apply`), Node
+26.13.1 at `/opt/node-26` with pnpm 12.18.0 (builds go through the `node-26`
+wrapper), the host PostgreSQL 18 cluster, the host-wide deploy lock
+(`/usr/local/sbin/with-deploy-lock`), and fix-forward deploys with a candidate
+check.
 
-| What            | Where                                                                               |
-| --------------- | ----------------------------------------------------------------------------------- |
-| Releases        | `/srv/www/cfromthegroundup.com/releases/<commit>`, live one at `current`            |
-| App server      | `cfromthegroundup.service`, `node build` on `127.0.0.1:4317`, `DynamicUser`         |
-| Caddy site      | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)                     |
-| Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`             |
-| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration,accounts}.env` (root only)           |
-| Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer`         |
-| Cutover records | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (staged bundle, replaced release) |
-| Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`           |
+| What                | Where                                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------- |
+| Releases            | `/srv/www/cfromthegroundup.com/releases/<commit>`, live one at `current`                              |
+| App server          | `cfromthegroundup.service`, `/opt/node-26/bin/node build/index.js` on `127.0.0.1:4317`, `DynamicUser` |
+| Caddy site          | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)                                       |
+| Database            | `cfromthegroundup` (schema `app`, bookkeeping in `drizzle`); roles `_owner`, `_migration`, `_web`     |
+| Test database       | `cfromthegroundup_test` (same roles); `~/.config/cfromthegroundup/test.env` for `sawyer`              |
+| Credentials         | `/etc/web-apps/cfromthegroundup/{web,migration,accounts}.env` (root only)                             |
+| Backups             | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer`                           |
+| Pre-migration dumps | `/var/backups/cfromthegroundup.com/pre-migrate-<commit>.dump` (root only)                             |
+| Build work          | `/home/sawyer/web-work/cfromthegroundup.com-<commit>/` (as `sawyer`)                                  |
+| Logs                | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`                             |
 
 DNS for `cfromthegroundup.com` and `www` points straight at the host (Cloudflare
 "DNS only"), so Caddy gets the certificates itself (BUILD.md D10). If the
@@ -36,49 +41,95 @@ idempotent and keeps existing passwords:
 /usr/local/sbin/with-deploy-lock /home/sawyer/github/c-from-the-ground-up/site/deploy/provision.sh
 ```
 
+## Test database
+
+The end-to-end tests (and so `prepare.sh`) need a PostgreSQL 18 database with
+the host's role model. On the server that is `cfromthegroundup_test` on the
+host cluster, created once by root with the host's provisioning command:
+
+```sh
+cd /home/sawyer/github/ubuntu-vm-backup
+/usr/local/sbin/with-deploy-lock bin/provision-app-database cfromthegroundup_test
+```
+
+`sawyer` reads its credentials from `~/.config/cfromthegroundup/test.env`
+(mode 0600): `DATABASE_URL` (the `_web` role, used by the server and the test
+helpers), `MIGRATION_DATABASE_URL` and `DB_OWNER_ROLE` (used by the
+migrator). Root copies them there from `/etc/web-apps/cfromthegroundup_test/`.
+The tests leave their learners in it; it holds nothing else.
+
 ## Every deploy
 
 1. Push the commit to `main`.
-2. As `sawyer`, build and test it in a fresh candidate directory. Nothing live
+2. As `sawyer`, build and test it in a fresh work directory. Nothing live
    changes:
 
    ```sh
    cd ~/github/c-from-the-ground-up && git pull --ff-only && site/deploy/prepare.sh
    ```
 
+   It refuses a dirty tree or a commit that is not `origin/main`, exports the
+   commit with `git archive`, runs `pnpm install --frozen-lockfile`, `check`,
+   `lint`, `test`, the end-to-end suite against the test database, the build
+   and a smoke test of `build/`, drops the devDependencies, and assembles the
+   release (`REVISION`, `.node-version`, `package.json`, `build/`,
+   `node_modules/`, `deploy/`, `drizzle/`).
+
 3. As root, run the cutover command that `prepare.sh` prints:
 
    ```sh
-   /usr/local/sbin/with-deploy-lock /home/sawyer/web-work/cfromthegroundup-<commit>/site/deploy/cutover.sh /home/sawyer/web-work/cfromthegroundup-<commit>
+   /usr/local/sbin/with-deploy-lock /home/sawyer/web-work/cfromthegroundup.com-<commit>/src/site/deploy/cutover.sh /home/sawyer/web-work/cfromthegroundup.com-<commit>
    ```
 
-Cutover stages the release next to the live one, validates Caddy, takes a
-backup and applies new migrations (see below), switches the `current` symlink,
-restarts the service, waits for `/healthz`, and checks the live site over HTTPS
-(`/version.txt`, the home page, `/healthz`, `/api/account`, the `www` redirect,
-and that the app sees the client address Caddy saw rather than a spoofed
-`X-Forwarded-For`). It also checks that no other site's files changed. If any
-step fails, it restores the previous release by itself.
+Cutover runs every step in one locked process and stops at the first failure,
+naming the step:
+
+2. **Stage** the release as `releases/<commit>` (root-owned, read-only for
+   everyone else, checked against the prepared checksums).
+3. **Migrate:** dump the database to `/var/backups/cfromthegroundup.com/`,
+   apply new migrations (below), and check that `drizzle.__drizzle_migrations`
+   has one row per entry in the release's `drizzle/meta/_journal.json`.
+4. **Candidate:** start a transient copy of the release's own unit file
+   (`cfromthegroundup-candidate.service`, same account, sandbox, env files and
+   Node) from the release directory on a free port in 4400-4499, then check
+   `/healthz` (`{"status":"ok","revision":"<commit>","database":"ok"}`) and
+   the smoke check (main pages, a 404, `/api/account`). It is always stopped
+   and removed afterwards.
+5. **Switch:** install the unit file if it changed, point `current` at the
+   release and restart the service.
+6. **Verify** `/healthz` and the smoke check on port 4317, and that the
+   running process is `/opt/node-v26.13.1-linux-x64/bin/node` in the new
+   release directory with its `REVISION` (as `bin/web-live` reports it).
+7. **Caddy:** only if the release's fragment differs from the installed one,
+   `caddy-apply cfromthegroundup.com <fragment>`.
+8. **Public check** over HTTPS through the local Caddy (`/healthz`, the pages,
+   `/version.txt`, security headers, the lesson files' `Content-Type`, the
+   client address the app sees, the `www` redirect), that no other site's
+   files changed, and a `web-deploy` line in the journal.
 
 ## Migrations
 
-The schema lives in `site/src/lib/server/db/schema.ts`; `npm run db:generate`
+The schema lives in `site/src/lib/server/db/schema.ts`; `pnpm run db:generate`
 writes a migration into `site/drizzle/`, which is committed. The build bundles
-a migrator (`site/scripts/migrate.ts`) into `build/migrate/migrate.js`, so it
-runs without `node_modules`; `prepare.sh` checks it can read every migration.
+a migrator (`site/scripts/migrate.ts`, `pg` and Drizzle's node-postgres
+migrator) into `build/migrate/migrate.js`, so it runs without `node_modules`;
+`prepare.sh` checks it can read every migration.
 
-When a release has migrations, cutover first runs the nightly backup script
-(a full `pg_dump`), then applies any new migrations as
-`cfromthegroundup_migration`, in a sandboxed `systemd-run` unit that reads
-`migration.env`. The migrator does `SET ROLE cfromthegroundup_owner`, so new
-tables belong to the owner and the web role gets row access through the
-default privileges `provision.sh` set. Migrations already applied are skipped.
+Cutover runs it as the site's service account in a sandboxed `systemd-run`
+unit that reads only `migration.env`, so it logs in as
+`cfromthegroundup_migration`. The migrator does `SET ROLE
+cfromthegroundup_owner`, so new tables belong to the owner and the web role
+gets row access through the owner's default privileges. Migrations already
+applied are skipped. Drizzle's bookkeeping is `drizzle.__drizzle_migrations`;
+until November 2026 it was `app.__drizzle_migrations`, and the first run of
+the new migrator copied those rows across (the old table is left in place,
+unused).
 
 Migrations are forward-only and run while the old release is still live. So a
-migration must work for the release before it too: add tables and columns first, and drop or rename only in a later
-release. To undo a migration, restore the database from the backup cutover
-made (`pg_restore` of `database.dump` inside the newest
-`/var/backups/cfromthegroundup/cftgu-*.tar.gz`).
+migration must work for the release before it too: add tables and columns
+first, and drop or rename only in a later release. Restoring a pre-migration
+dump over the live database is a recovery decision for the maintainer, never
+a deploy step.
 
 ## Accounts
 
@@ -153,23 +204,33 @@ the pnpm version that release's `package.json` requires, in `install.sh`):
    curl -sI https://cfromthegroundup.com/stats/script.js | head -1   # HTTP/2 200
    ```
 
+Umami is the one part of this site still on the host's Node 24 runtime
+(`/opt/node-runtime`): `install.sh` builds it with that runtime's corepack and
+the pnpm version Umami pins, and Node 26 ships no corepack. Moving it to
+`/opt/node-26` changes how it is built and is a host-wide decision for the
+maintainer; until then this site's conformance check reports these two files.
+
 To turn analytics off, set `UMAMI_WEBSITE_ID` back to `''` and deploy; to
 remove Umami, `systemctl disable --now umami` as well. The `umami` database
 is not in the nightly backup: losing it loses only statistics.
 
 ## If a deploy fails
 
-There is no rollback (maintainer's decision, 2026-11-21). A failed cutover
-stops where it is and prints the live release and its record directory. Before
-the switch the previous release is still serving. After it, read the error and
-`journalctl -u cfromthegroundup`, fix the cause and deploy again.
+There is no rollback (maintainer's decision, 2026-11-21). Cutover stops at the
+first failed step and says which. Up to and including the candidate check the
+previous release is still serving and nothing needs cleaning up. If the switch
+or the live check fails, the new release is live and unhealthy: do not point
+`current` at an older release or reinstall an old unit or fragment. Read
+`journalctl -u cfromthegroundup`, fix the cause in a new commit, and deploy
+that; if the candidate check missed it, extend the check in the same commit.
 
 ## Checks
 
 ```sh
-curl -s https://cfromthegroundup.com/healthz       # {"status":"ok","database":"ok"}
+curl -s https://cfromthegroundup.com/healthz       # {"status":"ok","revision":"<commit>","database":"ok"}
 curl -s https://cfromthegroundup.com/healthz/address   # your own IP address
 curl -s https://cfromthegroundup.com/version.txt   # the live commit
 curl -sI https://cfromthegroundup.com/lessons/01-hello-world/files/1_hello_world.c | grep -i content-type   # text/plain; charset=utf-8
+sudo /home/sawyer/github/ubuntu-vm-backup/bin/web-live cfromthegroundup.service   # node, release, revision, state
 systemctl status cfromthegroundup cfromthegroundup-backup.timer
 ```

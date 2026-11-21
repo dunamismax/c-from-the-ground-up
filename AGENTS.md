@@ -198,7 +198,7 @@ make verify              # check-sync + check-format + tidy + mdbook build + boo
 make format              # apply .clang-format to the lessons, exercises/, tests/ and fuzz/, then run make sync
 make tidy                # clang-tidy over the lessons and exercises/ (fails on any finding)
 make analyze GCC=gcc-16  # GCC -fanalyzer over the lessons and exercises/ (needs real GCC)
-make site-verify         # website only: npm ci, check, lint, test, build
+make site-verify         # website only: pnpm install --frozen-lockfile, check, lint, test, build
 make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
 make smoke CC=clang      # one compiler only
@@ -302,9 +302,11 @@ and `make fuzz`),
 clang-format and clang-tidy 23 (`pipx install clang-format==23.1.5` and
 `clang-tidy==23.1.4`, or Homebrew's LLVM),
 ncurses headers (`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+,
-mdBook **0.5.4**, and Node 24+ with npm for `site-verify`. The site's e2e tests also need Docker
-(or any PostgreSQL 18) and a Playwright Chromium (`npx playwright install
-chromium` in `site/`).
+mdBook **0.5.4**, and Node **26.13.1** with pnpm **12.18.0** for `site-verify`
+(on the server, run commands through the `node-26` wrapper, for example
+`node-26 make verify`). The site's e2e tests also need a PostgreSQL 18
+database (on the server, `cfromthegroundup_test`; see `site/deploy/README.md`)
+and a Playwright Chromium (`pnpm exec playwright install chromium` in `site/`).
 CI pins mdBook in both workflows. Bump the pin deliberately, in both files, after
 `make verify` passes locally with the new version.
 
@@ -314,8 +316,9 @@ SvelteKit 3 app for https://cfromthegroundup.com. The roadmap is BUILD.md,
 Phase W; `site/README.md` has the developer quick start.
 
 ```text
-site/package.json                  scripts, engines (Node >= 24), `imports` for the #lib alias
-site/.nvmrc                        Node 24 (the production and CI version)
+site/package.json                  scripts, engines (Node 26.13.1), packageManager (pnpm 12.18.0), exact pins, `imports` for the #lib alias
+site/.node-version                 26.13.1 (production, CI and builds)
+site/pnpm-workspace.yaml           pnpm settings: saveExact, engineStrict, allowBuilds
 site/vite.config.ts                ALL SvelteKit config: the sveltekit({...}) plugin call (incl. the CSP), plus Vitest projects
 site/src/env.ts                    environment variables (defineEnvVars), validated at build and start
 site/src/app.css                   Tailwind 4 entry: @import "tailwindcss", @plugin typography, @theme tokens
@@ -338,7 +341,7 @@ site/src/routes/account/, privacy/ account page (prerendered shell, fills in fro
 site/src/hooks.server.ts           Better Auth under /api/auth/, session lookup and write rate limit for /api/
 site/src/lib/                      shared code, imported as #lib/...
 site/src/lib/server/               server-only code (never shipped to the browser)
-site/src/lib/server/db/            Drizzle: schema.ts (tables, schema `app`) and index.ts (getDb(), lazy postgres.js client)
+site/src/lib/server/db/            Drizzle: schema.ts (tables, schema `app`) and index.ts (getDb(), lazy `pg` pool)
 site/src/lib/server/auth*.ts       Better Auth: auth-options.ts (shared with e2e), auth.ts (getAuth(), getSessionUser())
 site/src/lib/server/progress*.ts   progress in the database (applyOps, mergeProgress) and request validation (valibot)
 site/src/lib/server/content/       build-time content loader: SUMMARY.md + chapters + lesson files -> Lesson objects
@@ -347,26 +350,24 @@ site/src/lib/content/types.ts      Course / Lesson / Segment types shared with p
 site/drizzle/                      generated migrations (committed)
 site/scripts/migrate.ts            the migrator; build-migrator.ts bundles it into build/migrate/migrate.js
 site/e2e/accounts.ts               e2e account settings and signIn() (Better Auth test helpers, no GitHub)
-site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
 site/.env.example                  copy to site/.env (git-ignored) for local development
 site/playwright.config.ts          e2e tests run against `node build` (after the migrator), not the dev server
-site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover, runbook
+site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover (fix forward, candidate check), runbook
 ```
 
 Commands (run in `site/`):
 
 ```sh
-npm run dev                 # dev server
-npm run build               # production build into build/, plus build/migrate/migrate.js
-npm run start               # node build, loading .env if present
-npm run check               # svelte-check
-npm run lint                # prettier --check + eslint
-npm run format              # prettier --write
-npm test                    # vitest: *.spec.ts (node) and *.svelte.spec.ts (browser)
-npm run test:e2e            # playwright: *.e2e.ts against node build on :4173
-npm run db:start            # docker compose up --wait (db:stop to stop)
-npm run db:generate         # migration from schema.ts into drizzle/
-npm run db:migrate          # apply drizzle/ with scripts/migrate.ts (what production runs)
+pnpm run dev                # dev server
+pnpm run build              # production build into build/, plus build/migrate/migrate.js
+pnpm run start              # node build, loading .env if present
+pnpm run check              # svelte-check
+pnpm run lint               # prettier --check + eslint
+pnpm run format             # prettier --write
+pnpm test                   # vitest: *.spec.ts (node) and *.svelte.spec.ts (browser)
+pnpm run test:e2e           # playwright: *.e2e.ts against node build on :4173 (needs the database)
+pnpm run db:generate        # migration from schema.ts into drizzle/
+pnpm run db:migrate         # apply drizzle/ with scripts/migrate.ts (what production runs)
 ```
 
 Conventions:
@@ -402,7 +403,7 @@ Conventions:
   how browser progress is merged at sign-in. API endpoints live under
   `/api/`, set `prerender = false`, use `requireUser()` / `readBody()` from
   `#lib/server/api.js`, and validate bodies with valibot in server-only
-  modules (keep validators out of the browser bundle). `npm run start` needs
+  modules (keep validators out of the browser bundle). `pnpm run start` needs
   `ORIGIN`, as production sets it: without it adapter-node assumes https and
   Better Auth does not recognise its own URLs.
 - **Content Security Policy** lives in `csp` in `vite.config.ts`
@@ -414,13 +415,17 @@ Conventions:
   every scrollable `pre` `tabindex="0"`, and keep focus rings visible.
 - **Drizzle:** tables go in `src/lib/server/db/schema.ts`, in `pgSchema('app')`
   (production's web role may only use schema `app`). Change the schema, run
-  `npm run db:generate`, review and commit the SQL under `drizzle/`. Do not use
-  `drizzle-kit push` or `drizzle-kit migrate`; `npm run db:migrate` and
+  `pnpm run db:generate`, review and commit the SQL under `drizzle/`. Do not use
+  `drizzle-kit push` or `drizzle-kit migrate`; `pnpm run db:migrate` and
   production both use `scripts/migrate.ts`, which keeps its bookkeeping in
-  schema `app`. Migrations are forward-only and run while the previous release
+  `drizzle.__drizzle_migrations` (the host contract; it was in schema `app`
+  until November 2026). Migrations are forward-only and run while the previous release
   is still live, so a migration must not break it: add first, drop or rename a
-  release later. The client is postgres.js (`postgres`). Get it through
-  `getDb()`, which connects lazily so builds never need a database.
+  release later. The driver is `pg` (node-postgres) with
+  `drizzle-orm/node-postgres`; postgres.js and other drivers are not allowed
+  on the host. Get the client through `getDb()`, which creates the pool lazily
+  so builds never need a database. `db.execute()` returns a `pg` result
+  (`.rows`), not an array.
 - **Database holds learner state only.** Course content comes from the lesson
   and chapter files at build time; never copy it into `site/`.
 - **Content loader:** pages get content through `getCourse()` / `getLesson()`
@@ -432,8 +437,8 @@ Conventions:
   needs an entry in `metadata.ts`, and `metadata.spec.ts` fails if its flags
   disagree with `compile_lesson()` in the smoke check.
 - **Formatting:** Prettier (tabs, single quotes, width 100) and ESLint with
-  type-checked typescript-eslint rules. Run `npm run format` before committing;
-  `npm run lint` must pass.
+  type-checked typescript-eslint rules. Run `pnpm run format` before committing;
+  `pnpm run lint` must pass.
 - **Tests:** unit tests sit next to the code as `*.spec.ts`; component tests are
   `*.svelte.spec.ts` (Vitest browser mode, Chromium); e2e tests are `*.e2e.ts`.
   The e2e server runs with accounts on and test-only settings; sign a browser

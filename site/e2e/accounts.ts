@@ -6,8 +6,8 @@
 import { betterAuth } from 'better-auth';
 import { testUtils } from 'better-auth/plugins';
 import type { BrowserContext } from '@playwright/test';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import { authOptions } from '../src/lib/server/auth-options.js';
 import * as schema from '../src/lib/server/db/schema.js';
 
@@ -22,7 +22,21 @@ export const E2E_ACCOUNTS_ENV = {
 	GITHUB_CLIENT_SECRET: 'e2e-github-client-secret'
 };
 
-function databaseUrl(): string {
+export interface E2eDatabase {
+	/** The role the server and the test helpers use (the web role). */
+	url: string;
+	/** The role the migrator uses; the web role itself when none is given. */
+	migrationUrl: string;
+	/** The owner the migrator switches to with SET ROLE, if any. */
+	ownerRole: string | undefined;
+}
+
+/**
+ * The test database, from the environment or site/.env: DATABASE_URL, plus
+ * MIGRATION_DATABASE_URL and DB_OWNER_ROLE when the database has the host's
+ * owner / web / migration roles (cfromthegroundup_test on the server).
+ */
+export function e2eDatabase(): E2eDatabase {
 	if (!process.env.DATABASE_URL) {
 		try {
 			process.loadEnvFile();
@@ -32,13 +46,20 @@ function databaseUrl(): string {
 	}
 	const url = process.env.DATABASE_URL;
 	if (!url) throw new Error('DATABASE_URL is not set (copy .env.example to .env)');
-	return url;
+	return {
+		url,
+		migrationUrl: process.env.MIGRATION_DATABASE_URL ?? url,
+		ownerRole: process.env.DB_OWNER_ROLE
+	};
 }
 
 let testAuth: ReturnType<typeof createTestAuth> | undefined;
 
 function createTestAuth() {
-	const db = drizzle(postgres(databaseUrl(), { max: 2 }), { schema });
+	const db = drizzle({
+		client: new pg.Pool({ connectionString: e2eDatabase().url, max: 2 }),
+		schema
+	});
 	return betterAuth({
 		...authOptions(
 			{

@@ -14,7 +14,7 @@
 #   make format             apply .clang-format to the lesson sources
 #   make tidy               clang-tidy with .clang-tidy (static analysis)
 #   make analyze GCC=gcc-15 GCC's static analyzer (-fanalyzer)
-#   make site-verify        website gate: npm ci, check, lint, test, build
+#   make site-verify        website gate: pnpm install, check, lint, test, build
 #   make site-e2e           website Playwright tests (needs the site database)
 
 CC ?= cc
@@ -119,13 +119,14 @@ fuzz-linux:
 			apt-get install -y -qq libncurses-dev clang >/dev/null 2>&1; \
 			CC=clang FUZZ_REQUIRED=1 FUZZ_RUNS=$(FUZZ_RUNS) sh scripts/fuzz_check.sh'
 
-# The course website in site/ (SvelteKit). Needs Node 24+ and npm.
+# The course website in site/ (SvelteKit). Needs Node 26.13.1 and pnpm 12.18.0
+# (site/.node-version, packageManager); on the server run make through node-26.
 site-verify:
-	cd site && npm ci && npm run check && npm run lint && npm test && npm run build
+	cd site && pnpm install --frozen-lockfile && pnpm run check && pnpm run lint && pnpm test && pnpm run build
 
-# Start the database first: cd site && npm run db:start
+# Needs a PostgreSQL 18 database in site/.env (see site/.env.example).
 site-e2e:
-	cd site && npm run test:e2e
+	cd site && pnpm run test:e2e
 
 clean:
 	rm -rf book site/build site/.svelte-kit

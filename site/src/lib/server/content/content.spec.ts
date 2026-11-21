@@ -17,7 +17,7 @@ const chapterFiles = readdirSync(path.join(root, 'src/chapters')).filter((name) 
 
 // Parse every chapter once, while the file loads, like `course` above. Doing it
 // inside each test made three tests re-highlight all 35 chapters, and in a full
-// `npm test` run (sharing the CPU with the browser tests) that could pass
+// `pnpm test` run (sharing the CPU with the browser tests) that could pass
 // Vitest's 5-second per-test timeout.
 const parsedChapters = new Map(
 	chapterFiles.map((file) => {

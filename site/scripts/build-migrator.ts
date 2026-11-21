@@ -1,4 +1,4 @@
-// Bundle scripts/migrate.ts and its dependencies (drizzle-orm, postgres) into
+// Bundle scripts/migrate.ts and its dependencies (drizzle-orm, pg) into
 // build/migrate/migrate.js, so a release can migrate without node_modules,
 // like the adapter-node server next to it. Runs after `vite build`.
 

@@ -1,0 +1,4 @@
+saveExact: true
+engineStrict: true
+allowBuilds:
+  esbuild: true

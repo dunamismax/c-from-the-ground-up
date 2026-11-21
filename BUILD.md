@@ -10,7 +10,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
 | **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. (4) Umami on Node 26: `site/deploy/umami/` still builds and runs Umami with the Node 24 runtime and its corepack (Node 26 has none), so `bin/web-conformance` reports those two files. Moving Umami is a host-wide change for the maintainer to decide. |
 | **Live** | https://cfromthegroundup.com serves `c7fe8d3`, deployed 2026-11-21 (UTC), and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
 | **`main`** | `make verify`, the site e2e tests (72) and `make smoke-linux`, `sanitize-linux` and `fuzz-linux` were green on 2026-11-20 with the Part 1 exercise solutions. CI is green at `c7fe8d3`. |
 | **Last updated** | 2026-11-21 |
@@ -145,8 +145,11 @@ before relying on memory. In particular:
 - **Tailwind 4 is configured in CSS:** `@import "tailwindcss";` plus `@theme`
   tokens in `site/src/app.css`. Add `@tailwindcss/typography` through `@plugin`
   for prose. There is no `tailwind.config.js`.
-- **Package manager:** npm, with a committed `package-lock.json`. Pin the Node
-  version in `site/.nvmrc` and in `engines`.
+- **Toolchain (host web platform contract, 2026-11-21):** pnpm 12.18.0
+  (`packageManager`) with a committed `pnpm-lock.yaml`; Node 26.13.1 in
+  `site/.node-version` and `engines`; every dependency pinned exactly at the
+  host's baseline version; `pg` with `drizzle-orm/node-postgres` as the only
+  database driver; the host PostgreSQL 18 cluster for production and tests.
 - **Secrets stay out of git.** Commit `site/.env.example`; `site/.env` is ignored.
   Production configuration lives in an environment file on the server (see W5).
 - **Deploys go through `site/deploy/`.** Configs, scripts and the runbook
@@ -780,6 +783,18 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-21: the host's web platform contract.** The maintainer adopted
+  one standard for every site on the host (`docs/web-platform.md` in
+  `ubuntu-vm-backup`, which wins over this file where they differ): pnpm
+  12.18.0 instead of npm, Node 26.13.1 from `/opt/node-26`, exact pins at the
+  baseline versions, `pg` instead of postgres.js, the host PostgreSQL cluster
+  for tests too (`cfromthegroundup_test` replaces `site/compose.yaml`), and
+  fix-forward deploys with a candidate check before a release takes traffic.
+  Drizzle's bookkeeping moved to `drizzle.__drizzle_migrations` as the
+  contract says; the old `app.__drizzle_migrations` stays, unused. This
+  supersedes the 2026-11-20 choices of npm, `.nvmrc` 24, postgres.js and the
+  Compose database below. The framework, features and behaviour are
+  unchanged. Accounts and analytics stay off.
 - **2026-11-21: no rollback.** The maintainer decided the site stays on
   SvelteKit and there are no rollbacks on any of the host's sites.
   `site/deploy/rollback.sh` is gone, and a cutover that fails stops and is
@@ -875,6 +890,25 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-21:** moved the site to the host's web platform contract
+  (Decision log). npm to pnpm 12.18.0 (`pnpm import` from the old lockfile,
+  then `pnpm install`), Node 26.13.1 (`.node-version`, `engines`, CI, the
+  unit's `ExecStart`), every dependency pinned exactly (all matched what npm
+  had installed except `@types/node`, 24 to 26 with the runtime),
+  postgres.js to `pg` in `getDb()`, the migrator and the e2e helpers,
+  `/healthz` now reports the release's `REVISION`, and `prepare.sh` /
+  `cutover.sh` follow the contract's flow (dump, migrate, candidate on a
+  4400-4499 port under the new unit, switch, live check, `caddy-apply` only
+  for a changed fragment). The README and About page no longer say "no
+  trackers" without qualification: they describe the self-hosted, cookieless
+  Umami that analytics will use, and About now follows `UMAMI_WEBSITE_ID`
+  like the privacy page. Checked: `pnpm run check`, `lint`, 82 unit tests,
+  the build, and all 72 e2e tests against `cfromthegroundup_test` on the host
+  cluster under Node 26.13.1, twice: on a fresh database, and on a restore of
+  the production dump, where the new migrator moved the one bookkeeping row,
+  applied nothing and was a no-op on a second run. The C, book and fuzz parts
+  of `make verify` ran on the Mac (Node 26.13.0 there is not the pinned
+  26.13.1, so `site-verify` ran on the server).
 - **2026-11-21:** rollback retired at the maintainer's request (Decision
   log). Deleted `site/deploy/rollback.sh`; `cutover.sh` no longer copies
   rollback tools or the previous unit and Caddy file and, on failure, stops

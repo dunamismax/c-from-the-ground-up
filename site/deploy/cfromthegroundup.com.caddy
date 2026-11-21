@@ -9,7 +9,8 @@
 # Automatic HTTPS: DNS for both names points straight at the host (not
 # proxied by Cloudflare), so Caddy obtains and renews the certificates itself.
 #
-# Check and reload: caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy
+# Change it only through the deploy (cutover.sh runs caddy-apply when this
+# file differs from the installed one); never reload Caddy by hand.
 
 www.cfromthegroundup.com {
 	redir https://cfromthegroundup.com{uri} permanent

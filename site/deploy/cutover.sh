@@ -1,98 +1,147 @@
 #!/usr/bin/env bash
-# Atomic cutover of a prepared release. Run as root under the shared lock:
-#   /usr/local/sbin/with-deploy-lock CANDIDATE/site/deploy/cutover.sh CANDIDATE
-# Writes only /srv/www/cfromthegroundup.com, the site's database (migrations), /etc/caddy/sites/cfromthegroundup.com.caddy,
-# /etc/systemd/system/cfromthegroundup.service and a root-only record of the
-# deploy in /root/cfromthegroundup-backup-*; restarts the site server and
-# reloads Caddy. There is no rollback: a failure stops where it is and is fixed
-# by hand or by deploying a fix.
+# Put a prepared release live (steps 2-8 of the deploy flow, see README.md).
+# Run as root under the shared lock, in one process:
+#   /usr/local/sbin/with-deploy-lock CANDIDATE/src/site/deploy/cutover.sh CANDIDATE
+#
+# Writes only /srv/www/cfromthegroundup.com, the site's database (migrations),
+# a pre-migration dump in /var/backups/cfromthegroundup.com,
+# /etc/systemd/system/cfromthegroundup.service, a transient candidate unit in
+# /run/systemd/system, and (only if it changed) the site's Caddy fragment
+# through caddy-apply. Fix forward only: a failure stops at that step and says
+# which one. Before the switch (steps 2-4) the previous release keeps serving;
+# after it, fix the cause in a new commit and deploy that.
 set -Eeuo pipefail
 # shellcheck source=site/deploy/common.sh
 source "$(dirname "$0")/common.sh"
 require_lock
 candidate=${1:?usage: cutover.sh CANDIDATE_DIRECTORY}
-[[ -f $candidate/bundle/COMMIT && -f $candidate/bundle.sha256 && -f $candidate/expected-active ]] || die 'run site/deploy/prepare.sh first'
-commit=$(cat "$candidate/bundle/COMMIT")
+[[ -f $candidate/COMMIT && -f $candidate/release.sha256 && -d $candidate/$RELEASE_DIR ]] || die 'run site/deploy/prepare.sh first'
+commit=$(cat "$candidate/COMMIT")
 [[ $commit =~ ^[a-f0-9]{40}$ ]] || die 'invalid commit id'
-cmp -s <(snapshot) "$candidate/expected-active" || die 'active release or site config changed since preparation; prepare again'
-[[ -f $WEB_ENV ]] || die "missing $WEB_ENV; run site/deploy/provision.sh first"
+[[ $(cat "$candidate/$RELEASE_DIR/REVISION") == "$commit" ]] || die 'prepared REVISION does not match COMMIT'
+[[ -f $WEB_ENV && -f $MIGRATION_ENV ]] || die "missing $WEB_ENV or $MIGRATION_ENV"
+current_step=start
+trap 'status=$?; ((status == 0)) || echo "cutover stopped at step: $current_step (live release: $(readlink "$SRV/current" 2>/dev/null || echo none)); fix forward" >&2' EXIT
+others_before=$(preserved)
 
-backup="$BACKUP_PREFIX$(date -u +%Y%m%dT%H%M%SZ)-${commit:0:8}"
-install -d -m 0700 "$backup"
-cp -a "$candidate/bundle" "$backup/staged"
-[[ -z $(find "$backup/staged" -type l -print) ]] || die 'candidate bundle must contain no symlinks'
-(cd "$backup/staged" && sha256sum --quiet -c "$candidate/bundle.sha256")
-chown -R root:root "$backup/staged"
-# Record which release this deploy replaced.
-if [[ -L $SRV/current ]]; then readlink "$SRV/current" > "$backup/previous-current"; fi
-preserved > "$backup/preserved-before"
-trap 'status=$?; if ((status != 0)); then echo "Cutover failed; nothing was rolled back. Live release: $(readlink "$SRV/current" 2>/dev/null || echo none). Records: $backup" >&2; fi' EXIT
-
-# Stage the immutable release next to (not over) the live one.
-install -d -m 0755 "$SRV" "$SRV/releases"
-release="$SRV/releases/$commit"
+# --- 2. Stage the immutable release. -------------------------------------------
+current_step='2 stage'
+step "$current_step"
+release=$SRV/releases/$commit
+install -d -m 0755 -o root -g root "$SRV" "$SRV/releases"
 if [[ -d $release ]]; then
-  diff -qr "$backup/staged/web" "$release" >/dev/null || die "$release exists with different content"
+  (cd "$release" && sha256sum --quiet -c "$candidate/release.sha256") || die "$release exists with different content"
+  [[ $(cd "$release" && find . -type f | wc -l) == $(wc -l < "$candidate/release.sha256") ]] || die "$release exists with extra files"
 else
-  cp -a "$backup/staged/web" "$release.tmp"
-  chown -R root:root "$release.tmp"
-  find "$release.tmp" -type d -exec chmod 0755 {} +
-  find "$release.tmp" -type f -exec chmod 0644 {} +
-  mv -T "$release.tmp" "$release"
+  rm -rf "$release.staging"
+  cp -a "$candidate/$RELEASE_DIR" "$release.staging"
+  chown -R root:root "$release.staging"
+  chmod -R u=rwX,go=rX "$release.staging"
+  (cd "$release.staging" && sha256sum --quiet -c "$candidate/release.sha256") || die 'staged release does not match the prepared checksums'
+  mv -T "$release.staging" "$release"
 fi
-[[ -f $release/build/index.js ]] || die 'release has no server build'
+[[ -f $release/build/index.js && -f $release/build/migrate/migrate.js ]] || die 'release has no server build or migrator'
+[[ $(cat "$release/.node-version") == "$NODE_VERSION" ]] || die "release .node-version is not $NODE_VERSION"
 [[ $(cat "$release/build/client/version.txt") == "$commit" ]] || die 'release version.txt does not match the commit'
-# Migrations are forward-only and run before the switch, so the new release
-# never starts on an old schema. The live release keeps serving meanwhile, so
-# every migration must also work for the release before it (add things; drop
-# or rename only a release later).
-# A full backup comes first.
-if [[ -d $release/drizzle ]]; then
-  [[ -f $release/build/migrate/migrate.js ]] || die 'release has migrations but no bundled migrator'
-  /usr/local/sbin/cfromthegroundup-backup || die 'pre-migration backup failed'
-  migrate_release "$release" || die 'migration failed; the backup above holds the database as it was'
-fi
-
-# Install and validate the site config before anything goes live.
-install -m 0644 -o root -g root "$backup/staged/config/cfromthegroundup.com.caddy" "$SITE"
-validate_caddy
-
-# Switch atomically, restart the server on the new release, then reload Caddy
-# (it obtains the certificates on first use).
-ln -sfn "$release" "$SRV/current.next"
-mv -Tf "$SRV/current.next" "$SRV/current"
-start_unit "$backup/staged/config/cfromthegroundup.service"
-wait_site_service || die "site server did not become healthy (journalctl -u $SERVICE)"
-systemctl reload caddy
-
-# Verify through Caddy with the real hostname and certificate.
-live=$(local_get /version.txt) || die 'site did not answer over HTTPS'
-[[ $live == "$commit" ]] || die "live version.txt is $live, expected $commit"
-# Fetch each page in full before matching it. Piping curl into `grep -q`
-# breaks under pipefail: grep exits at the first match, curl fails writing
-# the rest (error 23), and local_get retries that until it gives up.
-home=$(local_get /) || die 'home page failed through Caddy'
-[[ $home == *'C From The Ground Up'* ]] || die 'home page through Caddy lacks the site title'
-[[ $(local_get /healthz) == '{"status":"ok","database":"ok"}' ]] || die '/healthz failed through Caddy'
-account=$(local_get /api/account) || die '/api/account failed through Caddy'
-[[ $account == *'"enabled":'* ]] || die "/api/account through Caddy returned $account"
-# The app must see the address Caddy saw (here loopback), never one the client
-# claims in X-Forwarded-For: rate limiting depends on it.
-seen=$(curl -fsS --max-time 10 --resolve "$HOST:443:127.0.0.1" -H 'X-Forwarded-For: 203.0.113.9' "https://$HOST/healthz/address") || die '/healthz/address failed through Caddy'
-[[ $seen == '{"address":"127.0.0.1"}' ]] || die "client address through Caddy is $seen, expected 127.0.0.1"
-[[ $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --resolve "www.$HOST:443:127.0.0.1" "https://www.$HOST/") == 301 ]] || die 'www does not redirect to the apex'
-# /stats/ goes to Umami's port: it must be Umami or nothing, never another
-# site's app (4318 was once taken by mistake).
-if ss -Hltn "sport = :$UMAMI_PORT" | grep -q .; then
-  systemctl is-active --quiet umami.service || die "port $UMAMI_PORT is in use by something other than umami.service"
-fi
-# Lesson files open as text in the browser (Caddy serves them from disk).
-lesson_type=$(curl -fsS -o /dev/null -w '%{content_type}' --max-time 10 --resolve "$HOST:443:127.0.0.1" "https://$HOST/lessons/01-hello-world/files/1_hello_world.c") || die 'lesson file download failed through Caddy'
-[[ $lesson_type == 'text/plain; charset=utf-8' ]] || die "lesson file through Caddy has Content-Type $lesson_type"
-
-preserved > "$backup/preserved-after"
-cmp -s "$backup/preserved-before" "$backup/preserved-after" || die 'another site or shared Caddy file changed during cutover'
 [[ -z $(find "$release" \( -type f -o -type d \) \( ! -user root -o -perm /022 \) -print) ]] || die 'release ownership or permissions are wrong'
 
+# --- 3. Migrate, after a dump. ------------------------------------------------------
+# Migrations are forward-only and run while the previous release still serves,
+# so every migration must also work for that release (add things; drop or
+# rename only a release later). The dump is for the owner's recovery decision,
+# never restored by a deploy.
+current_step='3 migrate'
+step "$current_step"
+install -d -m 0700 -o root -g root "$DUMP_DIR"
+dump=$DUMP_DIR/pre-migrate-$commit.dump
+[[ ! -e $dump ]] || dump=$DUMP_DIR/pre-migrate-$commit-$(date -u +%Y%m%dT%H%M%SZ).dump
+( umask 077; runuser -u postgres -- /usr/lib/postgresql/18/bin/pg_dump --format=custom "$NAME" > "$dump" ) || die 'pre-migration dump failed'
+/usr/lib/postgresql/18/bin/pg_restore --list "$dump" > /dev/null || die "pre-migration dump $dump is unreadable"
+echo "dump: $dump"
+# As the site's service account, with only migration.env, sandboxed like the
+# site itself.
+systemd-run --quiet --wait --collect --pipe --service-type=exec --unit="$NAME-migrate" \
+  -p DynamicUser=yes -p User="$NAME" -p EnvironmentFile="$MIGRATION_ENV" -p WorkingDirectory="$release" \
+  -p NoNewPrivileges=yes -p ProtectSystem=strict -p ProtectHome=yes -p PrivateTmp=yes \
+  -p PrivateDevices=yes -p 'RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6' \
+  "$NODE" "$release/build/migrate/migrate.js" drizzle || die 'migration failed; the previous release is still serving'
+expected=$("$NODE" -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).entries.length)' "$release/drizzle/meta/_journal.json")
+applied=$(runuser -u postgres -- psql -X -At -d "$NAME" -c 'select count(*) from drizzle.__drizzle_migrations')
+[[ $applied == "$expected" ]] || die "drizzle.__drizzle_migrations has $applied rows, the release has $expected migrations"
+echo "migrations: $applied of $expected"
+
+# --- 4. Candidate: the new release under the new unit, on a spare port. -----------
+current_step='4 candidate'
+step "$current_step"
+candidate_port=
+for ((port = CANDIDATE_PORTS[0]; port <= CANDIDATE_PORTS[1]; port++)); do
+  ss -Hltn "sport = :$port" | grep -q . || { candidate_port=$port; break; }
+done
+[[ -n $candidate_port ]] || die 'no free candidate port in 4400-4499'
+candidate_unit=/run/systemd/system/$CANDIDATE
+stop_candidate() {
+  systemctl stop "$CANDIDATE" 2>/dev/null || true
+  rm -f "$candidate_unit"
+  systemctl daemon-reload
+}
+fail_candidate() {
+  journalctl -u "$CANDIDATE" -n 30 --no-pager >&2 || true
+  stop_candidate
+  die "candidate: $*"
+}
+grep -q "PORT=$PORT\b" "$release/deploy/$SERVICE" || die "unit does not set PORT=$PORT"
+sed -e "s|$SRV/current|$release|g" -e "s|PORT=$PORT\b|PORT=$candidate_port|" \
+  "$release/deploy/$SERVICE" > "$candidate_unit"
+systemctl daemon-reload
+systemctl start "$CANDIDATE" || fail_candidate 'did not start'
+echo "candidate on 127.0.0.1:$candidate_port"
+( check_health "http://127.0.0.1:$candidate_port" "$commit" ) || fail_candidate '/healthz check failed'
+( smoke_app "http://127.0.0.1:$candidate_port" ) || fail_candidate 'smoke check failed'
+[[ $(systemctl show -p ExecMainStatus --value "$CANDIDATE") == 0 ]] || fail_candidate 'exited'
+stop_candidate
+echo 'candidate passed'
+
+# --- 5. Switch and restart. -------------------------------------------------------
+current_step='5 switch'
+step "$current_step"
+if ! cmp -s "$release/deploy/$SERVICE" "$UNIT"; then
+  install -m 0644 -o root -g root "$release/deploy/$SERVICE" "$UNIT"
+  systemd-analyze verify "$UNIT"
+  systemctl daemon-reload
+  echo "installed $UNIT"
+fi
+systemctl enable --quiet "$SERVICE"
+ln -sfn "$release" "$SRV/current.next"
+mv -Tf "$SRV/current.next" "$SRV/current"
+systemctl restart "$SERVICE"
+
+# --- 6. Verify what is live, from the running process. -------------------------------
+current_step='6 verify'
+step "$current_step"
+check_health "http://127.0.0.1:$PORT" "$commit"
+smoke_app "http://127.0.0.1:$PORT"
+pid=$(systemctl show -p MainPID --value "$SERVICE")
+[[ $(readlink "/proc/$pid/exe") == "/opt/node-v$NODE_VERSION-linux-x64/bin/node" ]] || die "$SERVICE runs $(readlink "/proc/$pid/exe")"
+[[ $(readlink "/proc/$pid/cwd") == "$release" ]] || die "$SERVICE runs from $(readlink "/proc/$pid/cwd")"
+[[ $(head -n 1 "/proc/$pid/cwd/REVISION") == "$commit" ]] || die "$SERVICE reports another revision"
+if [[ -x /home/sawyer/github/ubuntu-vm-backup/bin/web-live ]]; then
+  /home/sawyer/github/ubuntu-vm-backup/bin/web-live "$SERVICE"
+fi
+
+# --- 7. Caddy, only if the site's fragment changed. ---------------------------------
+current_step='7 caddy'
+step "$current_step"
+if cmp -s "$release/deploy/$FRAGMENT.caddy" "$SITE"; then
+  echo 'fragment unchanged'
+else
+  /usr/local/sbin/caddy-apply "$FRAGMENT" "$release/deploy/$FRAGMENT.caddy"
+fi
+
+# --- 8. Record, and check what the public sees. --------------------------------------
+current_step='8 public check'
+step "$current_step"
+smoke_public "$commit"
+[[ $(preserved) == "$others_before" ]] || die 'another site or a shared Caddy file changed during cutover'
+logger -t web-deploy "$HOST $commit live"
 trap - EXIT
-printf 'Deployed %s; records: %s\n' "$commit" "$backup"
+printf '\nDeployed %s: %s\n' "$commit" "$release"

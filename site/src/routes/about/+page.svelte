@@ -1,6 +1,9 @@
 <script lang="ts">
 	import PageMeta from '#lib/components/PageMeta.svelte';
+	import { UMAMI_WEBSITE_ID } from '#lib/analytics.js';
 	import { BOOK_URL, GITHUB_URL, LICENSE_URL } from '#lib/site.js';
+
+	const analytics = UMAMI_WEBSITE_ID !== '';
 </script>
 
 <PageMeta
@@ -39,9 +42,15 @@
 
 		<h2 id="privacy">Privacy</h2>
 		<p>
-			There are no ads or trackers. Accounts are optional: without one, your browser remembers your
-			progress, theme and preferred operating system tab on this device only. The
-			<a href="/privacy">privacy policy</a> says exactly what an account stores.
+			{#if analytics}
+				There are no ads and no third-party trackers. The site counts page views with its own copy
+				of Umami, which sets no cookies and stores no IP addresses.
+			{:else}
+				There are no ads, no analytics and no trackers.
+			{/if}
+			Accounts are optional: without one, your browser remembers your progress, theme and preferred operating
+			system tab on this device only. The
+			<a href="/privacy">privacy policy</a> says exactly what is recorded and what an account stores.
 		</p>
 
 		<h2 id="help">Help and contributing</h2>

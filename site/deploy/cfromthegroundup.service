@@ -2,7 +2,10 @@
 # site/deploy/cutover.sh.
 #
 # Runs the live release's SvelteKit server (adapter-node, build/) on loopback
-# as a throwaway unprivileged user. Caddy serves client assets from disk and
+# as a throwaway unprivileged user, on the host's Node 26 (/opt/node-26). The
+# deploy also starts a transient copy of this file on a candidate port with
+# `current` replaced by the new release, so keep the release named only as
+# /srv/www/cfromthegroundup.com/current and HOST/PORT on one Environment= line. Caddy serves client assets from disk and
 # proxies everything else here. Learner state lives in the local PostgreSQL 18
 # database `cfromthegroundup` (schema `app`), reached over 127.0.0.1 as
 # `cfromthegroundup_web`; DATABASE_URL is in the root-only web.env. Migrations
@@ -27,7 +30,7 @@ EnvironmentFile=/etc/web-apps/cfromthegroundup/web.env
 # Optional: the four account settings (GitHub sign-in, BUILD.md W6). Without
 # the file the site runs with accounts off. See README.md, "Accounts".
 EnvironmentFile=-/etc/web-apps/cfromthegroundup/accounts.env
-ExecStart=/opt/node-runtime/bin/node /srv/www/cfromthegroundup.com/current/build
+ExecStart=/opt/node-26/bin/node /srv/www/cfromthegroundup.com/current/build/index.js
 Restart=always
 RestartSec=5
 TimeoutStopSec=35

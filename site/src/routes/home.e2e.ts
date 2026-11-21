@@ -59,7 +59,8 @@ test('an unknown page is a 404 with a way back', async ({ page }) => {
 test('/healthz reports a healthy app and database', async ({ request }) => {
 	const response = await request.get('/healthz');
 	expect(response.status()).toBe(200);
-	expect(await response.json()).toEqual({ status: 'ok', database: 'ok' });
+	// No REVISION file next to a local build; a release has one.
+	expect(await response.json()).toEqual({ status: 'ok', revision: 'unknown', database: 'ok' });
 });
 
 test('robots.txt and the sitemap list every public page', async ({ request }) => {
