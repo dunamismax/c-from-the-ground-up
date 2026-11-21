@@ -59,8 +59,11 @@ kill "$smoke_pid"; wait "$smoke_pid" 2>/dev/null || true
 "$NODE" "$smoke/build/migrate/migrate.js" --check drizzle || die 'smoke: the bundled migrator cannot read drizzle/'
 trap - EXIT; rm -rf "$smoke"
 
-# Production dependencies only. Every runtime dependency is bundled into
-# build/ (they are all devDependencies), so this is normally empty.
+# Production dependencies only, from a clean install: `--prod` on top of the
+# full install would leave the devDependencies in node_modules/.pnpm. Every
+# runtime dependency is bundled into build/ (they are all devDependencies),
+# so this is normally empty.
+rm -rf node_modules
 node-26 pnpm install --frozen-lockfile --prod
 
 step 'Assemble the release'
