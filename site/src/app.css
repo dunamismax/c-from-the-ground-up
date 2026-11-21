@@ -196,7 +196,9 @@
 	scroll-margin-top: 5rem;
 }
 
-.prose :where(ul, ol, table, pre) {
+/* Not `pre`: a code block keeps the monospace font and size `.shiki` gives
+   it. Listing it here once set every snippet in the sans-serif font. */
+.prose :where(ul, ol, table) {
 	font-family: var(--font-sans);
 	font-size: 1rem;
 }

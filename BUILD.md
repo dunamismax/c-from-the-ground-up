@@ -836,6 +836,15 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-20:** code snippets in lesson prose were set in the sans-serif
+  font at 16px instead of the monospace font, on every lesson page since W3:
+  `.prose :where(ul, ol, table, pre)` in `app.css` came after `.shiki` and
+  won. Found by looking at the live site; no test saw it. `pre` is out of
+  that rule, and `lessons.e2e.ts` now checks that a prose snippet and the
+  full listing use the same monospace font (it failed before the fix).
+  Checked in the browser against `node build`, dark at desktop width and
+  light at phone width. Not deployed yet.
+
 - **2026-11-20:** eighth production deploy, commit `ecbc570`, which moves the
   Umami route to port 4321; `/stats/script.js` then answered 503 (nothing
   there yet) instead of reaching daybyword.com. Then Umami itself, at the

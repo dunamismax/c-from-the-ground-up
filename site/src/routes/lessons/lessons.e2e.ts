@@ -56,6 +56,21 @@ test('a lesson page shows its prose, listing, run panel and navigation', async (
 	await expect(page).toHaveURL('/lessons/30-multithreaded-file-analyzer');
 });
 
+// A snippet in the prose and the full listing are both Shiki output and must
+// look the same. The prose's own font rules once won over `.shiki`, which set
+// every snippet in a proportional font.
+test('code snippets in the prose use the same monospace font as the listing', async ({ page }) => {
+	await page.goto('/lessons/06-loops');
+	const font = (element: Element) => {
+		const style = getComputedStyle(element);
+		return { family: style.fontFamily, size: style.fontSize };
+	};
+	const snippet = await page.locator('.prose pre.shiki code').first().evaluate(font);
+	const listing = await page.locator('figure.listing pre.shiki code').first().evaluate(font);
+	expect(snippet.family).toContain('monospace');
+	expect(snippet).toEqual(listing);
+});
+
 test('the run panel tabs work with the keyboard', async ({ page }) => {
 	await page.goto('/lessons/33-advanced-terminal-ui');
 	const tabs = page.getByRole('tablist', { name: 'Operating system' });
