@@ -13,7 +13,7 @@
 // The bookkeeping table lives next to the app's tables, in schema `app`
 // (see schema.ts), so the migration role never needs another schema.
 // Migrations are forward-only. A release must keep working on the schema the
-// next release migrates to, because rollback.sh restores code, not data.
+// next release migrates to: migrations run while the old release still serves.
 
 import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { drizzle } from 'drizzle-orm/postgres-js';

@@ -780,6 +780,10 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-21: no rollback.** The maintainer decided the site stays on
+  SvelteKit and there are no rollbacks on any of the host's sites.
+  `site/deploy/rollback.sh` is gone, and a cutover that fails stops and is
+  fixed forward. Do not add rollback tooling back.
 - **2026-11-20: how exercise solutions are stored and shown.** One `.c` file
   per exercise in `exercises/<chapter-slug>/`, outside `Part */` so the
   lesson rules (one marker per file, every file embedded in a chapter) do
@@ -871,6 +875,14 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-21:** rollback retired at the maintainer's request (Decision
+  log). Deleted `site/deploy/rollback.sh`; `cutover.sh` no longer copies
+  rollback tools or the previous unit and Caddy file and, on failure, stops
+  and prints the live release and its record directory. The runbook and
+  AGENTS.md describe fixing forward. Checked with `bash -n` on the deploy
+  scripts and `git diff --check`; one comment changed in
+  `site/scripts/migrate.ts`, no other application code. The next deploy is
+  the first with the new cutover script.
 - **2026-11-21:** ninth production deploy, commit `c7fe8d3`, at the
   maintainer's request (the monospace fix for prose snippets, the lesson 34
   fix, the fuzz check and the Part 1 solutions). CI was green first; prepare

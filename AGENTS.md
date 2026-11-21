@@ -350,7 +350,7 @@ site/e2e/accounts.ts               e2e account settings and signIn() (Better Aut
 site/compose.yaml                  local PostgreSQL 18 on 127.0.0.1:5434
 site/.env.example                  copy to site/.env (git-ignored) for local development
 site/playwright.config.ts          e2e tests run against `node build` (after the migrator), not the dev server
-site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover/rollback, runbook
+site/deploy/                       production: Caddy site, systemd unit, provision/prepare/cutover, runbook
 ```
 
 Commands (run in `site/`):
@@ -447,8 +447,8 @@ Conventions:
   Follow `site/deploy/README.md` exactly (prepare as `sawyer`, then cutover as
   root under `with-deploy-lock`). Deploy only when the maintainer asks, and
   never edit another site's files or the shared Caddyfile. Never change SSH,
-  firewall or DNS settings on the host. If a deploy breaks the site, roll it
-  back first (`rollback.sh`, see the runbook), then fix it.
+  firewall or DNS settings on the host. There is no rollback: if a deploy
+  breaks the site, fix the cause and deploy again (see the runbook).
 
 ## Lesson conventions
 

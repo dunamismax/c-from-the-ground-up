@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared shell glue for cfromthegroundup.com deploys on ubuntu-vm. Sourced by
-# prepare.sh, cutover.sh, rollback.sh and provision.sh; see README.md.
+# prepare.sh, cutover.sh and provision.sh; see README.md.
 # shellcheck shell=bash disable=SC2034
 set -Eeuo pipefail
 
@@ -71,13 +71,6 @@ start_unit() {
   systemctl daemon-reload
   systemctl enable --quiet "$SERVICE"
   systemctl restart "$SERVICE"
-}
-
-# Stop and remove the unit (absent is fine).
-remove_unit() {
-  systemctl disable --now --quiet "$SERVICE" 2>/dev/null || true
-  rm -f "$UNIT"
-  systemctl daemon-reload
 }
 
 # Apply a release's migrations (build/migrate/migrate.js, see

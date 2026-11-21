@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Atomic, reversible cutover of a prepared release. Run as root under the
-# shared lock:
+# Atomic cutover of a prepared release. Run as root under the shared lock:
 #   /usr/local/sbin/with-deploy-lock CANDIDATE/site/deploy/cutover.sh CANDIDATE
 # Writes only /srv/www/cfromthegroundup.com, the site's database (migrations), /etc/caddy/sites/cfromthegroundup.com.caddy,
-# /etc/systemd/system/cfromthegroundup.service and a root-only backup in
-# /root/cfromthegroundup-backup-*; restarts the site server and reloads Caddy.
-# On any failure it restores the previous state through rollback.sh.
+# /etc/systemd/system/cfromthegroundup.service and a root-only record of the
+# deploy in /root/cfromthegroundup-backup-*; restarts the site server and
+# reloads Caddy. There is no rollback: a failure stops where it is and is fixed
+# by hand or by deploying a fix.
 set -Eeuo pipefail
 # shellcheck source=site/deploy/common.sh
 source "$(dirname "$0")/common.sh"
@@ -18,20 +18,15 @@ cmp -s <(snapshot) "$candidate/expected-active" || die 'active release or site c
 [[ -f $WEB_ENV ]] || die "missing $WEB_ENV; run site/deploy/provision.sh first"
 
 backup="$BACKUP_PREFIX$(date -u +%Y%m%dT%H%M%SZ)-${commit:0:8}"
-install -d -m 0700 "$backup" "$backup/tools"
+install -d -m 0700 "$backup"
 cp -a "$candidate/bundle" "$backup/staged"
 [[ -z $(find "$backup/staged" -type l -print) ]] || die 'candidate bundle must contain no symlinks'
 (cd "$backup/staged" && sha256sum --quiet -c "$candidate/bundle.sha256")
 chown -R root:root "$backup/staged"
-cp -a "$(dirname "$0")"/*.sh "$backup/tools/"
-# Record the state to restore: the previous release pointer, site file and
-# unit, or their absence.
+# Record which release this deploy replaced.
 if [[ -L $SRV/current ]]; then readlink "$SRV/current" > "$backup/previous-current"; fi
-if [[ -f $SITE ]]; then cp -a "$SITE" "$backup/site.caddy"; fi
-if [[ -f $UNIT ]]; then cp -a "$UNIT" "$backup/site.service"; fi
 preserved > "$backup/preserved-before"
-touch "$backup/ready"
-trap 'status=$?; if ((status != 0)); then echo "Cutover failed; restoring prior state" >&2; "$backup/tools/rollback.sh" "$backup"; fi' EXIT
+trap 'status=$?; if ((status != 0)); then echo "Cutover failed; nothing was rolled back. Live release: $(readlink "$SRV/current" 2>/dev/null || echo none). Records: $backup" >&2; fi' EXIT
 
 # Stage the immutable release next to (not over) the live one.
 install -d -m 0755 "$SRV" "$SRV/releases"
@@ -48,9 +43,9 @@ fi
 [[ -f $release/build/index.js ]] || die 'release has no server build'
 [[ $(cat "$release/build/client/version.txt") == "$commit" ]] || die 'release version.txt does not match the commit'
 # Migrations are forward-only and run before the switch, so the new release
-# never starts on an old schema. The live release keeps serving meanwhile, and
-# a rollback restores code but not data, so every migration must also work
-# for the release before it (add things; drop or rename only a release later).
+# never starts on an old schema. The live release keeps serving meanwhile, so
+# every migration must also work for the release before it (add things; drop
+# or rename only a release later).
 # A full backup comes first.
 if [[ -d $release/drizzle ]]; then
   [[ -f $release/build/migrate/migrate.js ]] || die 'release has migrations but no bundled migrator'
@@ -100,5 +95,4 @@ cmp -s "$backup/preserved-before" "$backup/preserved-after" || die 'another site
 [[ -z $(find "$release" \( -type f -o -type d \) \( ! -user root -o -perm /022 \) -print) ]] || die 'release ownership or permissions are wrong'
 
 trap - EXIT
-printf 'Deployed %s\n' "$commit"
-printf 'Rollback: /usr/local/sbin/with-deploy-lock %s/tools/rollback.sh %s\n' "$backup" "$backup"
+printf 'Deployed %s; records: %s\n' "$commit" "$backup"

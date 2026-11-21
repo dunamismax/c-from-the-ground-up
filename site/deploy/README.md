@@ -13,7 +13,7 @@ same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
 | Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`     |
 | Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration,accounts}.env` (root only)   |
 | Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer` |
-| Cutover backups | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (each has a rollback)     |
+| Cutover records | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (staged bundle, replaced release) |
 | Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`   |
 
 DNS for `cfromthegroundup.com` and `www` points straight at the host (Cloudflare
@@ -74,9 +74,8 @@ When a release has migrations, cutover first runs the nightly backup script
 tables belong to the owner and the web role gets row access through the
 default privileges `provision.sh` set. Migrations already applied are skipped.
 
-Migrations are forward-only and run while the old release is still live, and a
-rollback restores code, not data. So a migration must work for the release
-before it too: add tables and columns first, and drop or rename only in a later
+Migrations are forward-only and run while the old release is still live. So a
+migration must work for the release before it too: add tables and columns first, and drop or rename only in a later
 release. To undo a migration, restore the database from the backup cutover
 made (`pg_restore` of `database.dump` inside the newest
 `/var/backups/cfromthegroundup/cftgu-*.tar.gz`).
@@ -158,15 +157,12 @@ To turn analytics off, set `UMAMI_WEBSITE_ID` back to `''` and deploy; to
 remove Umami, `systemctl disable --now umami` as well. The `umami` database
 is not in the nightly backup: losing it loses only statistics.
 
-## Rollback
+## If a deploy fails
 
-Cutover prints the exact rollback command. In general:
-
-```sh
-/usr/local/sbin/with-deploy-lock /root/cfromthegroundup-backup-<stamp>/tools/rollback.sh /root/cfromthegroundup-backup-<stamp>
-```
-
-Releases are never deleted, so the previous one is still on disk.
+There is no rollback (maintainer's decision, 2026-11-21). A failed cutover
+stops where it is and prints the live release and its record directory. Before
+the switch the previous release is still serving. After it, read the error and
+`journalctl -u cfromthegroundup`, fix the cause and deploy again.
 
 ## Checks
 
