@@ -121,7 +121,8 @@ loads the tracker only when `UMAMI_WEBSITE_ID` in
 `site/src/lib/analytics.ts` is set, so it is off until the steps below are
 done. If Umami is down, the tracker fails quietly and the site is unaffected.
 
-To set it up (or update it after changing `UMAMI_VERSION` in `install.sh`):
+To set it up (or update it after changing `UMAMI_VERSION`, and `UMAMI_PNPM` to
+the pnpm version that release's `package.json` requires, in `install.sh`):
 
 1. As root, from a checkout of the repository on the server:
 

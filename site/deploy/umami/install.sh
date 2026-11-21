@@ -25,6 +25,10 @@ source "$here/../common.sh"
 require_lock
 
 UMAMI_VERSION=v3.4.1
+# The exact pnpm that release's package.json requires (`engines.pnpm`). It has
+# no `packageManager` field, so corepack would otherwise pick the newest pnpm
+# and the install would refuse to run. Update both together.
+UMAMI_PNPM=12.3.4
 UMAMI_ROOT=/srv/www/umami
 UMAMI_ENV_DIR=/etc/web-apps/umami
 UMAMI_ENV=$UMAMI_ENV_DIR/umami.env
@@ -99,7 +103,7 @@ if [[ ! -f $release/.built ]]; then
   }
   as_umami git clone --quiet --depth 1 --branch "$UMAMI_VERSION" https://github.com/umami-software/umami.git "$work/app"
   # The first build creates Umami's tables (and the admin / umami login).
-  ( cd "$work/app" && as_umami corepack pnpm install --frozen-lockfile && as_umami corepack pnpm build ) \
+  ( cd "$work/app" && as_umami corepack "pnpm@$UMAMI_PNPM" install --frozen-lockfile && as_umami corepack "pnpm@$UMAMI_PNPM" build ) \
     || die "building Umami $UMAMI_VERSION failed; $work is kept for inspection"
   rm -rf "$work/app/.next/cache"
   ln -s /var/cache/umami "$work/app/.next/cache"
