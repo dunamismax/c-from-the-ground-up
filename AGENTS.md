@@ -532,6 +532,11 @@ Mistakes that have cost real time here:
   curl then fails writing (error 23), and the pipeline fails although the page
   was fine. This rolled back the `46208f2` deploy. Fetch the page in full,
   then match.
+- **A loopback port that looks free on a Mac is not free on the server.**
+  Umami was first given port 4318, which another site on `ubuntu-vm` uses,
+  so the `8a5c018` deploy sent `/stats/` to that site's app until the port
+  moved to 4321 (cutover now refuses a port Umami does not own). Check `ss -ltn` and `/etc/caddy/sites`
+  on the server before choosing a port, and record it in `common.sh`.
 - **Paths with spaces.** Quote every `Part */` path, in scripts and in the
   commands you run.
 

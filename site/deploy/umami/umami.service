@@ -18,7 +18,7 @@ Group=umami
 WorkingDirectory=/srv/www/umami/current
 Environment=NODE_ENV=production DISABLE_TELEMETRY=1 DISABLE_UPDATES=1
 EnvironmentFile=/etc/web-apps/umami/umami.env
-ExecStart=/opt/node-runtime/bin/node /srv/www/umami/current/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4318
+ExecStart=/opt/node-runtime/bin/node /srv/www/umami/current/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4321
 # Next.js writes its cache to .next/cache, which install.sh links here.
 CacheDirectory=umami
 Restart=always

@@ -15,7 +15,7 @@
 # installs umami.service and waits until the tracker script answers.
 #
 # Nothing else on the host changes: the site's Caddy file (deployed with the
-# site) already passes /stats/script.js and /stats/api/send to port 4318.
+# site) already passes /stats/script.js and /stats/api/send to port 4321.
 # The first build creates the Umami login admin / umami: change it at once
 # (README.md, "Analytics").
 set -Eeuo pipefail
@@ -25,7 +25,6 @@ source "$here/../common.sh"
 require_lock
 
 UMAMI_VERSION=v3.4.1
-UMAMI_PORT=4318
 UMAMI_ROOT=/srv/www/umami
 UMAMI_ENV_DIR=/etc/web-apps/umami
 UMAMI_ENV=$UMAMI_ENV_DIR/umami.env

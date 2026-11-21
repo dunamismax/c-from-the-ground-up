@@ -7,9 +7,12 @@ set -Eeuo pipefail
 NAME=cfromthegroundup
 HOST=cfromthegroundup.com
 SRV=/srv/www/cfromthegroundup.com
-# The SvelteKit server (adapter-node) on loopback. 4311-4316 belong to other
-# sites on this host.
+# The SvelteKit server (adapter-node) on loopback. Ports 4311-4316, 4318-4320
+# and 4330 belong to other sites on this host (2026-11-20); check with
+# `ss -ltn` and /etc/caddy/sites before taking a new one.
 PORT=4317
+# Umami analytics (site/deploy/umami/), which the Caddy file proxies /stats/ to.
+UMAMI_PORT=4321
 SITE=/etc/caddy/sites/cfromthegroundup.com.caddy
 UNIT=/etc/systemd/system/cfromthegroundup.service
 SERVICE=cfromthegroundup.service

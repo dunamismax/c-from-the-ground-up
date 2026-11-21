@@ -11,8 +11,8 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Next step** | W9 (Umami analytics): code and runbook first, then the install on the server with the maintainer. Everything else in the course content track is done; the Ideas inbox has the optional exercise solutions. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
 | **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: the go-ahead to run `site/deploy/umami/install.sh` on the server, then changing Umami's admin password and adding the website (runbook, "Analytics"). |
-| **Live** | https://cfromthegroundup.com serves `25146a8`, deployed 2026-11-20 with `site/deploy/`, so the site matches the lessons on `main`. The database has the W6 tables; accounts are off until the OAuth app exists. |
-| **`main`** | `make verify` and CI are green at `25146a8`. |
+| **Live** | https://cfromthegroundup.com serves `8a5c018`, deployed 2026-11-20 with `site/deploy/`: Part 6, the glossary, the chapter boxes and exercises, and the W9 code with analytics off. The Caddy route for `/stats/` still points at port 4318 (another site's app) until the next deploy moves it to 4321; nothing requests it while analytics is off. Accounts are off until the OAuth app exists. |
+| **`main`** | `make verify` and CI are green at `8a5c018`. |
 | **Last updated** | 2026-11-20 |
 
 ### Milestones at a glance
@@ -506,7 +506,7 @@ runbook.
       Built 2026-11-20: `site/deploy/umami/install.sh` (pinned Umami v3.4.1,
       built from GitHub as a `umami` system user; role and database `umami`
       over 127.0.0.1 only; root-only `/etc/web-apps/umami/umami.env`) and
-      `umami.service` on 127.0.0.1:4318 with the same hardening as the site.
+      `umami.service` on 127.0.0.1:4321 with the same hardening as the site.
       Remaining: run it on the server, which needs the maintainer's go-ahead
       (it downloads and builds Umami and changes `pg_hba.conf`).
 - [x] The tracker reaches Umami through the site's own origin (a Caddy
@@ -834,6 +834,22 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** seventh production deploy, commit `8a5c018` (D1-D9, the
+  prose audit, lessons 25 and 35 fixes, Part 6, glossary, boxes and
+  exercises, W9 code). CI was green first; prepare and cutover passed on the
+  first try (backup taken, no new migrations), including the new lesson-file
+  `Content-Type` check. Checked from outside: `/version.txt`, `/healthz`,
+  `/api/account` (off), every page type including `/parts/6`, lessons 36-38
+  and `/glossary`, an Open Graph image, the course zip, a 404, the `www`
+  redirect, lesson files as `text/plain`, a sitemap with 38 lessons, lesson 5
+  with its box, exercises and C17 command, and no tracker with the privacy
+  page still saying "no analytics". One mistake found: `/stats/script.js`
+  answered 404 from another site, because port 4318, which the Umami route
+  uses, belongs to daybyword.com on this host. Harmless while analytics is
+  off (nothing requests `/stats/`), but fixed at once: Umami moves to 4321
+  (free on the host), `common.sh` lists the ports other sites use, and
+  cutover now fails if anything but `umami.service` holds Umami's port.
 
 - **2026-11-20:** W9 in code: Umami's installer and unit, the Caddy routes
   for its tracker, the site's tracker switch (`UMAMI_WEBSITE_ID`, empty for

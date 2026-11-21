@@ -113,7 +113,7 @@ The nightly backup includes this file.
 
 Page-view statistics come from a self-hosted [Umami](https://umami.is)
 (BUILD.md W9, decision D9): no cookies, no IP addresses stored, and nothing
-sent to a third party. It runs as `umami.service` on `127.0.0.1:4318` with
+sent to a third party. It runs as `umami.service` on `127.0.0.1:4321` with
 its own `umami` database. The site's Caddy file passes only two of its paths
 to the public, `/stats/script.js` (the tracker) and `/stats/api/send` (where
 the tracker reports a page view); its dashboard is never public. The site
@@ -135,10 +135,10 @@ To set it up (or update it after changing `UMAMI_VERSION` in `install.sh`):
    creates the login `admin` with the password `umami`.
 
 2. Open the dashboard through an SSH tunnel from your own machine, then go to
-   <http://localhost:4318>:
+   <http://localhost:4321>:
 
    ```sh
-   ssh -N -L 4318:127.0.0.1:4318 root@ubuntu-vm
+   ssh -N -L 4321:127.0.0.1:4321 root@ubuntu-vm
    ```
 
 3. Sign in as `admin` / `umami` and change the password at once (Settings,
