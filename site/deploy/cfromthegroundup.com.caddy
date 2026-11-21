@@ -38,6 +38,15 @@ cfromthegroundup.com {
 	}
 	header @fresh ?Cache-Control "public, max-age=0, must-revalidate"
 
+	# Umami analytics (BUILD.md W9) on 127.0.0.1:4318: only the tracker script
+	# and the endpoint it reports page views to are public. The dashboard is
+	# reached over an SSH tunnel. Without Umami these answer with the 503 below.
+	@umami path /stats/script.js /stats/api/send
+	handle @umami {
+		uri strip_prefix /stats
+		reverse_proxy 127.0.0.1:4318
+	}
+
 	# Lesson files (/lessons/<slug>/files/<name>: the .c, .h and Makefile
 	# downloads) are prerendered, but adapter-node serves them with no
 	# Content-Type, so opening one in the browser downloads it. Serve them from

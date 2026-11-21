@@ -1,0 +1,45 @@
+# /etc/systemd/system/umami.service: installed by site/deploy/umami/install.sh.
+#
+# Self-hosted Umami analytics for cfromthegroundup.com (BUILD.md W9), on
+# loopback only. Caddy passes just two paths of it to the public, under
+# /stats/ on the site (the tracker script and its collect endpoint); the
+# dashboard is reached over an SSH tunnel. Its data lives in the local
+# PostgreSQL 18 database `umami`, reached over 127.0.0.1 as the `umami` role;
+# DATABASE_URL and APP_SECRET are in the root-only umami.env.
+[Unit]
+Description=Umami analytics for cfromthegroundup.com
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=umami
+Group=umami
+WorkingDirectory=/srv/www/umami/current
+Environment=NODE_ENV=production DISABLE_TELEMETRY=1 DISABLE_UPDATES=1
+EnvironmentFile=/etc/web-apps/umami/umami.env
+ExecStart=/opt/node-runtime/bin/node /srv/www/umami/current/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4318
+# Next.js writes its cache to .next/cache, which install.sh links here.
+CacheDirectory=umami
+Restart=always
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+MemoryHigh=384M
+MemoryMax=768M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

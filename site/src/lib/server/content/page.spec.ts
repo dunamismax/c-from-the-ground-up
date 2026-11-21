@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getCourse } from './index.js';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { courseRoot } from './paths.js';
+import { parseSummary } from './summary.js';
 import { loadMarkdownPage, renderMarkdownPage, siteHref } from './page.js';
 
 describe('siteHref', () => {
@@ -36,8 +39,10 @@ describe('renderMarkdownPage', () => {
 
 describe('the glossary', () => {
 	it('links only to lessons that exist', async () => {
-		const [page, course] = await Promise.all([loadMarkdownPage('glossary.md'), getCourse()]);
-		const slugs = new Set(course.lessons.map((lesson) => lesson.slug));
+		// The slugs from SUMMARY.md, without loading (and highlighting) the course.
+		const summary = parseSummary(await readFile(path.join(courseRoot(), 'src/SUMMARY.md'), 'utf8'));
+		const slugs = new Set(summary.flatMap((part) => part.chapters.map((chapter) => chapter.slug)));
+		const page = await loadMarkdownPage('glossary.md');
 		const links = [...page.html.matchAll(/href="\/lessons\/([^"#]+)/g)].map((match) => match[1]);
 		expect(links.length).toBeGreaterThan(50);
 		for (const slug of links) expect(slugs, slug).toContain(slug);

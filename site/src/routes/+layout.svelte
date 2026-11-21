@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import favicon from '#lib/assets/favicon.svg';
+	import Analytics from '#lib/components/Analytics.svelte';
 	import SearchDialog from '#lib/components/SearchDialog.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import SiteHeader from '#lib/components/SiteHeader.svelte';
@@ -39,6 +40,8 @@
 <svelte:head>
 	<link rel="icon" href={favicon} type="image/svg+xml" />
 </svelte:head>
+
+<Analytics />
 
 <svelte:window onkeydown={onKeydown} />
 

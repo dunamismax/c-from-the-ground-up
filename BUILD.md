@@ -10,7 +10,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
 | **Next step** | W9 (Umami analytics): code and runbook first, then the install on the server with the maintainer. Everything else in the course content track is done; the Ideas inbox has the optional exercise solutions. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: the go-ahead to run `site/deploy/umami/install.sh` on the server, then changing Umami's admin password and adding the website (runbook, "Analytics"). |
 | **Live** | https://cfromthegroundup.com serves `25146a8`, deployed 2026-11-20 with `site/deploy/`, so the site matches the lessons on `main`. The database has the W6 tables; accounts are off until the OAuth app exists. |
 | **`main`** | `make verify` and CI are green at `25146a8`. |
 | **Last updated** | 2026-11-20 |
@@ -27,7 +27,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | [W5. Production deployment](#w5-production-deployment) | Done |
 | [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production until the OAuth app exists |
 | [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer step left: screen-reader pass |
-| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Not started |
+| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Built and tested in code; the server install and the Umami website need the maintainer |
 | [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Ideas, to triage when W7 is done |
 
 ## How to work this file
@@ -503,16 +503,38 @@ runbook.
 - [ ] Umami runs on `ubuntu-vm` as its own systemd service on a local port,
       with its own database and role in the shared PostgreSQL 18, set up by a
       script in `site/deploy/` (no other site's files touched).
-- [ ] The tracker reaches Umami through the site's own origin (a Caddy
+      Built 2026-11-20: `site/deploy/umami/install.sh` (pinned Umami v3.4.1,
+      built from GitHub as a `umami` system user; role and database `umami`
+      over 127.0.0.1 only; root-only `/etc/web-apps/umami/umami.env`) and
+      `umami.service` on 127.0.0.1:4318 with the same hardening as the site.
+      Remaining: run it on the server, which needs the maintainer's go-ahead
+      (it downloads and builds Umami and changes `pg_hba.conf`).
+- [x] The tracker reaches Umami through the site's own origin (a Caddy
       `handle` for the script and the collect endpoint), so no new DNS record
       and no new CSP origin are needed. The dashboard is reached over an SSH
-      tunnel, not published.
-- [ ] The site loads the tracker only when `PUBLIC_UMAMI_WEBSITE_ID` is set,
-      respects Do Not Track, sets no cookies, and the CSP allows it; e2e
-      tests cover both on and off.
-- [ ] `/privacy` says what Umami records (page, referrer, browser, country;
+      tunnel, not published. Done 2026-11-20: `@umami` in the Caddy file
+      passes only `/stats/script.js` and `/stats/api/send` (prefix
+      stripped); tested with a local Caddy and a stub upstream, where
+      `/stats/`, `/stats/settings` and `/stats/api/auth/login` fall through
+      to Node.
+- [x] The site loads the tracker only when it is configured, respects Do Not
+      Track, sets no cookies, and the CSP allows it; e2e tests cover both on
+      and off. Done 2026-11-20: `UMAMI_WEBSITE_ID` in
+      `site/src/lib/analytics.ts` (committed, not an environment variable,
+      because pages are prerendered and the ID is public), with
+      `data-domains="cfromthegroundup.com"` and `data-do-not-track`.
+      `Analytics.svelte` adds the script after mount: a rendered `<script>`
+      gets inline onload/onerror handlers from Svelte, which the CSP blocks.
+      `analytics.e2e.ts` checks whichever state is committed; with a test
+      ID it and `csp.e2e.ts` passed (one tracker, kept across client-side
+      navigation, no CSP violations), and with the ID empty no tracker loads.
+- [x] `/privacy` says what Umami records (page, referrer, browser, country;
       no cookies, no IP stored) and the runbook says how to install, back up
-      and update it.
+      and update it. Done 2026-11-20: the privacy page describes Umami only
+      while the ID is set; `site/deploy/README.md`, "Analytics".
+- Remaining after the install: the maintainer changes Umami's `admin` /
+  `umami` password over the SSH tunnel and adds the website, then the ID is
+  committed and deployed.
 - **Done when:** page views from the live site show up in Umami, and the site
   works exactly as before when Umami is down or switched off.
 
@@ -812,6 +834,14 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** W9 in code: Umami's installer and unit, the Caddy routes
+  for its tracker, the site's tracker switch (`UMAMI_WEBSITE_ID`, empty for
+  now) and the privacy text that appears with it. Tested with a test ID
+  (one tracker, no CSP violations), with the ID empty (no tracker), and the
+  Caddy routes with a local Caddy and a stub upstream. The page-spec glossary
+  test reads `SUMMARY.md` instead of loading the whole course, which timed
+  out under load.
 
 - **2026-11-20:** Part 6 and the Later items. Lessons 36 (debugging), 37
   (undefined behavior) and 38 (testing in C) with chapters, `tests/` for

@@ -109,6 +109,54 @@ stay in the database. Changing `BETTER_AUTH_SECRET` signs everyone out and
 makes the stored GitHub tokens unreadable (they are never used after sign-in).
 The nightly backup includes this file.
 
+## Analytics
+
+Page-view statistics come from a self-hosted [Umami](https://umami.is)
+(BUILD.md W9, decision D9): no cookies, no IP addresses stored, and nothing
+sent to a third party. It runs as `umami.service` on `127.0.0.1:4318` with
+its own `umami` database. The site's Caddy file passes only two of its paths
+to the public, `/stats/script.js` (the tracker) and `/stats/api/send` (where
+the tracker reports a page view); its dashboard is never public. The site
+loads the tracker only when `UMAMI_WEBSITE_ID` in
+`site/src/lib/analytics.ts` is set, so it is off until the steps below are
+done. If Umami is down, the tracker fails quietly and the site is unaffected.
+
+To set it up (or update it after changing `UMAMI_VERSION` in `install.sh`):
+
+1. As root, from a checkout of the repository on the server:
+
+   ```sh
+   /usr/local/sbin/with-deploy-lock site/deploy/umami/install.sh
+   ```
+
+   It creates the `umami` user, role, database and
+   `/etc/web-apps/umami/umami.env`, builds the pinned Umami release from
+   GitHub as the `umami` user, and starts the service. The first build
+   creates the login `admin` with the password `umami`.
+
+2. Open the dashboard through an SSH tunnel from your own machine, then go to
+   <http://localhost:4318>:
+
+   ```sh
+   ssh -N -L 4318:127.0.0.1:4318 root@ubuntu-vm
+   ```
+
+3. Sign in as `admin` / `umami` and change the password at once (Settings,
+   Profile).
+4. Add a website: name `C From The Ground Up`, domain `cfromthegroundup.com`.
+   Copy its website ID (a UUID).
+5. Put the ID in `UMAMI_WEBSITE_ID` in `site/src/lib/analytics.ts`, commit,
+   and deploy as usual. Check that a page view appears in the dashboard, and
+   that the tracker answers through Caddy:
+
+   ```sh
+   curl -sI https://cfromthegroundup.com/stats/script.js | head -1   # HTTP/2 200
+   ```
+
+To turn analytics off, set `UMAMI_WEBSITE_ID` back to `''` and deploy; to
+remove Umami, `systemctl disable --now umami` as well. The `umami` database
+is not in the nightly backup: losing it loses only statistics.
+
 ## Rollback
 
 Cutover prints the exact rollback command. In general:

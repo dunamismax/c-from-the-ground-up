@@ -1,21 +1,32 @@
 <script lang="ts">
 	import PageMeta from '#lib/components/PageMeta.svelte';
+	import { UMAMI_WEBSITE_ID } from '#lib/analytics.js';
+
+	const analytics = UMAMI_WEBSITE_ID !== '';
 	import { GITHUB_URL } from '#lib/site.js';
 	import { SESSION_DAYS } from '#lib/session.js';
 </script>
 
 <PageMeta
 	title="Privacy"
-	description="What C From The Ground Up stores about you, why, and how to get it or delete it. No ads, no trackers."
+	description="What C From The Ground Up stores about you, why, and how to get it or delete it. No ads, no third-party trackers."
 />
 
 <div class="mx-auto max-w-prose px-4 py-12 sm:px-6">
 	<h1 class="text-title font-bold">Privacy</h1>
 	<div class="prose mt-8">
-		<p>
-			C From The Ground Up has no ads, no analytics and no trackers, and it never sells or shares
-			your data. You can take the whole course without an account.
-		</p>
+		{#if analytics}
+			<p>
+				C From The Ground Up has no ads and no third-party trackers, and it never sells or shares
+				your data. It counts page views with its own copy of Umami, described below. You can take
+				the whole course without an account.
+			</p>
+		{:else}
+			<p>
+				C From The Ground Up has no ads, no analytics and no trackers, and it never sells or shares
+				your data. You can take the whole course without an account.
+			</p>
+		{/if}
 
 		<h2 id="without-an-account">Without an account</h2>
 		<p>
@@ -53,6 +64,18 @@
 			through GitHub while you sign in. They are only used by this site, and signing out removes
 			them.
 		</p>
+
+		{#if analytics}
+			<h2 id="page-statistics">Page statistics</h2>
+			<p>
+				To see which lessons help and where learners stop, the site counts page views with
+				<a href="https://umami.is">Umami</a>, running on our own server. For each page view it
+				records the page, the page you came from, your browser, operating system, device type,
+				screen size, language and country. It sets no cookies and does not store your IP address,
+				and nothing is shared with anyone else. If your browser sends a Do Not Track signal, nothing
+				is recorded at all.
+			</p>
+		{/if}
 
 		<h2 id="where">Where it is kept</h2>
 		<p>
