@@ -10,6 +10,7 @@
 #   make smoke-linux        smoke check on Linux (Docker), with GCC and Clang
 #   make sanitize           lessons under ASan/UBSan/LSan, MSan and TSan
 #   make sanitize-linux     the same on Linux (Docker), where MSan works
+#   make fuzz               fuzz the lesson 34 and 35 parsers (libFuzzer)
 #   make format             apply .clang-format to the lesson sources
 #   make tidy               clang-tidy with .clang-tidy (static analysis)
 #   make analyze GCC=gcc-15 GCC's static analyzer (-fanalyzer)
@@ -19,12 +20,12 @@
 CC ?= cc
 PYTHON ?= python3
 
-.PHONY: help verify sync check-sync book serve smoke smoke-all smoke-linux sanitize sanitize-linux format check-format tidy analyze site-verify site-e2e clean
+.PHONY: help verify sync check-sync book serve smoke smoke-all smoke-linux sanitize sanitize-linux fuzz fuzz-linux format check-format tidy analyze site-verify site-e2e clean
 
 help:
-	@sed -n '3,18p' Makefile
+	@sed -n '3,19p' Makefile
 
-verify: check-sync check-format tidy book smoke-all sanitize site-verify
+verify: check-sync check-format tidy book smoke-all sanitize fuzz site-verify
 
 sync:
 	$(PYTHON) scripts/sync_chapters.py
@@ -88,6 +89,7 @@ analyze:
 # MemorySanitizer is skipped where it cannot run (macOS). CI runs it on Linux
 # with SANITIZERS_REQUIRED=1, so nothing is skipped there.
 SANITIZE_CC ?= clang
+FUZZ_RUNS ?= 10000
 sanitize:
 	CC=$(SANITIZE_CC) sh scripts/sanitizer_check.sh
 
@@ -100,6 +102,21 @@ sanitize-linux:
 			apt-get update -qq >/dev/null; \
 			apt-get install -y -qq libncurses-dev clang >/dev/null 2>&1; \
 			CC=clang SANITIZERS_REQUIRED=1 sh scripts/sanitizer_check.sh'
+
+# Fuzz the parsers of lessons 34 and 35 (scripts/fuzz_check.sh, targets in
+# fuzz/). Needs a Clang with libFuzzer; Apple's Clang has none, so the check
+# is skipped there unless FUZZ_REQUIRED=1. FUZZ_RUNS=1000000 hunts longer.
+fuzz:
+	CC=$(SANITIZE_CC) sh scripts/fuzz_check.sh
+
+# The same on Linux, where LeakSanitizer also watches every input.
+fuzz-linux:
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts fuzz | \
+		docker run --rm -i --security-opt seccomp=unconfined $(LINUX_IMAGE) sh -c '\
+			set -e; mkdir /r; cd /r; tar xf -; \
+			apt-get update -qq >/dev/null; \
+			apt-get install -y -qq libncurses-dev clang >/dev/null 2>&1; \
+			CC=clang FUZZ_REQUIRED=1 FUZZ_RUNS=$(FUZZ_RUNS) sh scripts/fuzz_check.sh'
 
 # The course website in site/ (SvelteKit). Needs Node 24+ and npm.
 site-verify:

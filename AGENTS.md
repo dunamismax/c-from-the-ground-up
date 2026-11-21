@@ -136,6 +136,7 @@ Part 5 - Expert Systems & Application Development/  lessons 31-35
     31_make_files_for_multi_file_projects/          the only multi-file lesson (own Makefile)
 Part 6 - The Toolsmith Path_ Debugging, UB and Testing/  lessons 36-38
 tests/                                              unit tests for lessons 20 and 28 (lesson 38's `#define main` trick); the smoke and sanitizer checks run them
+fuzz/                                               libFuzzer targets for the lesson 34 and 35 parsers, with seed inputs in fuzz/corpus/<target>/
 src/SUMMARY.md                                      book table of contents (mdBook)
 src/index.md                                        book introduction page
 src/setup.md, src/glossary.md                       book setup chapter and glossary (the site renders the glossary at /glossary)
@@ -145,13 +146,14 @@ scripts/smoke_check.sh                              compiles every lesson and ru
 scripts/check_book_links.py                         checks internal links and anchors in the built book/
 scripts/sanitizer_check.sh                          runs the lessons under ASan/UBSan/LSan, MSan and TSan
 scripts/pty_run.py                                  runs an ncurses lesson in a pseudo-terminal with scripted keys
+scripts/fuzz_check.sh                               builds and runs the fuzz targets (`make fuzz`)
 Makefile                                            maintainer entry points (not a lesson)
 .clang-format                                       lesson code style; `make format`, checked in CI
 .clangd                                             editor flags for the lessons (the smoke check's warnings)
 .clang-tidy                                         static-analysis checks, and why some are off; `make tidy`
 book.toml                                           mdBook config; output goes to book/ (git-ignored)
 book-theme/                                         book-only script and style: a link on every page to the lesson on the site
-.github/workflows/verify.yml                        CI: listing and format checks, mdbook build and link check, smoke check (clang + gcc), sanitizers, clang-tidy and GCC analyzer, site
+.github/workflows/verify.yml                        CI: listing and format checks, mdbook build and link check, smoke check (clang + gcc), sanitizers and fuzzing, clang-tidy and GCC analyzer, site
 .github/workflows/deploy.yml                        publishes the book to GitHub Pages on push to main (or run by hand)
 assets/images/site/                                 screenshots of the site used by README.md
 site/                                               the course website, cfromthegroundup.com (see below)
@@ -190,7 +192,7 @@ block:
 ## Verification
 
 ```sh
-make verify              # check-sync + check-format + tidy + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + site-verify
+make verify              # check-sync + check-format + tidy + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + fuzz + site-verify
 make format              # apply .clang-format to the lessons, then run make sync
 make tidy                # clang-tidy over the lessons (fails on any finding)
 make analyze GCC=gcc-16  # GCC -fanalyzer over the lessons (needs real GCC)
@@ -201,6 +203,8 @@ make smoke CC=clang      # one compiler only
 make smoke-linux         # smoke check under glibc in Docker (GCC and Clang)
 make sanitize            # sanitizer check with clang (MSan is skipped on macOS)
 make sanitize-linux      # sanitizer check in Docker, MSan included
+make fuzz                # fuzz the lesson 34 and 35 parsers (skipped where Clang has no libFuzzer)
+make fuzz-linux          # the same in Docker, where LeakSanitizer watches too
 make serve               # live preview at http://localhost:3000
 ```
 
@@ -229,6 +233,9 @@ What `scripts/smoke_check.sh` does:
     commands and line numbers, and an overlong line
   - lesson 28: `run_hash_table_check`, including the bucket its comment says
     "age" and "city" collide in
+  - lesson 34: `run_data_parser_check` parses the sample file from its
+    comments, a file with an overlong line, 12 records (it keeps 10) and a
+    missing file
   - lessons 36-38: `run_toolsmith_checks` checks their output, builds 36 with
     `-DSHOW_BUG` and 37 with `-DSHOW_UB` and expects the AddressSanitizer and
     UBSan reports the lessons describe, and compiles and runs `tests/*.c`
@@ -258,7 +265,29 @@ What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
   (the default runs it with empty stdin and no arguments). A lesson that
   leaks, reads uninitialized memory or races fails this check.
 
-Requirements: a C compiler (Clang and GCC in CI; Clang for `make sanitize`),
+What `scripts/fuzz_check.sh` does (a step of the `sanitizers` CI job, with
+`FUZZ_REQUIRED=1`):
+
+- Builds each `fuzz/fuzz_<target>.c` with libFuzzer, ASan and UBSan and runs
+  it for `FUZZ_RUNS` inputs (10000 by default), starting from the seed files
+  in `fuzz/corpus/<target>/`. `data_parser` feeds bytes to lesson 34's
+  `parse_with_sscanf()`; `world_map` loads them with lesson 35's
+  `load_world()`, checks every exit points at a loaded room, and calls
+  `cleanup()`. Renaming those functions, or `find_room_by_id()`, breaks the
+  targets.
+- Fails on a crash, a sanitizer report, a leak or a hang, and saves the input
+  in `fuzz/artifacts/` (git-ignored; CI uploads it). Replay one with
+  `FUZZ_REPRODUCE=<file> sh scripts/fuzz_check.sh <target>`. When a fuzzer
+  finds a bug, fix the lesson and add the input to the target's seed corpus
+  in the same commit, so it is replayed on every run.
+- Apple's Clang and GCC have no libFuzzer; the check is skipped there with a
+  message. Homebrew's LLVM has it (`make fuzz SANITIZE_CC=/opt/homebrew/opt/llvm/bin/clang`).
+- **A new lesson that parses a file or other untrusted input should get a
+  target**: `fuzz/fuzz_<name>.c`, seeds in `fuzz/corpus/<name>/`, and its
+  name in `TARGETS` in the script.
+
+Requirements: a C compiler (Clang and GCC in CI; Clang for `make sanitize`
+and `make fuzz`),
 clang-format and clang-tidy 23 (`pipx install clang-format==23.1.5` and
 `clang-tidy==23.1.4`, or Homebrew's LLVM),
 ncurses headers (`libncurses-dev` on Debian/Ubuntu), `make`, Python 3.8+,

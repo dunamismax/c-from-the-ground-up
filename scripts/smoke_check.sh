@@ -433,6 +433,45 @@ run_text_editor_check() {
     fi
 }
 
+# Lesson 34: the sample file its comments give, its limits, and a line longer
+# than the line buffer whose tail looks like a record (the tail was once
+# parsed as a user of its own).
+run_data_parser_check() {
+    parser_bin=$BUILD_DIR/34_parsing_data_files
+    parser_dir=$BUILD_DIR/parser
+    mkdir -p "$parser_dir"
+
+    printf '101,alpha_coder,15,1\n102,bit_wizard,22,1\n205,kernel_hacker,45,0\nthis is a bad line and should be skipped\n310,logic_lord,33,1\n404,syntax_sorcerer,99,1\n' > "$parser_dir/users.dat"
+    run_lesson_with_args "$parser_bin" "$parser_dir/users.dat"
+    expect_status 0 "Lesson 34 failed on its own sample file."
+    expect_contains "$RUN_OUTPUT" "Successfully parsed 5 user records:" "Lesson 34 did not parse its 5 sample records."
+    expect_contains "$RUN_OUTPUT" "Warning: Malformed line skipped: this is a bad line and should be skipped" "Lesson 34 did not warn about the bad line."
+    expect_contains "$RUN_OUTPUT" "  User ID: 205   | Username: kernel_hacker   | Level: 45  | Active: No" "Lesson 34 printed a record wrongly."
+
+    # 255 characters fill the buffer exactly, so the next read starts at "7".
+    # The last line has no newline and must still count.
+    awk 'BEGIN { printf "1,first,1,1\n"; for (i = 0; i < 255; i++) printf "x"; printf "7,ghost,3,1\n2,last,2,0" }' > "$parser_dir/long.dat"
+    run_lesson_with_args "$parser_bin" "$parser_dir/long.dat"
+    expect_status 0 "Lesson 34 failed on a file with an overlong line."
+    expect_contains "$RUN_OUTPUT" "Warning: Overlong line skipped." "Lesson 34 did not warn about an overlong line."
+    expect_not_contains "$RUN_OUTPUT" "ghost" "Lesson 34 parsed the tail of an overlong line as a record."
+    expect_contains "$RUN_OUTPUT" "Successfully parsed 2 user records:" "Lesson 34 miscounted around an overlong line."
+    expect_contains "$RUN_OUTPUT" "Username: last " "Lesson 34 dropped a last line that has no newline."
+
+    # The lesson says it keeps at most MAX_USERS (10) records.
+    awk 'BEGIN { for (i = 1; i <= 12; i++) printf "%d,user%d,1,1\n", i, i }' > "$parser_dir/many.dat"
+    run_lesson_with_args "$parser_bin" "$parser_dir/many.dat"
+    expect_status 0 "Lesson 34 failed on a file with 12 records."
+    expect_contains "$RUN_OUTPUT" "Successfully parsed 10 user records:" "Lesson 34 did not stop at 10 records."
+
+    run_lesson_with_args "$parser_bin" "$parser_dir/missing.dat"
+    expect_status 1 "Lesson 34 did not fail on a missing file."
+    expect_contains "$RUN_OUTPUT" "Error opening file" "Lesson 34 did not explain a missing file."
+    run_lesson_with_args "$parser_bin"
+    expect_status 1 "Lesson 34 ran without a file name."
+    expect_contains "$RUN_OUTPUT" "Usage:" "Lesson 34 did not print its usage."
+}
+
 run_hash_table_check() {
     run_lesson_with_input "$BUILD_DIR/28_hash_table_implementation" ''
     expect_status 0 "Lesson 28 failed."
@@ -666,6 +705,7 @@ run_input_checks
 run_number_argument_checks
 run_text_editor_check
 run_hash_table_check
+run_data_parser_check
 run_toolsmith_checks
 run_sanitizer_regressions
 

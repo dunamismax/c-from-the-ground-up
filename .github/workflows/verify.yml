@@ -56,8 +56,9 @@ jobs:
           CC: ${{ matrix.compiler }}
         run: sh scripts/smoke_check.sh
 
-  # Every lesson under ASan/UBSan/LeakSanitizer and MemorySanitizer, and the
-  # threaded lesson under ThreadSanitizer. Nothing may be skipped here.
+  # Every lesson under ASan/UBSan/LeakSanitizer and MemorySanitizer, the
+  # threaded lesson under ThreadSanitizer, and a short fuzz run of the two
+  # file parsers. Nothing may be skipped here.
   sanitizers:
     runs-on: ubuntu-latest
     steps:
@@ -77,6 +78,23 @@ jobs:
           CC: clang
           SANITIZERS_REQUIRED: '1'
         run: sh scripts/sanitizer_check.sh
+
+      # libFuzzer over the parsers of lessons 34 and 35 (fuzz/), a short run
+      # from the committed seeds. A finding fails the job and the input that
+      # caused it is uploaded.
+      - name: Fuzz the lesson parsers
+        env:
+          CC: clang
+          FUZZ_REQUIRED: '1'
+        run: sh scripts/fuzz_check.sh
+
+      - name: Upload failing fuzz inputs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts/
+          if-no-files-found: ignore
 
   # Static analysis: clang-tidy (.clang-tidy, pinned to the version the
   # config was tuned with) and GCC's -fanalyzer.

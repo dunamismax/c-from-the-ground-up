@@ -738,9 +738,18 @@ checklist in AGENTS.md.
       encryption, `crypto_pwhash` (Argon2id) password hashing, and `crypto_box`
       public-key exchange, all with `sodium_memzero`. This needs a
       `pkg-config` setup, the CI package and README build notes.
-- [ ] **Fuzzing.** Add libFuzzer targets for the lesson 34 data parser and the
+- [x] **Fuzzing.** Add libFuzzer targets for the lesson 34 data parser and the
       lesson 35 map parser in `fuzz/`, with seed corpora and a short CI run
-      (`-runs=10000`).
+      (`-runs=10000`). Done 2026-11-20: `fuzz/fuzz_data_parser.c` and
+      `fuzz/fuzz_world_map.c` include the lessons with `main` renamed,
+      seeds are the lessons' sample files and the bad maps the other checks
+      use, and `scripts/fuzz_check.sh` (`make fuzz`, part of `make verify`,
+      and a step of CI's `sanitizers` job) runs each for 10000 inputs with
+      ASan and UBSan. 200000 inputs per target found nothing. The check
+      itself was proven on scratch copies: with `%49[^,]` changed to
+      `%[^,]` in lesson 34, and the direction-length guard loosened in
+      lesson 35, each target reported the overflow within 10000 inputs.
+      Also run on Linux (`make fuzz-linux`), where LeakSanitizer is on.
 - [ ] **Cross-compilation note.** Show building lesson 1 with `zig cc -target
       x86_64-linux-musl`.
 
@@ -761,6 +770,13 @@ pick them up.
 ---
 
 ## Decision log
+
+- **2026-11-20: go-ahead for the Fuzzing item.** The maintainer asked in chat
+  to "proceed with the BUILD.md file and do as much as you can". That was
+  read as the go-ahead for the Fuzzing item under Content expansion, which
+  is tooling: no new lesson, no new dependency (libFuzzer ships with
+  Clang). The other Content expansion items add lessons or dependencies and
+  still wait for an explicit yes.
 
 - **2026-11-20: the maintainer settled D1-D9.**
   - D1: the lessons teach **C17**. Every `-std=c11` became `-std=c17`, lesson 1
@@ -835,6 +851,19 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** the fuzz check (see the ticked Fuzzing item) and a lesson
+  34 fix found while writing it. A line longer than lesson 34's 256-byte
+  buffer was read in pieces, and a piece that looked like a record became
+  a user: 255 `x`s followed by `7,ghost,3,1` gave a user called `ghost`.
+  The loop now discards the whole line with a warning (`strchr`, `feof` and
+  the `fgetc` loop, all taught by Lesson 25) and stops if that line was the
+  last. The lesson also says `%d` cannot report overflow and points to
+  `strtol`. Chapter 34 gained a "Lines That Do Not Fit" section. Lesson 34
+  had no behavioural check; `run_data_parser_check` in the smoke check now
+  covers the sample file, the overlong line (it failed against the old
+  lesson), the 10-record limit, a last line with no newline and a missing
+  file. Both overlong inputs are fuzz seeds.
 
 - **2026-11-20:** code snippets in lesson prose were set in the sans-serif
   font at 16px instead of the monospace font, on every lesson page since W3:

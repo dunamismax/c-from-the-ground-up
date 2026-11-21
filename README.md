@@ -157,8 +157,9 @@ It checks that the book's listings match the `.c` files and that the lessons
 are formatted, runs clang-tidy over them, builds the book and checks its links,
 compiles every lesson with warnings as errors under Clang and GCC (and runs
 behavioural checks on the interactive ones), runs the lessons under
-AddressSanitizer, UndefinedBehaviorSanitizer and LeakSanitizer, and
-type-checks, lints, tests and builds the website. If your local GCC is
+AddressSanitizer, UndefinedBehaviorSanitizer and LeakSanitizer, fuzzes the two
+file parsers (lessons 34 and 35) where Clang has libFuzzer, and type-checks,
+lints, tests and builds the website. If your local GCC is
 versioned, point at it with `make verify GCC=gcc-15`; on macOS, plain `gcc` is
 usually Clang under another name. The website's end-to-end tests run with
 `make site-e2e`.

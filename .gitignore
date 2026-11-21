@@ -9,6 +9,9 @@ site/.env
 site/test-results/
 site/playwright-report/
 
+# Inputs the fuzz check saves when it finds a failure (scripts/fuzz_check.sh)
+fuzz/artifacts/
+
 # Prerequisites
 *.d
 

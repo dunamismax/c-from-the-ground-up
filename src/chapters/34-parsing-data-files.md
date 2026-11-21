@@ -1,6 +1,6 @@
 # Parsing Data Files
 
-> **What you'll learn:** parsing a CSV data file into structs with `sscanf`, checking every line, and why `strtok` needs more care.
+> **What you'll learn:** parsing a CSV data file into structs with `sscanf`, checking every line, skipping lines that are too long, and why `strtok` needs more care.
 >
 > **Before you start:** Lessons 12, 14 and 15.
 
@@ -39,6 +39,39 @@ int items_scanned = sscanf(line, "%d,%49[^,],%d,%d",
 `%49[^,]` reads up to 49 characters that are not a comma, which leaves room
 for the `\0` in the 50-character `username`. A well-formed line gives 4, so
 any other result means the line is malformed and is skipped.
+
+One weakness to know about: `%d` cannot tell you that a number was too big
+for an `int`. For numbers you do not trust, read the digits as text and
+convert them with `strtol`, which reports the overflow, as Lesson 15 does.
+
+## Lines That Do Not Fit
+
+`fgets` stops when `line` is full. If a line in the file is longer than
+that, `line` holds only its first part, with no `\n` at the end, and the
+rest is still waiting in the file. The next `fgets` would return that
+leftover as if it were a new line, and it might even look like a valid
+record. So the loop throws the whole line away before it parses anything:
+
+```c
+if (strchr(line, '\n') == NULL && !feof(file))
+{
+    int ch;
+
+    while ((ch = fgetc(file)) != '\n' && ch != EOF)
+    {
+        // Discard the rest of the overlong line.
+    }
+    fprintf(stderr, "Warning: Overlong line skipped.\n");
+    if (ch == EOF)
+    {
+        break; // That was the last line: nothing is left to read.
+    }
+    continue;
+}
+```
+
+The last line of a file may have no `\n` and still be complete; `feof` tells
+us when that is the reason.
 
 ## For Reference: Parsing with strtok()
 
@@ -118,7 +151,7 @@ complete version would also check `strtol`'s end pointer, as Lesson 15 does.
  */
 
 #include <stdio.h>
-#include <string.h> // For strtok(), shown in the reference section below
+#include <string.h> // For strchr(), and strtok() in the reference section below
 
 #define MAX_LINE_LENGTH 256
 #define MAX_USERS 10
@@ -179,11 +212,35 @@ void parse_with_sscanf(FILE *file)
     int user_count = 0;
 
     // We read the file line by line using `fgets`. This is safe because it
-    // prevents buffer overflows by never reading more than `MAX_LINE_LENGTH`
-    // characters at a time.
+    // prevents buffer overflows by never storing more than `MAX_LINE_LENGTH`
+    // characters (including the final '\0') at a time.
     while (fgets(line, sizeof(line), file) != NULL && user_count < MAX_USERS)
     {
         User current_user;
+
+        // `fgets` stops when `line` is full. If a line in the file is longer
+        // than that, `line` holds only its first part (with no '\n' at the
+        // end) and the rest is still waiting in the file. The next `fgets`
+        // would return that leftover as if it were a new line, and it might
+        // even look like a valid record. So we throw the whole line away:
+        // read and discard characters up to the newline, as Lesson 17 did
+        // for keyboard input. (The last line of a file may have no '\n' and
+        // still be complete; `feof` tells us when that is the reason.)
+        if (strchr(line, '\n') == NULL && !feof(file))
+        {
+            int ch;
+
+            while ((ch = fgetc(file)) != '\n' && ch != EOF)
+            {
+                // Discard the rest of the overlong line.
+            }
+            fprintf(stderr, "Warning: Overlong line skipped.\n");
+            if (ch == EOF)
+            {
+                break; // That was the last line: nothing is left to read.
+            }
+            continue;
+        }
 
         // This is the core of the sscanf method. Let's break down the format string:
         // "%d"       - Reads an integer (the ID).
@@ -197,6 +254,11 @@ void parse_with_sscanf(FILE *file)
         // CRITICAL: We pass POINTERS to the variables where sscanf should store
         // the data. For integers, we use the address-of operator `&`. For the
         // character array `username`, the name itself decays to a pointer.
+        //
+        // One weakness to know about: `%d` cannot tell you that a number was
+        // too big for an `int` (the result is undefined). For numbers you do
+        // not trust, read the digits as text and convert them with `strtol`,
+        // which reports the overflow, as Lesson 15 does.
         int items_scanned = sscanf(line, "%d,%49[^,],%d,%d",
                                    &current_user.id,
                                    current_user.username,
@@ -310,6 +372,8 @@ void print_user(const User *user)
  *
  *    The program will read `users.dat`, parse its contents, print a warning for
  *    the bad line, and then display the structured data it successfully extracted.
+ *    A line longer than MAX_LINE_LENGTH - 1 (255) characters is skipped with
+ *    its own warning.
  */
 ```
 
