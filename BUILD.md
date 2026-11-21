@@ -11,8 +11,8 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
 | **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. (4) Umami on Node 26: `site/deploy/umami/` still builds and runs Umami with the Node 24 runtime and its corepack (Node 26 has none), so `bin/web-conformance` reports those two files. Moving Umami is a host-wide change for the maintainer to decide. |
-| **Live** | https://cfromthegroundup.com serves `c7fe8d3`, deployed 2026-11-21 (UTC), and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
-| **`main`** | `make verify`, the site e2e tests (72) and `make smoke-linux`, `sanitize-linux` and `fuzz-linux` were green on 2026-11-20 with the Part 1 exercise solutions. CI is green at `c7fe8d3`. |
+| **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC with the new fix-forward cutover: Node 26.13.1, pnpm-built, `pg` driver. Umami v3.4.1 runs on the same host (127.0.0.1:4321, still on the Node 24 runtime) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
+| **`main`** | On 2026-11-21 under Node 26.13.1: `make site-verify` and the 72 e2e tests against `cfromthegroundup_test` on the server, and the C, book and fuzz targets of `make verify` on the Mac. CI has not yet run with pnpm. |
 | **Last updated** | 2026-11-21 |
 
 ### Milestones at a glance
@@ -890,6 +890,20 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-21:** tenth production deploy, commit `4112094` (the platform
+  move below), with the new cutover on its first run: pre-migration dump,
+  the migrator moved the one bookkeeping row to `drizzle` and applied
+  nothing, the candidate passed on 127.0.0.1:4400 under the new unit, the
+  switch installed the unit, `web-live` reported
+  `/opt/node-v26.13.1-linux-x64/bin/node` in the new release with revision
+  `4112094`, and `caddy-apply` reloaded the fragment (comment change only).
+  Public checks through Caddy passed: `/healthz` with the revision, the pages,
+  `/version.txt`, headers, lesson file `Content-Type`, client address, `www`.
+  The old Node 24 process ignored SIGTERM for 35 s and was killed (postgres.js
+  kept it alive); the new build exits in about 0.1 s after SIGTERM with its
+  pool open. `4112094` itself only changed `prepare.sh` to build the release
+  from a clean production install (the first attempt carried 382 MB of
+  devDependencies in `node_modules/.pnpm`; now 55 MB).
 - **2026-11-21:** moved the site to the host's web platform contract
   (Decision log). npm to pnpm 12.18.0 (`pnpm import` from the old lockfile,
   then `pnpm install`), Node 26.13.1 (`.node-version`, `engines`, CI, the
