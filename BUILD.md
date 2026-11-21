@@ -10,10 +10,10 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
 | **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. (4) Say when to deploy `main`: until then the live site still sets prose code snippets in the sans-serif font and has no Solutions sections. |
-| **Live** | https://cfromthegroundup.com serves `ecbc570`, deployed 2026-11-20, and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. `main` is ahead of production: the monospace fix for prose snippets, the lesson 34 fix and the Part 1 solutions are not deployed. |
-| **`main`** | `make verify`, the site e2e tests (72) and `make smoke-linux`, `sanitize-linux` and `fuzz-linux` were green on 2026-11-20 with the Part 1 exercise solutions. CI was last seen green at `c1c1096`. |
-| **Last updated** | 2026-11-20 |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
+| **Live** | https://cfromthegroundup.com serves `c7fe8d3`, deployed 2026-11-21 (UTC), and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
+| **`main`** | `make verify`, the site e2e tests (72) and `make smoke-linux`, `sanitize-linux` and `fuzz-linux` were green on 2026-11-20 with the Part 1 exercise solutions. CI is green at `c7fe8d3`. |
+| **Last updated** | 2026-11-21 |
 
 ### Milestones at a glance
 
@@ -870,6 +870,18 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-21:** ninth production deploy, commit `c7fe8d3`, at the
+  maintainer's request (the monospace fix for prose snippets, the lesson 34
+  fix, the fuzz check and the Part 1 solutions). CI was green first; prepare
+  and cutover passed on the first try (backup taken, no new migrations).
+  Checked from outside: `/version.txt`, `/healthz`, `/api/account` (off),
+  every page type, a 404, the `www` redirect, a lesson file as `text/plain`,
+  the lesson 6 zip with its three solutions, and chapter 34's new section.
+  In a headless browser on the live lesson 6 page: a prose snippet and the
+  listing are both 13px monospace, a solution opens, the chapter's link
+  jumps to `#solutions`, and the console has no errors. No tracker loads
+  yet. `cfromthegroundup`, its backup timer, `umami` and `caddy` are active.
 
 - **2026-11-20:** worked solutions for Part 1's exercises, at the
   maintainer's go-ahead in chat. 27 files in `exercises/<chapter-slug>/`,
