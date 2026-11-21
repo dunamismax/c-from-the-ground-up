@@ -5,16 +5,16 @@ same conventions: Caddy (`/etc/caddy/sites/*.caddy`), the shared Node 24 runtime
 (`/opt/node-runtime`), the shared PostgreSQL 18, and the host-wide deploy lock
 (`/usr/local/sbin/with-deploy-lock`).
 
-| What            | Where                                                                       |
-| --------------- | --------------------------------------------------------------------------- |
-| Releases        | `/srv/www/cfromthegroundup.com/releases/<commit>`, live one at `current`    |
-| App server      | `cfromthegroundup.service`, `node build` on `127.0.0.1:4317`, `DynamicUser` |
-| Caddy site      | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)             |
-| Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`     |
-| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration,accounts}.env` (root only)   |
-| Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer` |
+| What            | Where                                                                               |
+| --------------- | ----------------------------------------------------------------------------------- |
+| Releases        | `/srv/www/cfromthegroundup.com/releases/<commit>`, live one at `current`            |
+| App server      | `cfromthegroundup.service`, `node build` on `127.0.0.1:4317`, `DynamicUser`         |
+| Caddy site      | `/etc/caddy/sites/cfromthegroundup.com.caddy` (automatic HTTPS)                     |
+| Database        | `cfromthegroundup` (schema `app`); roles `_owner`, `_migration`, `_web`             |
+| Credentials     | `/etc/web-apps/cfromthegroundup/{web,migration,accounts}.env` (root only)           |
+| Backups         | `/var/backups/cfromthegroundup/`, daily via `cfromthegroundup-backup.timer`         |
 | Cutover records | `/root/cfromthegroundup-backup-<stamp>-<commit>/` (staged bundle, replaced release) |
-| Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`   |
+| Logs            | `journalctl -u cfromthegroundup`, `/var/log/caddy/cfromthegroundup-*.log`           |
 
 DNS for `cfromthegroundup.com` and `www` points straight at the host (Cloudflare
 "DNS only"), so Caddy gets the certificates itself (BUILD.md D10). If the
