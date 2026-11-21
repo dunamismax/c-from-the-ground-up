@@ -53,6 +53,30 @@ test('the search dialog with results has no detectable WCAG 2.2 AA violations', 
 	expect(results.violations.map((violation) => violation.id)).toEqual([]);
 });
 
+test('a lesson with its solutions open has no detectable WCAG 2.2 AA violations', async ({
+	page
+}) => {
+	for (const theme of ['light', 'dark'] as const) {
+		await page.emulateMedia({ colorScheme: theme });
+		await page.goto('/lessons/06-loops');
+		await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+		for (const summary of await page.locator('details.solution > summary').all()) {
+			await summary.click();
+		}
+		await expect(page.locator('details.solution figure.listing')).toHaveCount(3);
+		const results = await new AxeBuilder({ page })
+			.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+			.analyze();
+		expect(
+			results.violations.map((violation) => ({
+				id: violation.id,
+				targets: violation.nodes.slice(0, 5).map((node) => node.target.join(' '))
+			})),
+			theme
+		).toEqual([]);
+	}
+});
+
 test('a lesson marked complete has no detectable WCAG 2.2 AA violations', async ({ page }) => {
 	await page.goto('/lessons/02-variables-and-data-types');
 	await page.getByRole('button', { name: 'Mark complete' }).click();

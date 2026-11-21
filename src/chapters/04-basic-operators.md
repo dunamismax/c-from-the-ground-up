@@ -284,3 +284,9 @@ start a new one.
 1. Read two integers with `scanf` and print their sum, difference, product, integer quotient and remainder.
 2. Print `7 / 2`, `7.0 / 2` and `(double)7 / 2`. Explain each result.
 3. Write an expression that is 1 when an integer `year` is a leap year (divisible by 4, and not by 100 unless also by 400), and test it on 1900, 2000 and 2024.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/04-basic-operators/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/04-basic-operators)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/04-basic-operators#solutions).

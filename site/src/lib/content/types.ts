@@ -107,6 +107,12 @@ export interface Lesson extends LessonRef {
 	searchSections: SearchSection[];
 	sources: SourceFile[];
 	/**
+	 * Worked solutions to the chapter's "Try It Yourself" exercises, in exercise
+	 * order, from `exercises/<slug>/` in the repository. Empty for a lesson
+	 * that has none yet.
+	 */
+	solutions: SourceFile[];
+	/**
 	 * Extra advice from the chapter's "How to Compile and Run" section, rendered,
 	 * with its commands removed (the page shows `commands` instead). Often ''.
 	 */

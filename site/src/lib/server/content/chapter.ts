@@ -22,6 +22,7 @@ import type { Element, Root as HastRoot, RootContent as HastContent } from 'hast
 import type { Root as MdRoot, RootContent as MdContent, Paragraph } from 'mdast';
 import type { SearchSection, Segment, TocEntry } from '#lib/content/types.js';
 import { rehypeShiki } from './highlight.js';
+import { rewriteLinks } from './page.js';
 
 const MARKER_RE = /^<!-- source: (.+?) -->$/;
 export const RUN_HEADING = 'How to Compile and Run';
@@ -144,6 +145,8 @@ export async function renderChapter(
 ): Promise<RenderedChapter> {
 	const pipeline = processor(highlighter);
 	const hast: HastRoot = await pipeline.run(chapter.body);
+	// Links to the site's own address become paths (see siteHref).
+	rewriteLinks(hast);
 
 	const segments: Segment[] = [];
 	const toc: TocEntry[] = [];
@@ -200,6 +203,7 @@ export async function renderChapter(
 	let runNotesHtml = '';
 	if (chapter.run) {
 		const notes: HastRoot = await pipeline.run(runNotes(chapter.run));
+		rewriteLinks(notes);
 		runNotesHtml = toHtml(notes).trim();
 	}
 

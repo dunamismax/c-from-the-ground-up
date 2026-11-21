@@ -100,6 +100,29 @@
 			{/if}
 		{/each}
 
+		{#if lesson.solutions.length > 0}
+			<section aria-labelledby="solutions" class="mt-10">
+				<div class="prose max-w-prose">
+					<h2 id="solutions">Solutions</h2>
+					<p>
+						One worked solution for each exercise above, with the reasoning in its comments. They
+						stay closed until you open them: have a go first, then compare.
+					</p>
+				</div>
+				{#each lesson.solutions as solution, i (solution.id)}
+					<details class="solution group mt-4">
+						<summary
+							class="max-w-prose cursor-pointer rounded-lg border border-line bg-raised px-4 py-2.5 text-sm font-medium hover:border-line-strong"
+						>
+							<span class="group-open:hidden">Show the solution to exercise {i + 1}</span>
+							<span class="hidden group-open:inline">Hide the solution to exercise {i + 1}</span>
+						</summary>
+						<CodeBlock source={solution} />
+					</details>
+				{/each}
+			</section>
+		{/if}
+
 		<div class="max-w-prose">
 			<CompleteToggle slug={lesson.slug} />
 			<PrevNext prev={lesson.prev} next={lesson.next} />

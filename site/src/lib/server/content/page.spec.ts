@@ -13,6 +13,16 @@ describe('siteHref', () => {
 		);
 	});
 
+	it('turns links to the site itself into paths', () => {
+		expect(siteHref('https://cfromthegroundup.com/lessons/06-loops#solutions')).toBe(
+			'/lessons/06-loops#solutions'
+		);
+		expect(siteHref('https://cfromthegroundup.com')).toBe('/');
+		expect(siteHref('https://cfromthegroundup.com.example/x')).toBe(
+			'https://cfromthegroundup.com.example/x'
+		);
+	});
+
 	it('leaves other links alone', () => {
 		expect(siteHref('https://example.com/a.md')).toBe('https://example.com/a.md');
 		expect(siteHref('setup.md')).toBe('setup.md');

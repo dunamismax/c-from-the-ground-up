@@ -22,6 +22,11 @@ Besides refreshing listings, the script fails if:
   - a lesson source file (*.c, *.h, Makefile under Part */) has no marker,
     or has more than one
   - a chapter file in src/chapters/ is not listed in src/SUMMARY.md
+  - a directory of worked exercise solutions, exercises/<chapter>/, does not
+    match its chapter: it must be named after a chapter file, hold exactly
+    one solution for each of the chapter's exercises (1_*.c, 2_*.c, ...),
+    each quoting its exercise word for word after "THE EXERCISE:", and the
+    chapter must link to the directory
 
 Standard library only; Python 3.8+.
 """
@@ -108,6 +113,100 @@ def sync_chapter(chapter: Path, errors: list[str], seen: dict[Path, list[str]]) 
     return "\n".join(out)
 
 
+EXERCISES_DIR = ROOT / "exercises"
+EXERCISE_ITEM_RE = re.compile(r"^(?P<number>\d+)\. (?P<text>.+)$")
+SOLUTION_NAME_RE = re.compile(r"^(?P<number>\d+)_[a-z0-9_]+\.c$")
+
+
+def squash(text: str) -> str:
+    """Collapse runs of whitespace, so re-wrapped text compares equal."""
+    return " ".join(text.split())
+
+
+def chapter_exercises(chapter: Path) -> dict[int, str]:
+    """The numbered items under a chapter's "## Try It Yourself" heading."""
+    items: dict[int, str] = {}
+    in_section = False
+    for line in chapter.read_text(encoding="utf-8").split("\n"):
+        if line.startswith("## "):
+            in_section = line.strip() == "## Try It Yourself"
+            continue
+        item = EXERCISE_ITEM_RE.match(line) if in_section else None
+        if item:
+            items[int(item.group("number"))] = squash(item.group("text"))
+    return items
+
+
+def quoted_exercise(solution: Path) -> str | None:
+    """The exercise text a solution quotes in its header comment."""
+    lines = solution.read_text(encoding="utf-8").split("\n")
+    for index, line in enumerate(lines):
+        if line.strip() != "* THE EXERCISE:":
+            continue
+        quoted = []
+        for following in lines[index + 1 :]:
+            text = following.strip()
+            if text in {"*", "*/"}:
+                break
+            quoted.append(text.lstrip("*").strip())
+        return squash(" ".join(quoted))
+    return None
+
+
+def check_exercises(errors: list[str]) -> int:
+    """Check every exercises/<chapter>/ directory against its chapter."""
+    count = 0
+    if not EXERCISES_DIR.is_dir():
+        return count
+
+    for directory in sorted(EXERCISES_DIR.iterdir()):
+        rel_dir = directory.relative_to(ROOT).as_posix()
+        if not directory.is_dir():
+            errors.append(f"{rel_dir}: only chapter directories belong in exercises/")
+            continue
+        chapter = CHAPTERS_DIR / f"{directory.name}.md"
+        if not chapter.is_file():
+            errors.append(f"{rel_dir}: no chapter named src/chapters/{directory.name}.md")
+            continue
+
+        exercises = chapter_exercises(chapter)
+        solutions: dict[int, Path] = {}
+        for path in sorted(directory.iterdir()):
+            rel = path.relative_to(ROOT).as_posix()
+            name = SOLUTION_NAME_RE.match(path.name)
+            if not name:
+                errors.append(f"{rel}: solutions are named <exercise number>_<snake_case>.c")
+                continue
+            number = int(name.group("number"))
+            if number in solutions:
+                errors.append(f"{rel}: exercise {number} already has {solutions[number].name}")
+                continue
+            solutions[number] = path
+
+        for number in sorted(set(exercises) - set(solutions)):
+            errors.append(f"{rel_dir}: no solution for exercise {number} of {chapter.name}")
+        for number, path in sorted(solutions.items()):
+            rel = path.relative_to(ROOT).as_posix()
+            count += 1
+            if number not in exercises:
+                errors.append(f"{rel}: {chapter.name} has no exercise {number}")
+                continue
+            quoted = quoted_exercise(path)
+            if quoted is None:
+                errors.append(f"{rel}: no 'THE EXERCISE:' block in the header comment")
+            elif quoted != exercises[number]:
+                errors.append(
+                    f"{rel}: 'THE EXERCISE:' does not match exercise {number} in {chapter.name}\n"
+                    f"    chapter:  {exercises[number]}\n"
+                    f"    solution: {quoted}"
+                )
+
+        if f"exercises/{directory.name}" not in chapter.read_text(encoding="utf-8"):
+            errors.append(f"src/chapters/{chapter.name}: does not link to {rel_dir}/")
+
+    return count
+
+
 def main(argv: list[str]) -> int:
     check = "--check" in argv[1:]
     errors: list[str] = []
@@ -135,6 +234,8 @@ def main(argv: list[str]) -> int:
         if f"(chapters/{chapter.name})" not in summary:
             errors.append(f"src/chapters/{chapter.name}: not listed in src/SUMMARY.md")
 
+    solution_count = check_exercises(errors)
+
     for error in errors:
         print(f"error: {error}", file=sys.stderr)
 
@@ -149,7 +250,10 @@ def main(argv: list[str]) -> int:
 
     if errors:
         return 1
-    print(f"Chapter listings in sync ({sum(len(v) for v in seen.values())} embedded sources).")
+    print(
+        f"Chapter listings in sync ({sum(len(v) for v in seen.values())} embedded sources); "
+        f"{solution_count} exercise solutions match their chapters."
+    )
     return 0
 
 

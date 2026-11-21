@@ -316,3 +316,9 @@ start a new one.
 1. Read a temperature in Celsius and print "freezing", "cold", "mild" or "hot" for ranges you choose.
 2. Reject grades outside 0-100 with an error message before the grade chain runs.
 3. Read three integers and print the largest. Make sure it works when two of them are equal.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/05-conditional-statements/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/05-conditional-statements)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/05-conditional-statements#solutions).

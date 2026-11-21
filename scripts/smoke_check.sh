@@ -482,6 +482,129 @@ run_hash_table_check() {
     expect_contains "$RUN_OUTPUT" '["city": "Los Angeles"]' "Lesson 28 did not update a key."
 }
 
+# run_exercise <chapter>/<name> <stdin text>: run one worked solution.
+# Sets RUN_OUTPUT and RUN_STATUS.
+run_exercise() {
+    run_lesson_with_input "$BUILD_DIR/exercise_$(printf '%s' "$1" | tr '/' '_')" "$2"
+}
+
+# expect_exercise <chapter>/<name> <stdin text> <status> <expected output>
+expect_exercise() {
+    run_exercise "$1" "$2"
+    expect_status "$3" "Exercise solution $1 exited with the wrong status for input: $2"
+    expect_contains "$RUN_OUTPUT" "$4" "Exercise solution $1 did not print \"$4\" for input: $2"
+}
+
+# The worked solutions in exercises/<chapter>/ meet the same bar as the
+# lessons: each compiles warning-free under the taught standard and the newer
+# one, none hangs or crashes on end of input or garbage, and each prints the
+# answer its comments promise.
+run_exercise_checks() {
+    exercise_count=0
+    for solution in "$ROOT_DIR"/exercises/*/*.c; do
+        [ -f "$solution" ] || continue
+        chapter=$(basename "$(dirname "$solution")")
+        name=$(basename "$solution" .c)
+        binary=$BUILD_DIR/exercise_${chapter}_$name
+        extra_flags=
+        case "$chapter/$name" in
+            07-functions/3_definition_order)
+                # The exercise is to delete a prototype and see that a
+                # definition above main is enough, so this one file cannot
+                # satisfy -Wmissing-prototypes. Its comments say so.
+                extra_flags=-Wno-missing-prototypes
+                ;;
+        esac
+
+        "$CC" $EFFECTIVE_CFLAGS $extra_flags "$solution" -o "$binary"
+        if [ "$newer_count" -gt 0 ]; then
+            "$CC" $BASE_CFLAGS $NEWER_STANDARD $extra_flags "$solution" -o "$binary.newer"
+        fi
+
+        # Status 0 or 1 is the solution's own answer; anything else is a
+        # crash. run_lesson_with_input fails on a hang.
+        for input in '' 'abc\n' '\n\n\n' '-1\n0\n'; do
+            run_lesson_with_input "$binary" "$input"
+            if [ "$RUN_STATUS" -gt 1 ]; then
+                fail_with_output "Exercise solution $chapter/$name crashed (status $RUN_STATUS) for input: $input" "$RUN_OUTPUT"
+            fi
+        done
+        exercise_count=$((exercise_count + 1))
+    done
+    [ "$exercise_count" -gt 0 ] || return 0
+
+    run_exercise 01-hello-world/2_three_lines ''
+    three_lines=$(printf 'Roses are red,\nViolets are blue,\nC is a language.')
+    if [ "$RUN_OUTPUT" != "$(printf '%s\n%s' "$three_lines" "$three_lines")" ]; then
+        fail_with_output "Exercise solution 01-hello-world/2_three_lines did not print the same three lines twice." "$RUN_OUTPUT"
+    fi
+    expect_exercise 02-variables-and-data-types/1_player_health '' 0 "Player health: 87.5"
+    expect_exercise 02-variables-and-data-types/2_decimal_places '' 0 "With %.0f: 20"
+    expect_contains "$RUN_OUTPUT" "With %.1f: 20.0" "Exercise solution 2_decimal_places printed %.1f wrongly."
+    expect_contains "$RUN_OUTPUT" "With %.3f: 19.990" "Exercise solution 2_decimal_places printed %.3f wrongly."
+    expect_exercise 02-variables-and-data-types/3_character_codes '' 0 "As a number:    65"
+    expect_contains "$RUN_OUTPUT" "The character '7' has the code 55." "Exercise solution 3_character_codes printed the wrong code."
+
+    expect_exercise 03-user-input/1_age_this_year '2026\n1990\n' 0 "This year you turn 36."
+    expect_exercise 03-user-input/2_what_scanf_returns '42\n' 0 "scanf returned 1."
+    expect_exercise 03-user-input/2_what_scanf_returns 'abc\n' 1 "scanf returned 0."
+    expect_exercise 03-user-input/2_what_scanf_returns '' 1 "scanf returned -1."
+    expect_exercise 03-user-input/3_leftover_newline '3.8\nx\n' 0 "Its character code is 10."
+
+    expect_exercise 04-basic-operators/1_five_results '17\n5\n' 0 "17 / 5 = 3"
+    expect_contains "$RUN_OUTPUT" "17 % 5 = 2" "Exercise solution 1_five_results printed the wrong remainder."
+    expect_exercise 04-basic-operators/1_five_results '7\n0\n' 1 "Cannot divide by zero"
+    expect_exercise 04-basic-operators/2_three_divisions '' 0 "7 / 2         = 3"
+    expect_contains "$RUN_OUTPUT" "7.0 / 2       = 3.500000" "Exercise solution 2_three_divisions divided 7.0 / 2 wrongly."
+    expect_contains "$RUN_OUTPUT" "(double)7 / 2 = 3.500000" "Exercise solution 2_three_divisions divided (double)7 / 2 wrongly."
+    expect_exercise 04-basic-operators/3_leap_year '' 0 "Is 1900 a leap year? 0"
+    expect_contains "$RUN_OUTPUT" "Is 2000 a leap year? 1" "Exercise solution 3_leap_year is wrong about 2000."
+    expect_contains "$RUN_OUTPUT" "Is 2024 a leap year? 1" "Exercise solution 3_leap_year is wrong about 2024."
+
+    expect_exercise 05-conditional-statements/1_temperature '-0.5\n' 0 "is freezing."
+    expect_exercise 05-conditional-statements/1_temperature '0\n' 0 "is cold."
+    expect_exercise 05-conditional-statements/1_temperature '10\n' 0 "is mild."
+    expect_exercise 05-conditional-statements/1_temperature '25\n' 0 "is hot."
+    expect_exercise 05-conditional-statements/2_grade_range '101\n' 1 "Error: 101 is not a grade between 0 and 100."
+    expect_exercise 05-conditional-statements/2_grade_range '-1\n' 1 "Error: -1 is not a grade between 0 and 100."
+    expect_exercise 05-conditional-statements/2_grade_range '100\n' 0 "Your letter grade is A."
+    expect_exercise 05-conditional-statements/2_grade_range '0\n' 0 "Your letter grade is F."
+    expect_exercise 05-conditional-statements/3_largest_of_three '5\n5\n3\n' 0 "The largest is 5."
+    expect_exercise 05-conditional-statements/3_largest_of_three '3\n5\n5\n' 0 "The largest is 5."
+    expect_exercise 05-conditional-statements/3_largest_of_three '5\n3\n5\n' 0 "The largest is 5."
+    expect_exercise 05-conditional-statements/3_largest_of_three '4\n4\n4\n' 0 "The largest is 4."
+    expect_exercise 05-conditional-statements/3_largest_of_three '-3\n-1\n-2\n' 0 "The largest is -1."
+
+    expect_exercise 06-loops/1_multiplication_table '7\n' 0 " 1 x 7 = 7"
+    expect_contains "$RUN_OUTPUT" "10 x 7 = 70" "Exercise solution 1_multiplication_table stopped before 10 times."
+    expect_not_contains "$RUN_OUTPUT" "11 x 7" "Exercise solution 1_multiplication_table went past 10 times."
+    expect_exercise 06-loops/2_running_total '5\n10\n-3\n0\n' 0 "The total is 12."
+    expect_exercise 06-loops/2_running_total '5\nabc\n10\n0\n' 0 "The total is 15."
+    expect_exercise 06-loops/2_running_total '5\n' 0 "The total is 5."
+    expect_exercise 06-loops/3_guessing_game '3\nseven\n7\n' 0 "Correct! You needed 2 guesses."
+    expect_exercise 06-loops/3_guessing_game '3\n' 1 "No more input."
+
+    expect_exercise 07-functions/1_square '' 0 " 1 squared is   1"
+    expect_contains "$RUN_OUTPUT" "10 squared is 100" "Exercise solution 1_square did not reach 10."
+    expect_exercise 07-functions/2_max_of '' 0 "The largest of 12, 45 and 30 is 45."
+    expect_contains "$RUN_OUTPUT" "The largest of 7, 7 and 2 is 7." "Exercise solution 2_max_of is wrong for equal numbers."
+    expect_exercise 07-functions/3_definition_order '' 0 "Total calculated damage is: 36"
+
+    expect_exercise 08-arrays/1_largest_score '' 0 "The largest score is: 980"
+    expect_exercise 08-arrays/2_reverse_order '1\n2\n3\n4\n5\n' 0 "In reverse order: 5 4 3 2 1"
+    expect_exercise 08-arrays/2_reverse_order '1\n2\nx\n' 1 "That was not a whole number."
+    expect_exercise 08-arrays/3_average_temperature '' 0 "Average temperature: 76.5"
+
+    expect_exercise 09-strings/1_count_characters '' 0 "Counted by hand: 15 characters"
+    expect_contains "$RUN_OUTPUT" "According to strlen: 15 characters" "Exercise solution 1_count_characters disagrees with strlen."
+    expect_contains "$RUN_OUTPUT" "An empty string has 0 characters." "Exercise solution 1_count_characters miscounted an empty string."
+    expect_exercise 09-strings/2_count_a_letter '' 0 "The letter 's' appears 3 times."
+    expect_exercise 09-strings/3_room_to_append '' 0 "the joined string needs 20."
+    expect_contains "$RUN_OUTPUT" "Not enough room, so strcat was not called." "Exercise solution 3_room_to_append called strcat without room."
+
+    printf 'Checked %d exercise solutions.\n' "$exercise_count"
+}
+
 # Part 6: the lessons' own output, the bugs they switch on with -DSHOW_BUG and
 # -DSHOW_UB (the sanitizers must report them exactly as the comments say), and
 # the unit tests in tests/ that lesson 38 describes.
@@ -706,10 +829,11 @@ run_number_argument_checks
 run_text_editor_check
 run_hash_table_check
 run_data_parser_check
+run_exercise_checks
 run_toolsmith_checks
 run_sanitizer_regressions
 
-printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31 with %s' "$compiled_count" "$STANDARD_FLAG"
+printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31 and %d exercise solutions with %s' "$compiled_count" "$exercise_count" "$STANDARD_FLAG"
 if [ "$newer_count" -gt 0 ]; then
     printf ', and %d source files again with %s' "$newer_count" "$NEWER_STANDARD"
 fi

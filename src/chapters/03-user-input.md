@@ -318,3 +318,9 @@ start a new one.
 1. Ask for the user's birth year and print how old they turn this year.
 2. Run the program and type `abc` at the first prompt, then run it again and press Ctrl+D. Which message do you get each time, and why?
 3. Remove the space in `" %c"` and run the program again. What happens at the letter prompt?
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/03-user-input/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/03-user-input)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/03-user-input#solutions).

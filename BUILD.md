@@ -8,11 +8,11 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | | |
 | --- | --- |
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
-| **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Everything else in BUILD.md is done; the Ideas inbox has the optional exercise solutions. |
+| **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
-| **Live** | https://cfromthegroundup.com serves `ecbc570`, deployed 2026-11-20, and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
-| **`main`** | `make verify` and CI are green at `7999685`. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. (4) Say when to deploy `main`: until then the live site still sets prose code snippets in the sans-serif font and has no Solutions sections. |
+| **Live** | https://cfromthegroundup.com serves `ecbc570`, deployed 2026-11-20, and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. `main` is ahead of production: the monospace fix for prose snippets, the lesson 34 fix and the Part 1 solutions are not deployed. |
+| **`main`** | `make verify`, the site e2e tests (72) and `make smoke-linux`, `sanitize-linux` and `fuzz-linux` were green on 2026-11-20 with the Part 1 exercise solutions. CI was last seen green at `c1c1096`. |
 | **Last updated** | 2026-11-20 |
 
 ### Milestones at a glance
@@ -666,7 +666,20 @@ the lessons it serves.
       variable names it mentions exist; the features it asks for do not
       yet). On the site it follows the run panel as ordinary prose. The
       optional hidden solutions were not written; see "Exercise solutions"
-      in the Ideas inbox.
+      below.
+- [ ] **Exercise solutions** (from the Ideas inbox, picked up 2026-11-20).
+      A worked solution for every exercise, as `exercises/<chapter-slug>/
+      <n>_<name>.c`, compiled and run by the smoke and sanitizer checks and
+      shown closed on each lesson page; the conventions are in AGENTS.md,
+      "Exercise solutions". Part 1 is done (chapters 01-09, 27 solutions):
+      each compiles warning-free under Clang and GCC in C17 and C23, is
+      clean under clang-tidy and GCC's analyzer, and has output assertions
+      in `run_exercise_checks`.
+      Remaining: Parts 2-6, chapters 10-38 (87 solutions). Do a part at a
+      time; each chapter needs its three files, its lines in
+      `run_exercise_checks`, and the linking paragraph at the end of the
+      chapter. Lessons 26-30 need POSIX, and 33 and 35 a terminal, so their
+      solutions need the same special cases the lessons have in the checks.
 - [x] **Images.** Done 2026-11-20: the 7 unused images in `assets/images/`
       were deleted at the maintainer's request (unused, and several were
       third-party artwork with no clear license). `assets/images/site/` keeps
@@ -758,10 +771,6 @@ checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
-- **Exercise solutions.** The optional half of the Exercises item: worked
-  solutions in an `exercises/` directory that the smoke check compiles,
-  perhaps shown on the site behind a "Show solution" toggle. Writing 105
-  of them is a project of its own; start with Part 1.
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
   (`cg162` in `site/src/lib/compiler-explorer.ts`). Checked 2026-11-20: it
   is still the newest GCC there. Check once a year that the id still exists
@@ -770,6 +779,16 @@ pick them up.
 ---
 
 ## Decision log
+
+- **2026-11-20: how exercise solutions are stored and shown.** One `.c` file
+  per exercise in `exercises/<chapter-slug>/`, outside `Part */` so the
+  lesson rules (one marker per file, every file embedded in a chapter) do
+  not apply and no lesson path changes. Every exercise gets a program that
+  compiles, including the "what happens if" ones, whose answer is in the
+  comments, so one check covers them all. Solutions are not embedded in
+  the chapters: the book links to the directory and to the site, and the
+  site reads the files at build time and shows them closed. The directory
+  names follow the chapter slugs, which are already stable URLs.
 
 - **2026-11-20: go-ahead for the Fuzzing item.** The maintainer asked in chat
   to "proceed with the BUILD.md file and do as much as you can". That was
@@ -851,6 +870,28 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** worked solutions for Part 1's exercises, at the
+  maintainer's go-ahead in chat. 27 files in `exercises/<chapter-slug>/`,
+  each quoting its exercise and explaining the answer in comments, using
+  only what the course has taught by that lesson. `make check-sync` fails
+  when a solution's quoted exercise differs from the chapter (it caught one
+  paraphrase while this was written), when an exercise has no solution, or
+  when the chapter does not link to the directory. The smoke check compiles
+  each one in both standards, runs it with no input and with garbage, and
+  asserts on its answer (56 assertions); the sanitizer check runs them too;
+  `make format`, `tidy` and `analyze` now cover `exercises/`. The site shows
+  them under "Solutions" on the lesson page, closed until opened, lists the
+  section in the outline, and adds them to the zip downloads. Chapters
+  01-09 end with a paragraph linking to the directory and to the lesson's
+  page; on the site a link to the site's own address becomes a path, so it
+  jumps within the page. Chapter 1's exercise 2 asked for three lines from
+  one `printf` with "two `\n`s"; it now says three.
+  Also fixed here: the new fuzz check failed about 3 runs in 20 on macOS
+  with a LeakSanitizer report about libFuzzer's own memory-watching thread,
+  not the lessons (a `make verify` run caught it). `-rss_limit_mb=0` stops
+  that thread from starting; 20 runs in a row then passed, against 17 of 20
+  without the flag.
 
 - **2026-11-20:** the fuzz check (see the ticked Fuzzing item) and a lesson
   34 fix found while writing it. A line longer than lesson 34's 256-byte

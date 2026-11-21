@@ -16,6 +16,9 @@
 #            uninitialized.
 #   thread   ThreadSanitizer on lesson 30, the only multithreaded lesson.
 #
+# The address and memory runs also build and run every worked exercise
+# solution in exercises/.
+#
 # A sanitizer the compiler or platform does not support is skipped with a
 # message, unless SANITIZERS_REQUIRED=1 (CI on Linux), which makes that an
 # error. LeakSanitizer is part of the address run where the platform has it.
@@ -46,6 +49,8 @@ P5="$ROOT_DIR/Part 5 - Expert Systems & Application Development"
 P6="$ROOT_DIR/Part 6 - The Toolsmith Path_ Debugging, UB and Testing"
 # The unit tests lesson 38 describes; each includes a lesson with its main renamed.
 TESTS="$ROOT_DIR/tests"
+# Worked solutions to the chapters' exercises, three per chapter that has them.
+EXERCISES="$ROOT_DIR/exercises"
 
 # Every sanitizer exits with this status when it reports something, so a
 # lesson's own exit status (1 for bad input) is never mistaken for a finding.
@@ -400,6 +405,16 @@ run_lessons() {
     done
 
     run_case "35 world loader" "$bin/capstone_loader" '' world.map bad_room.map bad_link.map missing.map
+
+    # The worked exercise solutions (exercises/<chapter>/): with no input,
+    # and with a line of numbers that answers every prompt they have.
+    for source in "$EXERCISES"/*/*.c; do
+        [ -f "$source" ] || continue
+        name=$(basename "$(dirname "$source")")_$(basename "$source" .c)
+        build "$source" "$bin/exercise_$name" "$@"
+        run_case "exercise $name (no input)" "$bin/exercise_$name" ''
+        run_case "exercise $name" "$bin/exercise_$name" '7\n3\n5\n2\n1\n0\n7\n'
+    done
 }
 
 RUNS=0

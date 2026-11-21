@@ -2,10 +2,10 @@
 	import type { SourceFile } from '#lib/content/types.js';
 	import CopyButton from './CopyButton.svelte';
 
-	// A full lesson source listing: file name bar, line numbers (CSS), copy,
-	// download and a link to the file on GitHub. The highlighted HTML is
-	// produced at build time by Shiki.
-	let { source, downloadHref }: { source: Omit<SourceFile, 'contents'>; downloadHref: string } =
+	// A full source listing: file name bar, line numbers (CSS), copy, download
+	// (when the site serves the file) and a link to the file on GitHub. The
+	// highlighted HTML is produced at build time by Shiki.
+	let { source, downloadHref }: { source: Omit<SourceFile, 'contents'>; downloadHref?: string } =
 		$props();
 
 	let body: HTMLElement | undefined = $state();
@@ -41,13 +41,15 @@
 		<span class="text-xs text-code-muted">{source.lineCount} lines</span>
 		<span class="ml-auto flex items-center gap-1">
 			<CopyButton getText={text} />
-			<a
-				class="rounded-md px-2 py-1 text-xs font-medium text-code-muted hover:bg-white/10 hover:text-code-ink"
-				href={downloadHref}
-				download={source.name}
-			>
-				Download
-			</a>
+			{#if downloadHref}
+				<a
+					class="rounded-md px-2 py-1 text-xs font-medium text-code-muted hover:bg-white/10 hover:text-code-ink"
+					href={downloadHref}
+					download={source.name}
+				>
+					Download
+				</a>
+			{/if}
 			<a
 				class="rounded-md px-2 py-1 text-xs font-medium text-code-muted hover:bg-white/10 hover:text-code-ink"
 				href={source.githubUrl}

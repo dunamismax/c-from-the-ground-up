@@ -368,3 +368,9 @@ start a new one.
 1. Print the multiplication table for a number the user enters, from 1 times to 10 times.
 2. Use a `while` loop to add up numbers the user types until they enter 0, then print the total.
 3. Write a number-guessing game: keep asking until the user types 7, and count the guesses. Make sure garbage input and Ctrl+D do not make it loop forever.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/06-loops/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/06-loops)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/06-loops#solutions).

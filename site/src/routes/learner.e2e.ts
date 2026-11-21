@@ -113,7 +113,7 @@ test('lessons that need a real system say so instead', async ({ page }) => {
 	).toBeVisible();
 });
 
-test('zip downloads hold the lesson files', async ({ request }) => {
+test('zip downloads hold the lesson files and the exercise solutions', async ({ request }) => {
 	const lesson = await request.get('/downloads/31-makefiles.zip');
 	expect(lesson.status()).toBe(200);
 	const files = unzipSync(new Uint8Array(await lesson.body()));
@@ -124,11 +124,24 @@ test('zip downloads hold the lesson files', async ({ request }) => {
 		'31-makefiles/main.c'
 	]);
 
+	const loops = await request.get('/downloads/06-loops.zip');
+	expect(loops.status()).toBe(200);
+	expect(Object.keys(unzipSync(new Uint8Array(await loops.body()))).sort()).toEqual([
+		'06-loops/6_loops.c',
+		'06-loops/solutions/1_multiplication_table.c',
+		'06-loops/solutions/2_running_total.c',
+		'06-loops/solutions/3_guessing_game.c'
+	]);
+
 	const course = await request.get('/downloads/c-from-the-ground-up.zip');
 	expect(course.status()).toBe(200);
 	const all = unzipSync(new Uint8Array(await course.body()));
 	const names = Object.keys(all);
-	expect(names.filter((name) => name.endsWith('.c'))).toHaveLength(40);
+	const lessonFiles = names.filter((name) => name.startsWith('c-from-the-ground-up/Part '));
+	expect(lessonFiles.filter((name) => name.endsWith('.c'))).toHaveLength(40);
+	const solutions = names.filter((name) => name.startsWith('c-from-the-ground-up/exercises/'));
+	expect(solutions.length).toBeGreaterThanOrEqual(27);
+	expect(solutions).toContain('c-from-the-ground-up/exercises/01-hello-world/1_greet_by_name.c');
 	expect(names).toContain('c-from-the-ground-up/LICENSE');
 	expect(
 		strFromU8(all['c-from-the-ground-up/Part 1 - The Beginner Path_ Core Concepts/1_hello_world.c'])

@@ -274,3 +274,9 @@ start a new one.
 1. Add a `double` variable for the player's health, set it to 87.5, and print it with one decimal place.
 2. Print `item_price` with `%.0f`, `%.1f` and `%.3f`. What does the number after the dot control?
 3. Print a `char` variable with `%d` instead of `%c`. The number you see is the character's code.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/02-variables-and-data-types/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/02-variables-and-data-types)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/02-variables-and-data-types#solutions).

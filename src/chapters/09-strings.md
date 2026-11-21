@@ -313,3 +313,9 @@ start a new one.
 1. Write a loop that counts the characters in a string without calling `strlen`, by stopping at `'\0'`.
 2. Count how many times the letter `s` appears in `message`.
 3. Make `full_greeting` smaller, for example `char full_greeting[12]`, and think about what `strcat` would do. Why must the destination be big enough?
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/09-strings/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/09-strings)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/09-strings#solutions).

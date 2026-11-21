@@ -71,6 +71,39 @@ test('code snippets in the prose use the same monospace font as the listing', as
 	expect(snippet).toEqual(listing);
 });
 
+test('a lesson with worked solutions keeps them closed until asked', async ({ page }) => {
+	await page.goto('/lessons/06-loops');
+	const solutions = page.locator('section[aria-labelledby="solutions"]');
+	await expect(solutions.getByRole('heading', { level: 2, name: 'Solutions' })).toBeVisible();
+	await expect(solutions.locator('details')).toHaveCount(3);
+
+	// Closed: the code is on the page but not shown.
+	const third = solutions.locator('details').nth(2);
+	await expect(third.locator('figure.listing')).toBeHidden();
+	await third.getByText('Show the solution to exercise 3').click();
+	await expect(third.locator('figure.listing')).toBeVisible();
+	await expect(third.locator('figure.listing')).toContainText('3_guessing_game.c');
+	await expect(third.locator('figure.listing')).toContainText('Guess the number: ');
+	await expect(third.getByRole('link', { name: 'View on GitHub' })).toHaveAttribute(
+		'href',
+		'https://github.com/dunamismax/c-from-the-ground-up/blob/main/exercises/06-loops/3_guessing_game.c'
+	);
+	await third.getByText('Hide the solution to exercise 3').click();
+	await expect(third.locator('figure.listing')).toBeHidden();
+
+	// The outline and the chapter's own link both reach the section. The
+	// chapter links to the website for the book's readers; here that link
+	// stays on the page.
+	await expect(page.locator('.prose a[href="/lessons/06-loops#solutions"]')).toHaveCount(1);
+	await expect(
+		page.locator('nav[aria-labelledby="toc-heading"] a[href="#solutions"]')
+	).not.toHaveCount(0);
+
+	// A lesson without solutions has no such section.
+	await page.goto('/lessons/30-multithreaded-file-analyzer');
+	await expect(page.locator('section[aria-labelledby="solutions"]')).toHaveCount(0);
+});
+
 test('the run panel tabs work with the keyboard', async ({ page }) => {
 	await page.goto('/lessons/33-advanced-terminal-ui');
 	const tabs = page.getByRole('tablist', { name: 'Operating system' });

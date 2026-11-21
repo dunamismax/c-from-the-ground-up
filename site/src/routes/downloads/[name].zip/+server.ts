@@ -7,8 +7,9 @@ import { zipFiles } from '#lib/server/content/zip.js';
 import type { EntryGenerator, RequestHandler } from './$types';
 
 // Zip downloads, prerendered:
-//   /downloads/c-from-the-ground-up.zip  every lesson file, in its Part folder
-//   /downloads/<lesson-slug>.zip          one lesson's files
+//   /downloads/c-from-the-ground-up.zip  every lesson file, in its Part folder,
+//                                        and the exercise solutions
+//   /downloads/<lesson-slug>.zip          one lesson's files and its solutions
 export const prerender = true;
 
 const COURSE = 'c-from-the-ground-up';
@@ -32,6 +33,11 @@ async function courseFiles(): Promise<Record<string, string>> {
 			}
 		}
 	}
+	for (const lesson of (await getCourse()).lessons) {
+		for (const solution of lesson.solutions) {
+			files[`${COURSE}/${solution.path}`] = solution.contents;
+		}
+	}
 	return files;
 }
 
@@ -43,9 +49,13 @@ export const GET: RequestHandler = async ({ params }) => {
 	} else {
 		const lesson = (await getCourse()).lessons.find((candidate) => candidate.slug === params.name);
 		if (!lesson) error(404, 'Not found');
-		files = Object.fromEntries(
-			lesson.sources.map((source) => [`${lesson.slug}/${source.name}`, source.contents])
-		);
+		files = {};
+		for (const source of lesson.sources) {
+			files[`${lesson.slug}/${source.name}`] = source.contents;
+		}
+		for (const solution of lesson.solutions) {
+			files[`${lesson.slug}/solutions/${solution.name}`] = solution.contents;
+		}
 	}
 	return new Response(new Uint8Array(zipFiles(files)), {
 		headers: { 'content-type': 'application/zip' }

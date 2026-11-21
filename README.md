@@ -100,7 +100,8 @@ taught.
   It is kept as a mirror, and every page links to its lesson on the site.
 - **This repository:** the source of the course. Every lesson is one `.c` file
   under `Part */`, and the site and the book are both generated from those
-  files. Clone it to read and run the lessons in your own editor.
+  files. Clone it to read and run the lessons in your own editor. Worked
+  solutions to the exercises are in [`exercises/`](exercises/) (Part 1 so far).
 
 ## Running the lessons from this repository
 

@@ -128,10 +128,14 @@ for target in $TARGETS; do
     # New inputs the fuzzer finds go in a scratch corpus, so the committed
     # seeds stay as they are. -close_fd_mask=3 silences the lesson's own
     # printing (thousands of "Malformed line" warnings), not the fuzzer's.
+    # -rss_limit_mb=0 stops libFuzzer starting its memory-watching thread:
+    # when a short run ends while that thread is still starting,
+    # LeakSanitizer reports the thread's own bookkeeping as a leak (seen on
+    # macOS, in 3 runs of 20), and these parsers allocate almost nothing.
     mkdir -p "$BUILD_DIR/corpus_$target" "$FUZZ_ARTIFACTS"
     status=0
     output=$("$binary" -runs="$FUZZ_RUNS" -max_len="$FUZZ_MAX_LEN" -timeout=10 \
-        -close_fd_mask=3 -print_final_stats=1 -artifact_prefix="$FUZZ_ARTIFACTS/" \
+        -close_fd_mask=3 -rss_limit_mb=0 -print_final_stats=1 -artifact_prefix="$FUZZ_ARTIFACTS/" \
         "$BUILD_DIR/corpus_$target" "$seeds" 2>&1) || status=$?
     if [ "$status" -ne 0 ]; then
         fail "fuzz_$target found a failing input (saved under $FUZZ_ARTIFACTS/)." "$output"

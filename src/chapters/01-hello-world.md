@@ -216,5 +216,11 @@ Practise what this lesson taught. Change a copy of the lesson file, or
 start a new one.
 
 1. Change the message to greet yourself by name, then compile and run it again.
-2. Print three lines with three `printf` calls, then print the same three lines with one `printf` and two `\n`s.
+2. Print three lines with three `printf` calls, then print the same three lines with one `printf` that contains three `\n`s.
 3. Delete the semicolon after the `printf` call and compile. Read the error message: which line does it point at? Put the semicolon back.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/01-hello-world/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/01-hello-world)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/01-hello-world#solutions).

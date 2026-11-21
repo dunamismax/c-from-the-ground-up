@@ -3,17 +3,69 @@
 // serializable objects. Lesson pages are prerendered, so none of this runs in
 // production; the site never keeps its own copy of the content.
 
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Course, Lesson, LessonRef, Part, SourceFile } from '#lib/content/types.js';
+import type { Highlighter } from 'shiki';
 import { parseChapter, renderChapter } from './chapter.js';
 import { getHighlighter, highlightToHtml } from './highlight.js';
 import { lessonCommands, lessonMeta } from './metadata.js';
 import { courseRoot, findCourseRoot, githubBlobUrl, githubRawUrl } from './paths.js';
 import { parsePartSummaries, parseSummary } from './summary.js';
 
+/** Anchor of the solutions section on a lesson page; the chapters link to it. */
+export const SOLUTIONS_ID = 'solutions';
+
 function sourceId(name: string): string {
 	return `source-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+}
+
+/** Read one repository file and highlight it. */
+async function loadSource(
+	root: string,
+	repoPath: string,
+	highlighter: Highlighter
+): Promise<SourceFile> {
+	const contents = await readFile(path.join(root, repoPath), 'utf8');
+	const name = path.posix.basename(repoPath);
+	const language = name === 'Makefile' ? 'makefile' : 'c';
+	return {
+		path: repoPath,
+		name,
+		id: sourceId(name),
+		language,
+		contents,
+		lineCount: contents.replace(/\n$/, '').split('\n').length,
+		html: highlightToHtml(highlighter, contents, language),
+		githubUrl: githubBlobUrl(repoPath),
+		rawUrl: githubRawUrl(repoPath)
+	};
+}
+
+/**
+ * The worked solutions in `exercises/<slug>/`, in exercise order (their names
+ * start with the exercise number). scripts/sync_chapters.py checks that the
+ * directory matches the chapter's exercises.
+ */
+async function loadSolutions(
+	root: string,
+	slug: string,
+	highlighter: Highlighter
+): Promise<SourceFile[]> {
+	const directory = `exercises/${slug}`;
+	let names: string[];
+	try {
+		names = await readdir(path.join(root, directory));
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+		throw error;
+	}
+	const solutions = names
+		.filter((name) => /^\d+_.+\.c$/.test(name))
+		.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+	return Promise.all(
+		solutions.map((name) => loadSource(root, `${directory}/${name}`, highlighter))
+	);
 }
 
 export async function loadCourse(root: string = courseRoot()): Promise<Course> {
@@ -48,21 +100,9 @@ export async function loadCourse(root: string = courseRoot()): Promise<Course> {
 			for (const listing of parsed.listings) {
 				// Read the file itself, the single source of truth, rather than the
 				// copy embedded in the chapter.
-				const contents = await readFile(path.join(root, listing.path), 'utf8');
-				const name = path.posix.basename(listing.path);
-				const language = name === 'Makefile' ? 'makefile' : 'c';
-				sources.push({
-					path: listing.path,
-					name,
-					id: sourceId(name),
-					language,
-					contents,
-					lineCount: contents.replace(/\n$/, '').split('\n').length,
-					html: highlightToHtml(highlighter, contents, language),
-					githubUrl: githubBlobUrl(listing.path),
-					rawUrl: githubRawUrl(listing.path)
-				});
+				sources.push(await loadSource(root, listing.path, highlighter));
 			}
+			const solutions = await loadSolutions(root, entry.slug, highlighter);
 
 			const meta = lessonMeta(
 				entry.number,
@@ -76,9 +116,14 @@ export async function loadCourse(root: string = courseRoot()): Promise<Course> {
 				chapterPath,
 				description: rendered.description,
 				segments: rendered.segments,
-				toc: rendered.toc,
+				// The solutions section is added by the lesson page, after the chapter.
+				toc:
+					solutions.length > 0
+						? [...rendered.toc, { depth: 2, id: SOLUTIONS_ID, text: 'Solutions' }]
+						: rendered.toc,
 				searchSections: rendered.sections,
 				sources,
+				solutions,
 				runNotesHtml: rendered.runNotesHtml,
 				meta,
 				commands: lessonCommands(meta),

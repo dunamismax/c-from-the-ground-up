@@ -221,3 +221,9 @@ start a new one.
 1. Find and print the largest value in `high_scores`.
 2. Read 5 integers from the user into an array, then print them in reverse order.
 3. Compute the average of `temperatures` as a `double` and print it with one decimal place.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/08-arrays/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/08-arrays)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/08-arrays#solutions).

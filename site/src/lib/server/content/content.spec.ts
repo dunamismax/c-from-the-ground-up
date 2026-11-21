@@ -143,7 +143,8 @@ describe('course content', () => {
 			const ids = lesson.toc.map((entry) => entry.id);
 			expect(new Set(ids).size, lesson.slug).toBe(ids.length);
 			for (const entry of lesson.toc) {
-				if (entry.id === 'how-to-compile-and-run') continue;
+				// The run panel and the solutions section are rendered by the page.
+				if (entry.id === 'how-to-compile-and-run' || entry.id === 'solutions') continue;
 				expect(html, `${lesson.slug}#${entry.id}`).toContain(`id="${entry.id}"`);
 			}
 		}
@@ -166,6 +167,48 @@ describe('course content', () => {
 				expect(segment.html).not.toContain('```');
 				expect(segment.html).not.toContain('<code class="language-');
 			}
+		}
+	});
+});
+
+describe('exercise solutions', () => {
+	const exerciseDirs = readdirSync(path.join(root, 'exercises')).sort();
+
+	it('loads every directory in exercises/ into the lesson of the same slug', () => {
+		const withSolutions = course.lessons.filter((lesson) => lesson.solutions.length > 0);
+		expect(withSolutions.map((lesson) => lesson.slug)).toEqual(exerciseDirs);
+		for (const lesson of withSolutions) {
+			const onDisk = readdirSync(path.join(root, 'exercises', lesson.slug)).sort();
+			expect(lesson.solutions.map((solution) => solution.name)).toEqual(onDisk);
+		}
+	});
+
+	it('orders the solutions by exercise number and links them to GitHub', () => {
+		const lesson = course.lessons.find((candidate) => candidate.slug === '06-loops');
+		expect(lesson?.solutions.map((solution) => solution.name)).toEqual([
+			'1_multiplication_table.c',
+			'2_running_total.c',
+			'3_guessing_game.c'
+		]);
+		expect(lesson?.solutions[2].githubUrl).toBe(
+			'https://github.com/dunamismax/c-from-the-ground-up/blob/main/exercises/06-loops/3_guessing_game.c'
+		);
+		expect(lesson?.solutions[2].contents).toBe(
+			readFileSync(path.join(root, 'exercises/06-loops/3_guessing_game.c'), 'utf8')
+		);
+	});
+
+	it('adds "Solutions" to the outline only where there are solutions', () => {
+		for (const lesson of course.lessons) {
+			const last = lesson.toc.at(-1);
+			expect(last?.id === 'solutions', lesson.slug).toBe(lesson.solutions.length > 0);
+		}
+	});
+
+	it('gives every listing on a lesson page its own anchor', () => {
+		for (const lesson of course.lessons) {
+			const ids = [...lesson.sources, ...lesson.solutions].map((source) => source.id);
+			expect(new Set(ids).size, lesson.slug).toBe(ids.length);
 		}
 	});
 });

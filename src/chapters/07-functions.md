@@ -289,3 +289,9 @@ start a new one.
 1. Write `int square(int n)` and use it to print the squares of 1 to 10.
 2. Write `int max_of(int a, int b)` and use it twice to find the largest of three numbers.
 3. Move a function's definition above `main` and delete its prototype. Does it still compile? Now move it below `main` again, still without the prototype, and read the error.
+
+Try each one yourself before you look at a worked solution. The solutions,
+with the reasoning in their comments, are in
+[`exercises/07-functions/`](https://github.com/dunamismax/c-from-the-ground-up/tree/main/exercises/07-functions)
+in the repository and
+[on this lesson's page on the website](https://cfromthegroundup.com/lessons/07-functions#solutions).

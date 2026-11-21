@@ -57,7 +57,7 @@ smoke-all:
 # directories do not work with Docker Desktop.
 LINUX_IMAGE ?= gcc:15
 smoke-linux:
-	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests | \
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests exercises | \
 		docker run --rm -i $(LINUX_IMAGE) sh -c '\
 			set -e; mkdir /r; cd /r; tar xf -; \
 			apt-get update -qq >/dev/null; \
@@ -65,10 +65,11 @@ smoke-linux:
 			CC=gcc sh scripts/smoke_check.sh; \
 			CC=clang sh scripts/smoke_check.sh'
 
-# Lesson sources in the house style (.clang-format). After `make format`, run
-# `make sync` so the chapters embed the reformatted files.
+# Lesson sources in the house style (.clang-format), and with them the
+# exercise solutions, the unit tests and the fuzz targets. After `make
+# format`, run `make sync` so the chapters embed the reformatted files.
 CLANG_FORMAT ?= clang-format
-LESSON_SOURCES = find ./Part* -type f \( -name '*.c' -o -name '*.h' \) -print0
+LESSON_SOURCES = find ./Part* ./exercises ./tests ./fuzz -type f \( -name '*.c' -o -name '*.h' \) -print0
 format:
 	$(LESSON_SOURCES) | xargs -0 $(CLANG_FORMAT) -i
 check-format:
@@ -79,7 +80,7 @@ check-format:
 # `gcc` is Clang), so it is not part of verify; CI runs it without failing
 # the build while it proves itself (BUILD.md).
 CLANG_TIDY ?= clang-tidy
-LESSON_C_SOURCES = find ./Part* -type f -name '*.c' -print0
+LESSON_C_SOURCES = find ./Part* ./exercises -type f -name '*.c' -print0
 tidy:
 	$(LESSON_C_SOURCES) | xargs -0 sh -c '$(CLANG_TIDY) --quiet "$$@" -- -std=c17' sh
 analyze:
@@ -96,7 +97,7 @@ sanitize:
 # MemorySanitizer needs the personality() syscall, which Docker's default
 # seccomp profile blocks.
 sanitize-linux:
-	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests | \
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests exercises | \
 		docker run --rm -i --security-opt seccomp=unconfined $(LINUX_IMAGE) sh -c '\
 			set -e; mkdir /r; cd /r; tar xf -; \
 			apt-get update -qq >/dev/null; \

@@ -136,12 +136,13 @@ Part 5 - Expert Systems & Application Development/  lessons 31-35
     31_make_files_for_multi_file_projects/          the only multi-file lesson (own Makefile)
 Part 6 - The Toolsmith Path_ Debugging, UB and Testing/  lessons 36-38
 tests/                                              unit tests for lessons 20 and 28 (lesson 38's `#define main` trick); the smoke and sanitizer checks run them
+exercises/NN-slug/                                  worked solutions to a chapter's exercises, one `.c` file each (Part 1 so far); the site shows them on the lesson page
 fuzz/                                               libFuzzer targets for the lesson 34 and 35 parsers, with seed inputs in fuzz/corpus/<target>/
 src/SUMMARY.md                                      book table of contents (mdBook)
 src/index.md                                        book introduction page
 src/setup.md, src/glossary.md                       book setup chapter and glossary (the site renders the glossary at /glossary)
 src/chapters/NN-slug.md                             one chapter per lesson (26 covers server + client)
-scripts/sync_chapters.py                            copies lesson sources into chapters; --check for CI
+scripts/sync_chapters.py                            copies lesson sources into chapters; --check for CI, which also checks exercises/ against the chapters
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
 scripts/check_book_links.py                         checks internal links and anchors in the built book/
 scripts/sanitizer_check.sh                          runs the lessons under ASan/UBSan/LSan, MSan and TSan
@@ -182,7 +183,8 @@ block:
   with spaces. That is why the sync script exists.
 - `make check-sync` (run in CI) fails if a listing is stale, a marker points at a
   missing file, a lesson file has no marker or more than one, or a chapter is
-  missing from `src/SUMMARY.md`.
+  missing from `src/SUMMARY.md`. It also fails if an `exercises/<chapter>/`
+  directory does not match its chapter (see "Exercise solutions" below).
 - The prose above `## Full Source` in each chapter is hand-maintained. It mirrors
   the lesson's comments but is **not** synced. When you change what a lesson
   teaches, update that prose too.
@@ -193,9 +195,9 @@ block:
 
 ```sh
 make verify              # check-sync + check-format + tidy + mdbook build + book link check + smoke check under clang and $(GCC) + sanitize + fuzz + site-verify
-make format              # apply .clang-format to the lessons, then run make sync
-make tidy                # clang-tidy over the lessons (fails on any finding)
-make analyze GCC=gcc-16  # GCC -fanalyzer over the lessons (needs real GCC)
+make format              # apply .clang-format to the lessons, exercises/, tests/ and fuzz/, then run make sync
+make tidy                # clang-tidy over the lessons and exercises/ (fails on any finding)
+make analyze GCC=gcc-16  # GCC -fanalyzer over the lessons and exercises/ (needs real GCC)
 make site-verify         # website only: npm ci, check, lint, test, build
 make site-e2e            # website Playwright tests (start the database first)
 make verify GCC=gcc-15   # point at a real GCC (on macOS, `gcc` is Clang)
@@ -236,6 +238,9 @@ What `scripts/smoke_check.sh` does:
   - lesson 34: `run_data_parser_check` parses the sample file from its
     comments, a file with an overlong line, 12 records (it keeps 10) and a
     missing file
+  - `exercises/`: `run_exercise_checks` compiles every solution (both
+    standards), runs each with no input and with garbage (a hang or a crash
+    fails), and asserts on the answer each one prints
   - lessons 36-38: `run_toolsmith_checks` checks their output, builds 36 with
     `-DSHOW_BUG` and 37 with `-DSHOW_UB` and expects the AddressSanitizer and
     UBSan reports the lessons describe, and compiles and runs `tests/*.c`
@@ -256,6 +261,8 @@ What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
   80x24 pseudo-terminal through `scripts/pty_run.py`, which types their keys
   (`run_terminal_lessons`); a harness also runs 35's `load_world()` and
   `cleanup()` on bad maps and a missing file.
+- Builds and runs every solution in `exercises/` the same way, with no input
+  and with a line of numbers.
 - Repeats the non-terminal runs under MemorySanitizer (Clang on Linux only;
   ncurses is not instrumented) to catch reads of uninitialized memory, and runs
   lesson 30 under ThreadSanitizer.
@@ -280,6 +287,10 @@ What `scripts/fuzz_check.sh` does (a step of the `sanitizers` CI job, with
   `FUZZ_REPRODUCE=<file> sh scripts/fuzz_check.sh <target>`. When a fuzzer
   finds a bug, fix the lesson and add the input to the target's seed corpus
   in the same commit, so it is replayed on every run.
+- Runs with `-rss_limit_mb=0`: without it LeakSanitizer sometimes reports
+  libFuzzer's own memory-watching thread as a leak at exit (3 runs in 20 on
+  macOS). A leak report whose stack shows only `fuzzer::` frames is the
+  fuzzer, not the lesson.
 - Apple's Clang and GCC have no libFuzzer; the check is skipped there with a
   message. Homebrew's LLVM has it (`make fuzz SANITIZE_CC=/opt/homebrew/opt/llvm/bin/clang`).
 - **A new lesson that parses a file or other untrusted input should get a
@@ -505,7 +516,38 @@ Each `src/chapters/NN-slug.md` contains:
    `### Client Source` / `### Server Source`; lesson 31 uses one `##` per file).
 5. `## How to Compile and Run`, with `sh` code blocks.
 6. `## Try It Yourself`: three exercises that need only what the course has
-   taught so far.
+   taught so far. A chapter with solutions in `exercises/` ends with the
+   paragraph that links to them (copy it from chapter 1).
+
+## Exercise solutions
+
+`exercises/<chapter-slug>/` holds one worked solution per exercise of that
+chapter, named `<exercise number>_<snake_case>.c`. Part 1 (chapters 01-09)
+has them; BUILD.md's Ideas inbox tracks the rest. `06-loops/3_guessing_game.c`
+is a good reference.
+
+- A solution follows the lesson conventions (style, ASCII, strict flags,
+  checked input, `-std=c17` in its compile command) and uses **only what the
+  course has taught up to that lesson**. Where it needs one thing from the
+  next lesson (an `if` in a lesson 4 solution), a comment says which lesson
+  covers it.
+- The header is `@file`, `@brief Lesson N, Exercise M: ...`, `@author`,
+  `@date`, then `THE EXERCISE:` followed by the exercise **word for word**
+  from the chapter. `make check-sync` compares the two, so change the chapter
+  and the solution together. It also fails when a directory is not named
+  after a chapter, an exercise has no solution or two, or the chapter does
+  not link to the directory.
+- An exercise that asks "what happens?" still gets a `.c` file that compiles:
+  the program that shows the behaviour, with the answer in its comments
+  (`01-hello-world/3_missing_semicolon.c`, `03-user-input/3_leftover_newline.c`).
+- The comments explain why, not just what: the solution is a small lesson.
+- Each solution needs lines in `run_exercise_checks` in the smoke check that
+  assert on its output. `07-functions/3_definition_order.c` is the one file
+  built with `-Wno-missing-prototypes`, because deleting the prototype is the
+  exercise.
+- The site reads the directory at build time (`Lesson.solutions`) and shows
+  each solution closed, under "Solutions" on the lesson page; the zip
+  downloads include them. Nothing is copied into chapters or `site/`.
 
 `src/setup.md` (a prefix chapter) and `src/glossary.md` (a suffix chapter,
 after `---` in `SUMMARY.md`) are not lessons; the site skips them in
@@ -566,6 +608,11 @@ Mistakes that have cost real time here:
   so the `8a5c018` deploy sent `/stats/` to that site's app until the port
   moved to 4321 (cutover now refuses a port Umami does not own). Check `ss -ltn` and `/etc/caddy/sites`
   on the server before choosing a port, and record it in `common.sh`.
+- **`.gitignore` drops fixtures with build-output names.** It excludes `*.map`,
+  `*.out`, `*.d`, `*.o`, `*.exe` and more, so `git add` silently leaves out a
+  test file with such a name. The world-map fuzz seeds were first named
+  `*.map`; the commit lacked them and CI failed. After adding files, check
+  `git status --short --ignored <dir>`.
 - **Paths with spaces.** Quote every `Part */` path, in scripts and in the
   commands you run.
 

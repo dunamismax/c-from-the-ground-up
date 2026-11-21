@@ -22,7 +22,8 @@ export const load: PageServerLoad = async ({ params }) => {
 			// The search index carries the prose text; the page does not need it.
 			searchSections: [],
 			// The code is already in the highlighted HTML; do not ship it twice.
-			sources: lesson.sources.map(({ contents, ...source }) => source)
+			sources: lesson.sources.map(({ contents, ...source }) => source),
+			solutions: lesson.solutions.map(({ contents, ...source }) => source)
 		},
 		summary: excerpt(lesson.description, 160),
 		outline: course.parts.map(({ number, title, lessons }) => ({ number, title, lessons }))

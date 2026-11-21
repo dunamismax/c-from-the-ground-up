@@ -16,6 +16,7 @@ import { toHtml } from 'hast-util-to-html';
 import { toString as hastToString } from 'hast-util-to-string';
 import type { Element, Root as HastRoot, RootContent as HastContent } from 'hast';
 import type { TocEntry } from '#lib/content/types.js';
+import { SITE_URL } from '#lib/site.js';
 import { courseRoot } from './paths.js';
 
 export interface MarkdownPage {
@@ -30,13 +31,21 @@ export interface MarkdownPage {
 
 const CHAPTER_LINK_RE = /^chapters\/(\d+-[a-z0-9-]+)\.md(#.*)?$/;
 
-/** `chapters/01-hello-world.md#x` -> `/lessons/01-hello-world#x`; other links unchanged. */
+/**
+ * `chapters/01-hello-world.md#x` -> `/lessons/01-hello-world#x`, and a link
+ * to the site's own address -> its path, so a chapter can point the book's
+ * readers at the website without sending the website's readers away from the
+ * page they are on. Other links are unchanged.
+ */
 export function siteHref(href: string): string {
 	const match = CHAPTER_LINK_RE.exec(href);
-	return match ? `/lessons/${match[1]}${match[2] ?? ''}` : href;
+	if (match) return `/lessons/${match[1]}${match[2] ?? ''}`;
+	if (href === SITE_URL) return '/';
+	if (href.startsWith(`${SITE_URL}/`)) return href.slice(SITE_URL.length);
+	return href;
 }
 
-function rewriteLinks(node: HastRoot | HastContent): void {
+export function rewriteLinks(node: HastRoot | HastContent): void {
 	if (node.type === 'element' && node.tagName === 'a' && typeof node.properties.href === 'string') {
 		node.properties.href = siteHref(node.properties.href);
 	}
