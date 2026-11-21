@@ -1,0 +1,2 @@
+room 0 "Fine."
+link 0 n 7

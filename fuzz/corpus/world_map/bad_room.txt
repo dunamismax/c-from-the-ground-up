@@ -1,0 +1,2 @@
+room 0 "Fine."
+room 1 broken

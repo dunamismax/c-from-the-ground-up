@@ -1,0 +1,11 @@
+room 0 "You are in a dusty, forgotten library. Ancient tomes line the walls. A grand wooden door stands to the north."
+room 1 "You've entered a vast, cold cavern. The sound of dripping water echoes around you. A narrow passage leads east."
+room 2 "This is a small, cramped tunnel. It smells of damp earth. The path continues west, and you see a faint light to the south."
+room 3 "You emerge into a treasure room! Piles of gold and jewels glitter in the torchlight. A heavy stone door is to the north."
+
+link 0 n 1
+link 1 s 0
+link 1 e 2
+link 2 w 1
+link 2 s 3
+link 3 n 2
