@@ -1,5 +1,9 @@
 # Linked Lists
 
+> **What you'll learn:** building a singly linked list with `malloc`: nodes, the head pointer, inserting, printing and freeing.
+>
+> **Before you start:** Lessons 12 and 13.
+
 So far, our primary way of storing a collection of items has been the ARRAY.
 Arrays are great, but they have one major limitation: they have a fixed size.
 If you declare `int my_array[100];`, you can't store 101 items without
@@ -234,3 +238,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 20_linked_lists 20_linked_lists.c
 ./20_linked_lists
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write `int list_length(const Node *head)`.
+2. Write `void insert_at_end(Node **head, int data)`.
+3. Write a function that deletes the first node holding a given value, and free it.

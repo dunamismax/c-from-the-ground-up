@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('the course overview lists all 35 lessons in five parts', async ({ page }) => {
+test('the course overview lists all 38 lessons in six parts', async ({ page }) => {
 	await page.goto('/lessons');
-	await expect(page.getByRole('heading', { level: 2 })).toHaveCount(5);
-	await expect(page.locator('main a[href^="/lessons/"]')).toHaveCount(35);
+	await expect(page.getByRole('heading', { level: 2 })).toHaveCount(6);
+	await expect(page.locator('main a[href^="/lessons/"]')).toHaveCount(38);
 	await page.getByRole('link', { name: /Lesson 20\s+Linked Lists/ }).click();
 	await expect(page).toHaveURL('/lessons/20-linked-lists');
 });

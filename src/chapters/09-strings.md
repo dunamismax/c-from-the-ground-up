@@ -1,5 +1,9 @@
 # Strings
 
+> **What you'll learn:** C strings as `char` arrays with a null terminator, and the `string.h` functions `strlen`, `strcpy`, `strcat` and `strcmp`.
+>
+> **Before you start:** Lesson 8.
+
 Up to this point, we've only seen string "literals" (text in double quotes)
 used directly in `printf`. We haven't stored or manipulated them.
 
@@ -300,3 +304,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 9_strings 9_strings.c
 ./9_strings
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write a loop that counts the characters in a string without calling `strlen`, by stopping at `'\0'`.
+2. Count how many times the letter `s` appears in `message`.
+3. Make `full_greeting` smaller, for example `char full_greeting[12]`, and think about what `strcat` would do. Why must the destination be big enough?

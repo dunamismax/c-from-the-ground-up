@@ -43,6 +43,9 @@ P2="$ROOT_DIR/Part 2 - The Intermediate Path_ Deeper into C"
 P3="$ROOT_DIR/Part 3 - The Advanced Path_ Towards Mastery"
 P4="$ROOT_DIR/Part 4 - The Expert Path_ Systems and Concurrency"
 P5="$ROOT_DIR/Part 5 - Expert Systems & Application Development"
+P6="$ROOT_DIR/Part 6 - The Toolsmith Path_ Debugging, UB and Testing"
+# The unit tests lesson 38 describes; each includes a lesson with its main renamed.
+TESTS="$ROOT_DIR/tests"
 
 # Every sanitizer exits with this status when it reports something, so a
 # lesson's own exit status (1 for bad input) is never mistaken for a finding.
@@ -326,7 +329,7 @@ run_lessons() {
     rm -rf "$bin"
     mkdir -p "$bin"
 
-    for source in "$P1"/*.c "$P2"/*.c "$P3"/*.c "$P4"/*.c "$P5"/*.c; do
+    for source in "$P1"/*.c "$P2"/*.c "$P3"/*.c "$P4"/*.c "$P5"/*.c "$P6"/*.c "$TESTS"/*.c; do
         case "$source" in
             *33_advanced_terminal_ui.c|*35_*) continue ;;
         esac
@@ -335,7 +338,7 @@ run_lessons() {
     done
     build "$BUILD_DIR/capstone_loader.c" "$bin/capstone_loader" "$@"
 
-    for source in "$P1"/*.c "$P2"/*.c "$P3"/*.c "$P4"/*.c "$P5"/*.c; do
+    for source in "$P1"/*.c "$P2"/*.c "$P3"/*.c "$P4"/*.c "$P5"/*.c "$P6"/*.c "$TESTS"/*.c; do
         name=$(basename "$source" .c)
         b=$bin/$name
         case "$name" in

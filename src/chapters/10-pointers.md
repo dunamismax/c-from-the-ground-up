@@ -1,5 +1,9 @@
 # Pointers
 
+> **What you'll learn:** what a pointer is, how `&` and `*` work, and changing a variable through a pointer.
+>
+> **Before you start:** Lessons 1-9.
+
 Welcome to Part 2 of your C journey! You've mastered the fundamentals, and now
 we're diving deeper. This lesson introduces POINTERS, arguably the most
 powerful and unique feature of the C language.
@@ -172,3 +176,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 10_pointers 10_pointers.c
 ./10_pointers
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Declare a `double` and a pointer to it, change the value through the pointer, and print both the variable and the pointer.
+2. Write `void reset(int *value)` that sets the pointed-to integer to 0, and call it on `score`.
+3. Print the address of two neighbouring local variables. How far apart are they? (The answer depends on your compiler; there is no single right one.)

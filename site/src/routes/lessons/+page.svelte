@@ -13,7 +13,7 @@
 
 <PageMeta
 	title="All lessons"
-	description="The whole course: 35 lessons in five parts, from Hello World to sockets, threads, ncurses and a capstone text adventure."
+	description="The whole course: 38 lessons in six parts, from Hello World to sockets, threads, ncurses, a capstone text adventure, debugging and testing."
 />
 
 <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6">

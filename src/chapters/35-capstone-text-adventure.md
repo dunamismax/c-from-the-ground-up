@@ -1,5 +1,9 @@
 # Capstone: Text Adventure
 
+> **What you'll learn:** the capstone: a text adventure that loads its world from a file, links rooms with pointers and runs in an ncurses interface.
+>
+> **Before you start:** The whole course, especially Lessons 18, 20, 33 and 34.
+
 Welcome to the final project. This is it.
 
 Every lesson, from `printf` to pointers, from `malloc` to Makefiles, has been
@@ -974,3 +978,12 @@ void cleanup(GameState *game)
 cc -Wall -Wextra -std=c17 -o 35_capstone_awesome_text_adventure 35_capstone_awesome_text_adventure.c -lncurses
 ./35_capstone_awesome_text_adventure world.map
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a new room to `world.map` and connect it to the existing ones.
+2. Add an `inventory` command and an item the player can pick up.
+3. Add a `save` command that writes the player's current room to a file, and load it at startup.

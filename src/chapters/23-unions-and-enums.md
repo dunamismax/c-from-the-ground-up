@@ -1,5 +1,9 @@
 # Unions and Enums
 
+> **What you'll learn:** naming constants with `enum`, sharing memory with `union`, and the tagged-union pattern that keeps track of which member is valid.
+>
+> **Before you start:** Lessons 12 and 22.
+
 Today we're looking at two special kinds of data types: `enum` and `union`.
 While they look a bit like `structs`, they solve very different problems.
 
@@ -201,3 +205,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 23_unions_and_enums 23_unions_and_enums.c
 ./23_unions_and_enums
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add `STATE_CANCELLED` to `SystemState` and print its value. Which number does it get, and why?
+2. Add a `TYPE_BOOL` tag and an `int is_true` member to the tagged union, and print it as `true` or `false` in the `switch`.
+3. Print `sizeof` of the union and of a struct with the same members. Explain the difference.

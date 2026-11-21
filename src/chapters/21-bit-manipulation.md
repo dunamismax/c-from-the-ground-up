@@ -1,5 +1,9 @@
 # Bit Manipulation
 
+> **What you'll learn:** working with individual bits: the bitwise operators, masks, shifts and integer promotion.
+>
+> **Before you start:** Lessons 2 and 4.
+
 C is a language that operates very close to the hardware. All data in your
 computer--integers, characters, etc.--is ultimately stored as a sequence of
 BITS (binary digits), which are either 0 or 1.
@@ -262,3 +266,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 21_bit_manipulation 21_bit_manipulation.c
 ./21_bit_manipulation
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write `int count_set_bits(unsigned int value)` using `&` and `>>`.
+2. Use `FLAG_READ_ACCESS` and `FLAG_EXECUTE_ACCESS` to give a user both permissions, then remove execute, printing the flags with `print_binary` after each step.
+3. Write `uint8_t reverse_bits(uint8_t value)` that reverses the order of the 8 bits, and check it with `print_binary`.

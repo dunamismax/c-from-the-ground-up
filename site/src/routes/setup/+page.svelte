@@ -61,9 +61,9 @@
 				</li>
 			</ul>
 			<p>
-				Lessons 1 to 25 are portable C and run anywhere. Lessons 26 to 35 use POSIX system calls or
-				the ncurses library, so they need macOS, Linux, or Linux inside Windows (WSL). The
-				instructions below set all of that up.
+				Lessons 1 to 25 and 36 to 38 are portable C and run anywhere. Lessons 26 to 35 use POSIX
+				system calls or the ncurses library, so they need macOS, Linux, or Linux inside Windows
+				(WSL). The instructions below set all of that up.
 			</p>
 
 			<h2 id="macos">macOS</h2>

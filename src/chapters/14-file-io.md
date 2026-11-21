@@ -1,5 +1,9 @@
 # File I/O
 
+> **What you'll learn:** writing and reading files with `fopen`, `fprintf`, `fgets` and `fclose`, and checking each step.
+>
+> **Before you start:** Lessons 9 and 13.
+
 All our programs so far have had a temporary existence. When the program ends,
 any data it was holding in variables, arrays, or structs is lost forever.
 
@@ -215,3 +219,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 14_file_io 14_file_io.c
 ./14_file_io
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Open the file in append mode (`"a"`) and add a line with the current score each time the program runs.
+2. Count the lines while reading the file back and print the total at the end.
+3. Change the file name to a directory that does not exist, such as `"no/such/dir/file.txt"`, and check that the error message appears.

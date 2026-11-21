@@ -1,5 +1,9 @@
 # Dynamic Memory Allocation
 
+> **What you'll learn:** asking for memory at run time with `malloc`, checking the result, and giving it back with `free`.
+>
+> **Before you start:** Lessons 10-12.
+
 Until now, the size of all our variables and arrays had to be known when we
 wrote the program (at COMPILE-TIME). For example, `int numbers[10];` creates
 an array that can hold exactly 10 integers. It can't hold 9, and it can't hold 11.
@@ -203,3 +207,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 13_dynamic_memory_allocation 13_dynamic_memory_allocation.c
 ./13_dynamic_memory_allocation
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Ask the user for each GPA instead of computing dummy values, checking every `scanf`.
+2. Print the average of the stored GPAs before freeing the memory.
+3. Remove the `free` call and build with `-fsanitize=address -g` (Clang or GCC on Linux, Clang on macOS). Read the leak report, then put `free` back.

@@ -1,5 +1,9 @@
 # Basic Operators
 
+> **What you'll learn:** arithmetic, relational and logical operators, integer division, the modulus operator and operator precedence.
+>
+> **Before you start:** Lessons 1-3.
+
 In programming, an OPERATOR is a special symbol that performs an operation on
 one or more values or variables (called OPERANDS). For example, in `5 + 3`,
 the `+` is the operator and `5` and `3` are the operands.
@@ -271,3 +275,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 4_basic_operators 4_basic_operators.c
 ./4_basic_operators
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Read two integers with `scanf` and print their sum, difference, product, integer quotient and remainder.
+2. Print `7 / 2`, `7.0 / 2` and `(double)7 / 2`. Explain each result.
+3. Write an expression that is 1 when an integer `year` is a leap year (divisible by 4, and not by 100 unless also by 400), and test it on 1900, 2000 and 2024.

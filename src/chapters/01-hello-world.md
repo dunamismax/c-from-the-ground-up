@@ -1,5 +1,9 @@
 # Hello, World!
 
+> **What you'll learn:** how a C program goes from source code to a running program, and what `#include`, `main`, `printf` and `return` do.
+>
+> **Before you start:** Nothing. Install a compiler with the setup guide and you are ready.
+
 Welcome to your first lesson in C! The journey to mastering C is challenging
 but incredibly rewarding. It all begins with this single step.
 
@@ -205,3 +209,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 1_hello_world 1_hello_world.c
 ./1_hello_world
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Change the message to greet yourself by name, then compile and run it again.
+2. Print three lines with three `printf` calls, then print the same three lines with one `printf` and two `\n`s.
+3. Delete the semicolon after the `printf` call and compile. Read the error message: which line does it point at? Put the semicolon back.

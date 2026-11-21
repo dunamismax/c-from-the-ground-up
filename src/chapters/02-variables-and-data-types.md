@@ -1,5 +1,9 @@
 # Variables and Data Types
 
+> **What you'll learn:** variables, the `int`, `double` and `char` types, and printing values with format specifiers such as `%d`, `%.2f` and `%c`.
+>
+> **Before you start:** Lesson 1.
+
 In the last lesson, we printed a fixed message. To write useful programs,
 we need a way to store and manipulate data that can change. This is where
 variables come in.
@@ -261,3 +265,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 2_variables_and_data_types 2_variables_and_data_types.c
 ./2_variables_and_data_types
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a `double` variable for the player's health, set it to 87.5, and print it with one decimal place.
+2. Print `item_price` with `%.0f`, `%.1f` and `%.3f`. What does the number after the dot control?
+3. Print a `char` variable with `%d` instead of `%c`. The number you see is the character's code.

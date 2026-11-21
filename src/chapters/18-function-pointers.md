@@ -1,5 +1,9 @@
 # Function Pointers
 
+> **What you'll learn:** storing a function's address in a function pointer, calling through it, and passing functions as callbacks.
+>
+> **Before you start:** Lessons 7 and 10.
+
 You have mastered pointers to DATA (like `int*` or `struct Student*`), which
 store the memory address of a variable.
 
@@ -180,3 +184,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 18_function_pointers 18_function_pointers.c
 ./18_function_pointers
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write `multiply` and `divide` functions and pass each one to `perform_calculation`. Make `divide` handle a divisor of 0.
+2. Make an array of function pointers holding `add` and `subtract`, and call each one in a loop.
+3. Use the standard library's `qsort` with a comparison function to sort an array of integers.

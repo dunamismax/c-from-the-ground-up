@@ -1,5 +1,9 @@
 # Linking External Libraries
 
+> **What you'll learn:** using a library: header files, the linker, and the `-l` flag, with the math library as the example.
+>
+> **Before you start:** Lesson 31.
+
 In our last lesson, we learned how to build a project from multiple source
 files that WE wrote. But what if we want to use code written by someone else?
 This is where LIBRARIES come in.
@@ -172,3 +176,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 32_linking_external_libraries 32_linking_external_libraries.c -lm
 ./32_linking_external_libraries
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Use `pow` and `sqrt` to compute the distance between two points.
+2. Build without `-lm` and read the error. On which systems does it still build, and why?
+3. Print the sine of 0, 30, 45 and 90 degrees, converting degrees to radians first.

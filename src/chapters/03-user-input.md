@@ -1,10 +1,15 @@
 # User Input
 
+> **What you'll learn:** reading numbers and characters from the keyboard with `scanf`, why it needs `&`, and how to check that it worked.
+>
+> **Before you start:** Lessons 1 and 2.
+
 So far, our programs have been one-way streets: they run and print things
 without any input from the outside world. To build truly useful tools,
 we need our programs to be interactive.
 
-THE `scanf` FUNCTION
+## The `scanf` Function
+
 The counterpart to `printf` (for printing) is `scanf` (for scanning/reading).
 The `scanf` function reads formatted input from the standard input, which is
 usually your keyboard.
@@ -304,3 +309,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 3_user_input 3_user_input.c
 ./3_user_input
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Ask for the user's birth year and print how old they turn this year.
+2. Run the program and type `abc` at the first prompt, then run it again and press Ctrl+D. Which message do you get each time, and why?
+3. Remove the space in `" %c"` and run the program again. What happens at the letter prompt?

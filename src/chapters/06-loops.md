@@ -1,5 +1,9 @@
 # Loops
 
+> **What you'll learn:** repeating code with `for`, `while` and `do-while` loops, and reading input in a loop without hanging on bad input or end of input.
+>
+> **Before you start:** Lessons 1-5.
+
 Imagine you needed to print "Hello!" five times. You could write:
 
 ```c
@@ -355,3 +359,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 6_loops 6_loops.c
 ./6_loops
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Print the multiplication table for a number the user enters, from 1 times to 10 times.
+2. Use a `while` loop to add up numbers the user types until they enter 0, then print the total.
+3. Write a number-guessing game: keep asking until the user types 7, and count the guesses. Make sure garbage input and Ctrl+D do not make it loop forever.

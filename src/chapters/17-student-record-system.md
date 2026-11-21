@@ -1,5 +1,9 @@
 # Student Record System
 
+> **What you'll learn:** putting functions, structs, file I/O and input checking together in a menu-driven program that saves its records.
+>
+> **Before you start:** Lessons 12-15.
+
 This project is where everything comes together. We will build a complete
 application that can:
 1. Add new student records.
@@ -566,3 +570,12 @@ void load_from_file(Student students[], int *count)
 cc -Wall -Wextra -std=c17 -o 17_student_record_system 17_student_record_system.c
 ./17_student_record_system
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a menu option that finds a student by ID and prints their record.
+2. Add a menu option that prints the average GPA of all students.
+3. Open the saved file in a text editor, make one line malformed, and see how loading handles it.

@@ -1,5 +1,9 @@
 # Pointers and Arrays
 
+> **What you'll learn:** how an array name acts as a pointer to its first element, pointer arithmetic, and the two equivalent ways to reach an element.
+>
+> **Before you start:** Lessons 8 and 10.
+
 In the previous lesson, you learned what a POINTER is: a variable that stores
 a memory address. Now, we will explore one of the most important relationships
 in C: the connection between pointers and arrays.
@@ -170,3 +174,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 11_pointers_and_arrays 11_pointers_and_arrays.c
 ./11_pointers_and_arrays
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Loop over `grades` with a pointer that you move with `p++` instead of an index.
+2. Write `int sum(const int *values, int count)` and call it with `grades`.
+3. Print `sizeof(grades)` in `main` and `sizeof(values)` inside your `sum` function. Why are they different?

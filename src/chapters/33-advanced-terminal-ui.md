@@ -1,5 +1,9 @@
 # Advanced Terminal UI
 
+> **What you'll learn:** full-screen terminal programs with ncurses: setup and cleanup, windows, colors and reading single keys.
+>
+> **Before you start:** Lessons 31 and 32.
+
 So far, our programs have been linear: we `printf` some text, `scanf` some
 input, and the text scrolls up and away forever. It's functional, but not
 very interactive. Today, we take control of the entire terminal screen.
@@ -289,3 +293,12 @@ WINDOW *draw_ui(void)
 cc -Wall -Wextra -std=c17 -o 33_advanced_terminal_ui 33_advanced_terminal_ui.c -lncurses
 ./33_advanced_terminal_ui
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Move a `@` around the screen with the arrow keys until the user presses `q`.
+2. Draw a second window with a different color pair.
+3. Show the terminal's size with `getmaxyx`, and update it when the window is resized (`KEY_RESIZE`).

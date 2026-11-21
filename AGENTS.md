@@ -8,9 +8,10 @@ open decisions, and backlog.
 
 A free, progressive C course for beginners. Learners take it at
 <https://cfromthegroundup.com>, and the same lessons are published as an mdBook
-mirror at <https://dunamismax.github.io/c-from-the-ground-up/>. It has 35
-lessons in five parts, running from Hello World to sockets, threads, ncurses and
-a capstone text adventure. The project is popular, and real learners follow it
+mirror at <https://dunamismax.github.io/c-from-the-ground-up/>. It has 38
+lessons in six parts, running from Hello World to sockets, threads, ncurses and
+a capstone text adventure, then the tools that keep C correct: debugging,
+undefined behavior and testing. The project is popular, and real learners follow it
 in order.
 
 Core idea: **every lesson is a small, readable, runnable C program, and the
@@ -133,8 +134,11 @@ Part 3 - The Advanced Path_ Towards Mastery/        lessons 16-25
 Part 4 - The Expert Path_ Systems and Concurrency/  lessons 26-30 (POSIX)
 Part 5 - Expert Systems & Application Development/  lessons 31-35
     31_make_files_for_multi_file_projects/          the only multi-file lesson (own Makefile)
+Part 6 - The Toolsmith Path_ Debugging, UB and Testing/  lessons 36-38
+tests/                                              unit tests for lessons 20 and 28 (lesson 38's `#define main` trick); the smoke and sanitizer checks run them
 src/SUMMARY.md                                      book table of contents (mdBook)
 src/index.md                                        book introduction page
+src/setup.md, src/glossary.md                       book setup chapter and glossary (the site renders the glossary at /glossary)
 src/chapters/NN-slug.md                             one chapter per lesson (26 covers server + client)
 scripts/sync_chapters.py                            copies lesson sources into chapters; --check for CI
 scripts/smoke_check.sh                              compiles every lesson and runs behavioural checks
@@ -225,6 +229,9 @@ What `scripts/smoke_check.sh` does:
     commands and line numbers, and an overlong line
   - lesson 28: `run_hash_table_check`, including the bucket its comment says
     "age" and "city" collide in
+  - lessons 36-38: `run_toolsmith_checks` checks their output, builds 36 with
+    `-DSHOW_BUG` and 37 with `-DSHOW_UB` and expects the AddressSanitizer and
+    UBSan reports the lessons describe, and compiles and runs `tests/*.c`
   If you change those messages, update the script in the same commit.
 - Runs ASan/UBSan regressions when the compiler supports them: lesson 30 on an
   empty file, and a harness that includes lesson 35 with `#define main ...` and
@@ -234,8 +241,8 @@ What `scripts/smoke_check.sh` does:
 What `scripts/sanitizer_check.sh` does (the `sanitizers` CI job, on Linux with
 `SANITIZERS_REQUIRED=1`, so nothing may be skipped there):
 
-- Builds every lesson with ASan + UBSan (+ LeakSanitizer where the platform
-  has it) and runs each one in a fresh directory with a canned input from the
+- Builds every lesson and every `tests/*.c` file with ASan + UBSan (+
+  LeakSanitizer where the platform has it) and runs each one in a fresh directory with a canned input from the
   `case` table in `run_lessons()`: valid input, and bad input for the
   interactive and argument-parsing lessons. Lesson 26's server and client run
   as a pair over a local port (`run_socket_pair`). Lessons 33 and 35 run in an
@@ -437,8 +444,8 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
   under `// --- Function Prototypes ---`) or, from lesson 24 on, can be
   `static`. `-Wconversion` and `-Wsign-conversion` need narrowing conversions
   written as casts; add a comment saying why the value fits.
-- Lessons 26-30 may use POSIX; everything earlier must stay ISO C plus the
-  standard library.
+- Lessons 26-30 may use POSIX; every other lesson must stay ISO C plus the
+  standard library (and libm and ncurses where 32, 33 and 35 say so).
 - Interactive lessons must not hang when stdin hits EOF or the user types
   garbage. Always check `scanf` (`!= 1`) and `fgets` (`== NULL`) return values,
   and initialize variables that `scanf` fills. Lessons 3 and 6 teach the
@@ -460,10 +467,21 @@ Follow the existing lessons exactly. `20_linked_lists.c` is a good reference.
 Each `src/chapters/NN-slug.md` contains:
 
 1. `# Title` matching the lesson's `@brief` title.
-2. Prose overview, mostly drawn from the lesson's comments, using `##` sections.
-3. `## Full Source`, then the marker and the synced code block (lesson 26 uses
+2. A callout blockquote: `> **What you'll learn:** ...`, a `>` line, then
+   `> **Before you start:** ...` (the lessons it builds on).
+3. Prose overview, mostly drawn from the lesson's comments, using `##` sections.
+   When the prose talks about a line of code, show it in a short `c` block
+   copied from the lesson.
+4. `## Full Source`, then the marker and the synced code block (lesson 26 uses
    `### Client Source` / `### Server Source`; lesson 31 uses one `##` per file).
-4. `## How to Compile and Run`, with `sh` code blocks.
+5. `## How to Compile and Run`, with `sh` code blocks.
+6. `## Try It Yourself`: three exercises that need only what the course has
+   taught so far.
+
+`src/setup.md` (a prefix chapter) and `src/glossary.md` (a suffix chapter,
+after `---` in `SUMMARY.md`) are not lessons; the site skips them in
+`parseSummary` and renders the glossary at `/glossary`. When a lesson
+introduces a new UPPERCASE term, add it to the glossary.
 
 ## Adding a new lesson
 
@@ -475,9 +493,10 @@ Each `src/chapters/NN-slug.md` contains:
    apt-get step in `.github/workflows/verify.yml` and to the README Build Notes.
 4. If it has meaningful runtime behaviour, add a `run_*_check` function to the
    smoke script that pipes input in and asserts on output.
-5. Create `src/chapters/NN-slug.md` with prose, `## Full Source`, an empty marked
-   block (`<!-- source: ... -->` then an opening and closing ```` ```c ```` fence),
-   and `## How to Compile and Run`.
+5. Create `src/chapters/NN-slug.md` with the "What you'll learn" box, prose,
+   `## Full Source`, an empty marked block (`<!-- source: ... -->` then an
+   opening and closing ```` ```c ```` fence), `## How to Compile and Run` and
+   `## Try It Yourself`. Add its new terms to `src/glossary.md`.
 6. Add the chapter to `src/SUMMARY.md`.
 7. Update the part descriptions in `README.md` and `src/index.md` if the scope of
    a part changed.

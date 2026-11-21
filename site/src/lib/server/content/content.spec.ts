@@ -47,15 +47,15 @@ function lessonSourceFiles(): string[] {
 }
 
 describe('course content', () => {
-	it('yields one lesson per SUMMARY.md chapter, numbered 1 to 35', () => {
+	it('yields one lesson per SUMMARY.md chapter, numbered 1 to 38', () => {
 		const summaryChapters = summary.flatMap((part) => part.chapters);
 		expect(course.lessons.map((lesson) => lesson.slug)).toEqual(
 			summaryChapters.map((chapter) => chapter.slug)
 		);
 		expect(course.lessons.map((lesson) => lesson.number)).toEqual(
-			Array.from({ length: 35 }, (_, i) => i + 1)
+			Array.from({ length: 38 }, (_, i) => i + 1)
 		);
-		expect(course.parts.map((part) => part.number)).toEqual([1, 2, 3, 4, 5]);
+		expect(course.parts.map((part) => part.number)).toEqual([1, 2, 3, 4, 5, 6]);
 	});
 
 	it('has unique slugs that match the chapter file names', () => {

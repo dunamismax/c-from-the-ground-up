@@ -1,5 +1,9 @@
 # Static and Extern Variables
 
+> **What you'll learn:** controlling a variable's lifetime and visibility with `static` and `extern`.
+>
+> **Before you start:** Lessons 7 and 22.
+
 As programs grow, we need more control over our variables and functions. We need
 to answer two key questions:
 
@@ -206,3 +210,12 @@ int g_late_defined_variable = 999;
 cc -Wall -Wextra -std=c17 -o 24_static_and_extern_variables 24_static_and_extern_variables.c
 ./24_static_and_extern_variables
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write a function that returns a new ID each time it is called, using a `static` counter.
+2. Split the lesson into two `.c` files that share a global variable through `extern`, and compile them together.
+3. Try to use the `static` global from the second file. Read the linker error.

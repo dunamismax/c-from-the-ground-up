@@ -1,6 +1,7 @@
 # Summary
 
 - [Introduction](index.md)
+- [Setting Up](setup.md)
 
 # Part 1: The Beginner Path -- Core Concepts
 
@@ -51,3 +52,13 @@
 - [Advanced Terminal UI](chapters/33-advanced-terminal-ui.md)
 - [Parsing Data Files](chapters/34-parsing-data-files.md)
 - [Capstone: Text Adventure](chapters/35-capstone-text-adventure.md)
+
+# Part 6: The Toolsmith Path -- Debugging, UB and Testing
+
+- [Debugging](chapters/36-debugging.md)
+- [Undefined Behavior](chapters/37-undefined-behavior.md)
+- [Testing in C](chapters/38-testing.md)
+
+---
+
+- [Glossary](glossary.md)

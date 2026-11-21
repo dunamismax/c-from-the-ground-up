@@ -19,6 +19,7 @@
 			<a class="hover:text-ink" href="/setup">Setup guide</a>
 			<a class="hover:text-ink" href={BOOK_URL}>Read as a book</a>
 			<a class="hover:text-ink" href="/about">About</a>
+			<a class="hover:text-ink" href="/glossary">Glossary</a>
 			<a class="hover:text-ink" href="/downloads/c-from-the-ground-up.zip">Download (.zip)</a>
 			<a class="hover:text-ink" href={LICENSE_URL}>MIT License</a>
 			<a class="hover:text-ink" href="/privacy">Privacy</a>

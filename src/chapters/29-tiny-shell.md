@@ -1,5 +1,9 @@
 # Tiny Shell
 
+> **What you'll learn:** how a shell runs programs: reading a command, splitting it into arguments, `fork`, `execvp` and `waitpid`.
+>
+> **Before you start:** Lessons 15 and 26.
+
 This lesson is a project: a working command-line shell.
 
 A SHELL is a command-line interpreter. It's the program that gives you a
@@ -281,3 +285,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 29_tiny_shell 29_tiny_shell.c
 ./29_tiny_shell
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a built-in `pwd` command using `getcwd`.
+2. Print the exit status of each command after it finishes, using `WIFEXITED` and `WEXITSTATUS`.
+3. Add a built-in `cd` command with `chdir`. Why can `cd` not be run as a child process?

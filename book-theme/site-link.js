@@ -10,10 +10,21 @@
     if (!main) {
         return;
     }
-    var match = /\/chapters\/(\d{2}-[a-z0-9-]+)\.html$/.exec(window.location.pathname);
+    var path = window.location.pathname;
+    var match = /\/chapters\/(\d{2}-[a-z0-9-]+)\.html$/.exec(path);
+    // The setup and glossary pages have their own pages on the site too.
+    var page = /\/(setup|glossary)\.html$/.exec(path);
     var link = document.createElement('a');
-    link.href = match ? site + '/lessons/' + match[1] : site + '/';
-    link.textContent = match ? 'Read this lesson on cfromthegroundup.com' : 'Take the course at cfromthegroundup.com';
+    if (match) {
+        link.href = site + '/lessons/' + match[1];
+        link.textContent = 'Read this lesson on cfromthegroundup.com';
+    } else if (page) {
+        link.href = site + '/' + page[1];
+        link.textContent = 'Read this page on cfromthegroundup.com';
+    } else {
+        link.href = site + '/';
+        link.textContent = 'Take the course at cfromthegroundup.com';
+    }
     var banner = document.createElement('aside');
     banner.className = 'site-link';
     banner.setAttribute('aria-label', 'Course website');

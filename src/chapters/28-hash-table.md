@@ -1,5 +1,9 @@
 # Hash Table Implementation
 
+> **What you'll learn:** building a hash table with separate chaining: a hash function, insert, search, delete and cleanup.
+>
+> **Before you start:** Lessons 13 and 20.
+
 This lesson is a project: a data structure you build from scratch.
 
 So far, we've seen arrays (fast access by index, slow search) and linked lists
@@ -496,3 +500,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 28_hash_table_implementation 28_hash_table_implementation.c
 ./28_hash_table_implementation
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add `int ht_count(const HashTable *table)` that counts the stored entries.
+2. Change `TABLE_SIZE` to 1 and run the lesson. It still works: why, and what happens to the speed?
+3. Add a function that prints how many entries each bucket holds, to see how evenly the keys spread.

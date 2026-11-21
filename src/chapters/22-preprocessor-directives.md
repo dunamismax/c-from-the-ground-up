@@ -1,5 +1,9 @@
 # Preprocessor Directives
 
+> **What you'll learn:** what the preprocessor does: `#include`, `#define` macros, the parentheses rule, and conditional compilation.
+>
+> **Before you start:** Part 1 and Lesson 7.
+
 Before your C code is ever seen by the actual compiler, it goes through a
 first pass by a program called the C PREPROCESSOR. The preprocessor's job is
 simple: it's a text-replacement tool that scans your code for lines starting
@@ -171,3 +175,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 22_preprocessor_directives 22_preprocessor_directives.c
 ./22_preprocessor_directives
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write a `MAX(a, b)` macro with every parameter and the whole body in parentheses, and test it with `MAX(1 + 2, 3 * 2)`.
+2. Build the lesson with `-DDEBUG` and without it, and compare the output.
+3. Call your `MAX` macro with `MAX(x++, y)`. Why can a macro evaluate an argument twice when a function would not?

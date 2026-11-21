@@ -1,5 +1,9 @@
 # Multithreaded File Analyzer
 
+> **What you'll learn:** running work in parallel with POSIX threads, race conditions, and protecting shared data with a mutex.
+>
+> **Before you start:** Lessons 13, 14 and 29.
+
 This lesson is a project: putting every core of your CPU to work.
 
 So far, all our programs have run in a single sequence of execution. They do
@@ -383,3 +387,12 @@ int main(int argc, char *argv[])
 cc -Wall -Wextra -std=c17 -pthread -o 30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c
 ./30_multithreaded_file_analyzer 30_multithreaded_file_analyzer.c
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Change the number of threads and time the program on a large file with `time`.
+2. Remove the mutex lock and unlock calls, build with `-fsanitize=thread`, and read the race report. Then put them back.
+3. Make each thread also count how many times the letter `e` appears.

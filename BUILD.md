@@ -8,7 +8,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | | |
 | --- | --- |
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
-| **Next step** | The **chapter prose drift audit** (read each chapter beside its lesson for tone and order), then the [Ideas inbox](#ideas-inbox), the Later items (setup chapter, prerequisites boxes, glossary, exercises), Part 6 (lessons 36-38) and W9. |
+| **Next step** | W9 (Umami analytics): code and runbook first, then the install on the server with the maintainer. Everything else in the course content track is done; the Ideas inbox has the optional exercise solutions. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
 | **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). |
 | **Live** | https://cfromthegroundup.com serves `25146a8`, deployed 2026-11-20 with `site/deploy/`, so the site matches the lessons on `main`. The database has the W6 tables; accounts are off until the OAuth app exists. |
@@ -637,17 +637,36 @@ the lessons it serves.
 
 ### Later (P3): book and reader experience
 
-- [ ] **Exercises.** Add a "Try it yourself" section to each chapter with 2-3
-      exercises. Optionally add hidden solutions in an `exercises/` directory
-      that the smoke check compiles.
+- [x] **Exercises.** Done 2026-11-20: every chapter ends with a `## Try It
+      Yourself` section of 3 exercises that use only what the course has
+      taught by then, each checked against its lesson's code (function and
+      variable names it mentions exist; the features it asks for do not
+      yet). On the site it follows the run panel as ordinary prose. The
+      optional hidden solutions were not written; see "Exercise solutions"
+      in the Ideas inbox.
 - [x] **Images.** Done 2026-11-20: the 7 unused images in `assets/images/`
       were deleted at the maintainer's request (unused, and several were
       third-party artwork with no clear license). `assets/images/site/` keeps
       the README screenshots.
-- [ ] **Per-chapter "What you'll learn / prerequisites"** box at the top of each
-      chapter.
-- [ ] **Glossary page** for the UPPERCASE terms the lessons introduce.
-- [ ] **Setup chapter** ("Chapter 0") for the book. The site's `/setup` page
+- [x] **Per-chapter "What you'll learn / prerequisites"** box at the top of each
+      chapter. Done 2026-11-20: a blockquote right under each `# Title`
+      ("What you'll learn" and "Before you start"). The site styles prose
+      blockquotes as callouts (no italics or quote marks), checked in both
+      themes and at phone width; the lesson description still comes from
+      the first paragraph.
+- [x] **Glossary page** for the UPPERCASE terms the lessons introduce. Done
+      2026-11-20: `src/glossary.md` (120 terms, each linking to the
+      lesson that teaches it) is a suffix chapter of the book after a `---`
+      separator in `SUMMARY.md`, and the site renders the same file at
+      `/glossary` (`src/lib/server/content/page.ts`, which rewrites
+      `chapters/NN-slug.md` links to `/lessons/NN-slug`). Linked from the
+      footer and the sitemap; covered by unit tests (every link names a real
+      lesson), an e2e test, axe and the CSP test.
+- [x] **Setup chapter** ("Chapter 0") for the book. Done 2026-11-20:
+      `src/setup.md` ("Setting Up"), a prefix chapter after the
+      introduction that mirrors the site's `/setup` page, plus a short
+      "Using the Terminal" section. The book's banner script links it, and
+      the glossary, to the matching site page. The site's `/setup` page
       (W3) already covers this. The mdBook is kept (D6), so add a matching
       chapter: installing a compiler on macOS, Linux and Windows (WSL), using a
       terminal, and running a lesson, teaching `-std=c17` (D1) and WSL on
@@ -660,15 +679,31 @@ The rest are ideas, not planned work; each needs the maintainer's go-ahead
 before anyone starts it. Each new lesson follows the "Adding a new lesson"
 checklist in AGENTS.md.
 
-- [ ] **Debugging lesson** (Part 6, lesson 36). Cover `gdb`/`lldb` basics, breakpoints and
-      backtraces, and reading sanitizer reports.
-- [ ] **Undefined behaviour lesson** (Part 6, lesson 37). Cover signed overflow, out-of-bounds
-      access, uninitialized reads and strict aliasing, and show UBSan catching
-      them.
-- [ ] **Testing in C lesson** (Part 6, lesson 38). Use plain `assert` and exit-code tests, with the
-      `#define main` harness trick the smoke check already uses. Add
-      `tests/test_linked_list.c` (lesson 20) and `tests/test_hash_table.c`
-      (lesson 28).
+- [x] **Debugging lesson** (Part 6, lesson 36). Done 2026-11-20:
+      `36_debugging.c` covers `-g -O0`, a gdb/lldb command table (breakpoints,
+      stepping, printing, `backtrace`, `finish`, watchpoints) with a guided
+      session, and reading an AddressSanitizer report. `-DSHOW_BUG` switches
+      on an off-by-one read; the smoke check builds it with ASan and expects
+      the `stack-buffer-overflow` report in `sum_readings` the lesson shows.
+- [x] **Undefined behaviour lesson** (Part 6, lesson 37). Done 2026-11-20:
+      `37_undefined_behavior.c` covers why optimizers make UB dangerous,
+      signed overflow (`checked_add`), out-of-bounds access, uninitialized
+      reads, shifts, strict aliasing (`memcpy`) and unsequenced changes.
+      `-DSHOW_UB` adds a real overflow; the smoke check expects UBSan's
+      "signed integer overflow" report, which both Clang and GCC 16 print.
+- [x] **Testing in C lesson** (Part 6, lesson 38). Done 2026-11-20:
+      `38_testing.c` covers `assert` and `NDEBUG`, a `CHECK` macro
+      (`#condition`, `__LINE__`, `do { } while (0)`), edge cases and exit
+      status (18 checks). `tests/test_linked_list.c` and
+      `tests/test_hash_table.c` include lessons 20 and 28 with `main`
+      renamed; the smoke check compiles and runs them with ASan and UBSan,
+      and the sanitizer check runs them under every sanitizer.
+- Part 6 as a whole: chapters 36-38 with boxes and exercises, `# Part 6` in
+  `SUMMARY.md`, the Structure list in `src/index.md` (which the site reads),
+  the README table, 17 new glossary terms, and the site's lesson counts
+  (description, Open Graph card, landing grid of 3 columns for 6 parts, and
+  the e2e tests). Every new file builds warning-free under Clang and GCC 16,
+  in C17 and C23.
 - [ ] **Modern C (C23) lesson.** Cover `nullptr`, `bool`/`true` as keywords,
       `constexpr`, `typeof`, `[[nodiscard]]`, digit separators and `#embed`. This
       D1 teaches C17, so this lesson would give the `-std=c23` command.
@@ -691,6 +726,10 @@ checklist in AGENTS.md.
 Unsorted ideas. Triage them into a section above, with a priority, when you
 pick them up.
 
+- **Exercise solutions.** The optional half of the Exercises item: worked
+  solutions in an `exercises/` directory that the smoke check compiles,
+  perhaps shown on the site behind a "Show solution" toggle. Writing 105
+  of them is a project of its own; start with Part 1.
 - **Compiler Explorer compiler pin.** "Try it online" pins GCC 16.2
   (`cg162` in `site/src/lib/compiler-explorer.ts`). Checked 2026-11-20: it
   is still the newest GCC there. Check once a year that the id still exists
@@ -773,6 +812,19 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** Part 6 and the Later items. Lessons 36 (debugging), 37
+  (undefined behavior) and 38 (testing in C) with chapters, `tests/` for
+  lessons 20 and 28, and smoke and sanitizer checks that prove each lesson's
+  claims (the `-DSHOW_BUG` and `-DSHOW_UB` builds produce the reports the
+  comments show). Every chapter gained a "What you'll learn" box and three
+  exercises; the book gained a setup chapter and a glossary (120 terms),
+  which the site serves at `/glossary`. Checked with `make verify`, the site
+  e2e tests (axe on `/glossary` in both themes), `make sanitize-linux` (101
+  runs, MSan included) and `make smoke-linux`; the pages were checked in the
+  browser in both themes and at phone width. GCC's ASan on macOS hangs while
+  symbolizing, so lesson 36's ASan check runs with `symbolize=0` and looks
+  for the variable name instead of the function name.
 
 - **2026-11-20:** the chapter prose audit and three Ideas inbox fixes.
   - Prose: every chapter read beside its lesson (see the ticked item in Now

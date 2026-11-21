@@ -1,5 +1,9 @@
 # Structs
 
+> **What you'll learn:** grouping related data in a `struct`, reaching members with `.`, and with `->` through a pointer.
+>
+> **Before you start:** Lessons 9-11.
+
 So far, our variables have held a single piece of data (like an `int` or a
 `double`), and our arrays have held multiple pieces of the SAME type of data.
 
@@ -167,3 +171,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 12_structs 12_structs.c
 ./12_structs
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add an `int age` member to `struct Student`, set it and print it.
+2. Make an array of three students and print them all with a loop.
+3. Write `void print_student(const struct Student *s)` and use it instead of the repeated `printf` calls.

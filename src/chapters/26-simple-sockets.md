@@ -1,5 +1,9 @@
 # Simple Socket Server and Client
 
+> **What you'll learn:** TCP networking with sockets: a server that binds, listens and accepts, and a client that connects, sends and receives.
+>
+> **Before you start:** Parts 1-3. The lesson uses POSIX, so on Windows run it in WSL.
+
 ## The Client
 
 Welcome to the world of network programming! In this lesson, we will build a
@@ -680,3 +684,12 @@ port and a message:
 ```sh
 ./26_simple_socket_client 127.0.0.1 8888 "Hello from the C client!"
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Make the server reply with the message in uppercase.
+2. Make the server handle clients one after another in a loop instead of exiting after one.
+3. Run the client with a port where no server is listening, and check the error message.

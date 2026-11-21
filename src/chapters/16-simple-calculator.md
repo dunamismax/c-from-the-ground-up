@@ -1,5 +1,9 @@
 # Simple Calculator
 
+> **What you'll learn:** building a small command-line calculator: parsing arguments with `strtod`, choosing an operation, and reporting errors clearly.
+>
+> **Before you start:** Part 2, especially Lesson 15.
+
 Welcome to Part 3! It's time to start building bigger things. This lesson is
 our first real PROJECT: a simple calculator that works from the command line.
 
@@ -243,3 +247,12 @@ Try the error checks too: `./16_simple_calculator ten + 5` is not a number,
 `./16_simple_calculator 10 plus 5` is not a single-character operator,
 `./16_simple_calculator 10 / 0` divides by zero, and
 `./16_simple_calculator 10 +` prints the usage message.
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a `^` operator that raises the first number to a whole-number power with a loop.
+2. Add a `%` operator for two whole numbers, and reject it when either one is not a whole number.
+3. Run the calculator with `*` unquoted, as in `./16_simple_calculator 7 * 6`. What does your shell do to the `*`, and why does the lesson quote it as `'*'`?

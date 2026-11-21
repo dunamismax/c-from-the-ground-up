@@ -56,7 +56,7 @@ smoke-all:
 # directories do not work with Docker Desktop.
 LINUX_IMAGE ?= gcc:15
 smoke-linux:
-	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts | \
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests | \
 		docker run --rm -i $(LINUX_IMAGE) sh -c '\
 			set -e; mkdir /r; cd /r; tar xf -; \
 			apt-get update -qq >/dev/null; \
@@ -94,7 +94,7 @@ sanitize:
 # MemorySanitizer needs the personality() syscall, which Docker's default
 # seccomp profile blocks.
 sanitize-linux:
-	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts | \
+	COPYFILE_DISABLE=1 tar --no-xattrs -cf - Part* scripts tests | \
 		docker run --rm -i --security-opt seccomp=unconfined $(LINUX_IMAGE) sh -c '\
 			set -e; mkdir /r; cd /r; tar xf -; \
 			apt-get update -qq >/dev/null; \

@@ -1,5 +1,9 @@
 # Build Your Own grep
 
+> **What you'll learn:** a project that rebuilds the core of `grep`: arguments, reading a file line by line, and searching with `strstr`.
+>
+> **Before you start:** Lessons 14 and 15.
+
 This lesson is a project: your own version of a classic Unix tool.
 
 `grep` (which stands for Global Regular Expression Print) is one of the most
@@ -203,3 +207,12 @@ int main(int argc, char *argv[])
 cc -Wall -Wextra -std=c17 -o 27_build_your_own_grep 27_build_your_own_grep.c
 ./27_build_your_own_grep main 27_build_your_own_grep.c
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Print the line number before each matching line, like `grep -n`.
+2. Add a `-c` option that prints only the number of matching lines.
+3. Read from standard input when no file name is given, so `cat file | ./27_build_your_own_grep pattern` works.

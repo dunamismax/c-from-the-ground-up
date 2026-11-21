@@ -11,6 +11,7 @@ const pages = [
 	'/lessons/01-hello-world',
 	'/lessons/33-advanced-terminal-ui',
 	'/setup',
+	'/glossary',
 	'/about',
 	'/privacy',
 	'/account',

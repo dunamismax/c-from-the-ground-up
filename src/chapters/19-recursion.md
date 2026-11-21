@@ -1,5 +1,9 @@
 # Recursion
 
+> **What you'll learn:** recursion: functions that call themselves, base cases, recursive steps, and the danger of stack overflow.
+>
+> **Before you start:** Lessons 7 and 8.
+
 So far, when you've needed to repeat a task, you've used a loop (`for` or `while`).
 Today, we're going to learn a powerful and elegant alternative: RECURSION.
 
@@ -203,3 +207,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 19_recursion 19_recursion.c
 ./19_recursion
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write a recursive `int sum_to(int n)` that returns 1 + 2 + ... + n.
+2. Write a recursive function that prints a string backwards, one character per call.
+3. Write a recursive `long long fibonacci(int n)` (with `fibonacci(0)` = 0 and `fibonacci(1)` = 1) and a loop version, and time both for n = 40. Which is faster, and why?

@@ -1,5 +1,9 @@
 # Command-Line Arguments
 
+> **What you'll learn:** reading command-line arguments with `argc` and `argv`, and converting them to numbers safely with `strtol`.
+>
+> **Before you start:** Lessons 9-14.
+
 You've already been using command-line arguments without even realizing it!
 When you compile a program like this:
 
@@ -254,3 +258,12 @@ cc -Wall -Wextra -std=c17 -o 15_command_line_arguments 15_command_line_arguments
 Run it with no arguments, or with too many, to see the usage message. Run it
 with an age that is not a number, as in `./15_command_line_arguments Dana forty`,
 to see the `strtol` check reject it.
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Print every argument with its index, using a loop from 0 to `argc - 1`.
+2. Write a program that adds up all of its numeric arguments, rejecting any that `strtol` cannot fully convert.
+3. Try the lesson with `30abc`, `abc` and `99999999999999999999` as the age, and match each message to the check that caught it.

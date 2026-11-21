@@ -21,6 +21,7 @@ for (const path of [
 	'/lessons',
 	'/lessons/13-dynamic-memory-allocation',
 	'/setup',
+	'/glossary',
 	'/no-such-page'
 ]) {
 	test(`${path} runs without CSP violations`, async ({ page }) => {

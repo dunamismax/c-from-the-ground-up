@@ -1,5 +1,9 @@
 # Arrays
 
+> **What you'll learn:** arrays: declaring them, zero-based indexing, initializer lists, and looping over every element.
+>
+> **Before you start:** Lessons 1-7, especially `for` loops from Lesson 6.
+
 So far, we have only used variables that can hold one value at a time. For
 example, `int score = 100;`. But what if you need to store the scores for
 an entire class of 30 students? Declaring 30 separate variables (`score1`,
@@ -208,3 +212,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 8_arrays 8_arrays.c
 ./8_arrays
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Find and print the largest value in `high_scores`.
+2. Read 5 integers from the user into an array, then print them in reverse order.
+3. Compute the average of `temperatures` as a `double` and print it with one decimal place.

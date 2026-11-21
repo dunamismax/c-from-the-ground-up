@@ -1,5 +1,9 @@
 # Conditional Statements
 
+> **What you'll learn:** making decisions with `if`, `else` and `else if` chains, and combining conditions with `&&` and `||`.
+>
+> **Before you start:** Lessons 1-4, especially the operators from Lesson 4.
+
 Our programs so far have been linear; they execute every line of code from
 top to bottom in the same order every time. To create powerful and intelligent
 programs, we need them to be able to make decisions.
@@ -303,3 +307,12 @@ int main(void)
 cc -Wall -Wextra -std=c17 -o 5_conditional_statements 5_conditional_statements.c
 ./5_conditional_statements
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Read a temperature in Celsius and print "freezing", "cold", "mild" or "hot" for ranges you choose.
+2. Reject grades outside 0-100 with an error message before the grade chain runs.
+3. Read three integers and print the largest. Make sure it works when two of them are equal.

@@ -1,5 +1,9 @@
 # Parsing Data Files
 
+> **What you'll learn:** parsing a CSV data file into structs with `sscanf`, checking every line, and why `strtok` needs more care.
+>
+> **Before you start:** Lessons 12, 14 and 15.
+
 So far, our programs have either been non-persistent or have saved data in a
 simple, unstructured way. Real-world applications, however, almost always
 need to read structured data--user profiles, game levels, configuration
@@ -317,3 +321,12 @@ cc -Wall -Wextra -std=c17 -o 34_parsing_data_files 34_parsing_data_files.c
 ```
 
 Create `users.dat` first, with the sample lines shown in the source above.
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add an email field to the data file and to `struct User`.
+2. Print only the active users, then only users above a level the user gives as an argument.
+3. Write the parsed users back out to a new file in the same format.

@@ -443,6 +443,61 @@ run_hash_table_check() {
     expect_contains "$RUN_OUTPUT" '["city": "Los Angeles"]' "Lesson 28 did not update a key."
 }
 
+# Part 6: the lessons' own output, the bugs they switch on with -DSHOW_BUG and
+# -DSHOW_UB (the sanitizers must report them exactly as the comments say), and
+# the unit tests in tests/ that lesson 38 describes.
+run_toolsmith_checks() {
+    part6="$ROOT_DIR/Part 6 - The Toolsmith Path_ Debugging, UB and Testing"
+
+    run_lesson_with_input "$BUILD_DIR/36_debugging" ''
+    expect_status 0 "Lesson 36 did not exit cleanly."
+    expect_contains "$RUN_OUTPUT" "Total:   141" "Lesson 36 computed the wrong total."
+    expect_contains "$RUN_OUTPUT" "Highest: 24" "Lesson 36 found the wrong highest reading."
+    expect_contains "$RUN_OUTPUT" "Average: 20.14" "Lesson 36 computed the wrong average."
+
+    run_lesson_with_input "$BUILD_DIR/37_undefined_behavior" ''
+    expect_status 0 "Lesson 37 did not exit cleanly."
+    expect_contains "$RUN_OUTPUT" "2000000000 + 100 = 2000000100" "Lesson 37's checked_add refused a sum that fits."
+    expect_contains "$RUN_OUTPUT" "2000000000 + 2000000000 would overflow an int, so it was refused." "Lesson 37's checked_add accepted an overflow."
+    expect_contains "$RUN_OUTPUT" "values[2] = 30" "Lesson 37's element_at refused a valid index."
+    expect_contains "$RUN_OUTPUT" "Index 5 is outside an array of 4 elements, so it was refused." "Lesson 37's element_at accepted a bad index."
+    expect_contains "$RUN_OUTPUT" "bit_mask(3) = 8" "Lesson 37's bit_mask gave the wrong mask."
+    expect_contains "$RUN_OUTPUT" "bit_mask(40) was refused" "Lesson 37's bit_mask accepted a shift that is too wide."
+    expect_contains "$RUN_OUTPUT" "The bits of 1.0f are 0x3F800000." "Lesson 37 printed the wrong bits for 1.0f."
+    expect_not_contains "$RUN_OUTPUT" "INT_MAX + 1" "Lesson 37 ran its -DSHOW_UB overflow in a normal build."
+
+    run_lesson_with_input "$BUILD_DIR/38_testing" ''
+    expect_status 0 "Lesson 38's own tests failed."
+    expect_contains "$RUN_OUTPUT" "All 18 checks passed." "Lesson 38 did not run all of its checks."
+
+    for test_name in test_linked_list test_hash_table; do
+        printf 'Compiling tests/%s.c\n' "$test_name"
+        "$CC" $EFFECTIVE_CFLAGS "$ROOT_DIR/tests/$test_name.c" -o "$BUILD_DIR/$test_name" ${SANITIZER_FLAGS:-}
+        run_lesson_with_input "$BUILD_DIR/$test_name" ''
+        expect_status 0 "tests/$test_name.c failed."
+        expect_contains "$RUN_OUTPUT" "checks passed." "tests/$test_name.c did not report its result."
+    done
+
+    if [ -z "${SANITIZER_FLAGS:-}" ]; then
+        printf 'Skipping the Part 6 sanitizer demonstrations (no -fsanitize support).\n'
+        return 0
+    fi
+    "$CC" $EFFECTIVE_CFLAGS -g -DSHOW_BUG "$part6/36_debugging.c" -o "$BUILD_DIR/36_debugging_bug" $SANITIZER_FLAGS
+    # symbolize=0: GCC's AddressSanitizer on macOS can hang while it turns the
+    # backtrace into function names. The error kind and the variable name do
+    # not need the symbolizer.
+    saved_asan_options=${ASAN_OPTIONS-}
+    ASAN_OPTIONS=symbolize=0
+    export ASAN_OPTIONS
+    run_lesson_with_input "$BUILD_DIR/36_debugging_bug" ''
+    ASAN_OPTIONS=$saved_asan_options
+    expect_contains "$RUN_OUTPUT" "stack-buffer-overflow" "Lesson 36's -DSHOW_BUG build did not produce the AddressSanitizer report the lesson describes."
+    expect_contains "$RUN_OUTPUT" "'readings'" "Lesson 36's AddressSanitizer report does not name the readings array."
+    "$CC" $EFFECTIVE_CFLAGS -g -DSHOW_UB "$part6/37_undefined_behavior.c" -o "$BUILD_DIR/37_undefined_behavior_ub" $SANITIZER_FLAGS
+    run_lesson_with_input "$BUILD_DIR/37_undefined_behavior_ub" ''
+    expect_contains "$RUN_OUTPUT" "signed integer overflow" "Lesson 37's -DSHOW_UB build did not produce the UBSan report the lesson describes."
+}
+
 run_sanitizer_regressions() {
     if [ -z "${SANITIZER_FLAGS:-}" ]; then
         printf 'Skipping sanitizer regressions (compiler does not support -fsanitize=address,undefined).\n'
@@ -611,6 +666,7 @@ run_input_checks
 run_number_argument_checks
 run_text_editor_check
 run_hash_table_check
+run_toolsmith_checks
 run_sanitizer_regressions
 
 printf 'Smoke check passed. Compiled %d single-file lessons plus lesson 31 with %s' "$compiled_count" "$STANDARD_FLAG"

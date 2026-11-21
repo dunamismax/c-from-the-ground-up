@@ -6,8 +6,9 @@
 //
 //   - [Hello, World!](chapters/01-hello-world.md)
 //
-// Links that appear before the first part heading (the introduction) are not
-// lessons and are skipped.
+// Links that appear before the first part heading (the introduction and the
+// setup page) are not lessons and are skipped, and so is everything after a
+// `---` separator line (the glossary): mdBook's prefix and suffix chapters.
 
 export interface SummaryChapter {
 	title: string;
@@ -36,6 +37,7 @@ export function parseSummary(text: string): SummaryPart[] {
 	const parts: SummaryPart[] = [];
 	for (const raw of text.split('\n')) {
 		const line = raw.trim();
+		if (line === '---' && parts.length > 0) break;
 		const part = PART_RE.exec(line);
 		if (part) {
 			parts.push({ number: Number(part[1]), title: displayTitle(part[2]), chapters: [] });

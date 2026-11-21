@@ -11,7 +11,7 @@ game you build yourself.**
 ## [Start learning at cfromthegroundup.com &rarr;](https://cfromthegroundup.com)
 
 [Start lesson 1](https://cfromthegroundup.com/lessons/01-hello-world) &middot;
-[Browse all 35 lessons](https://cfromthegroundup.com/lessons) &middot;
+[Browse all 38 lessons](https://cfromthegroundup.com/lessons) &middot;
 [Set up a compiler](https://cfromthegroundup.com/setup)
 
 Free &middot; Open source &middot; No sign-up &middot; No ads or trackers
@@ -79,7 +79,7 @@ while learning:
 
 ## What you will learn
 
-Five parts, taken in order. Each lesson only uses ideas that earlier lessons
+Six parts, taken in order. Each lesson only uses ideas that earlier lessons
 taught.
 
 | Part | Lessons | What it covers |
@@ -89,6 +89,7 @@ taught.
 | [**3. The Advanced Path**](https://cfromthegroundup.com/parts/3) | 16-25 | Function pointers, recursion, linked lists, bit manipulation, the preprocessor and a line-based text editor |
 | [**4. The Expert Path**](https://cfromthegroundup.com/parts/4) | 26-30 | Sockets, your own `grep`, hash tables, a tiny shell and multithreading |
 | [**5. Expert Systems**](https://cfromthegroundup.com/parts/5) | 31-35 | Multi-file projects, external libraries, ncurses terminal UIs, data parsing and a capstone text adventure |
+| [**6. The Toolsmith Path**](https://cfromthegroundup.com/parts/6) | 36-38 | Debugging with gdb and lldb, undefined behavior and the sanitizers, and testing in C |
 
 **[Start with lesson 1: Hello, World! &rarr;](https://cfromthegroundup.com/lessons/01-hello-world)**
 

@@ -1,5 +1,9 @@
 # Functions
 
+> **What you'll learn:** writing your own functions: prototypes, definitions, parameters, arguments and return values.
+>
+> **Before you start:** Lessons 1-6.
+
 As programs grow larger, putting all the code inside the `main` function
 becomes messy, hard to read, and difficult to maintain. If you have a task
 that needs to be performed multiple times, you don't want to copy and paste
@@ -276,3 +280,12 @@ int calculate_damage(int strength, int weapon_power)
 cc -Wall -Wextra -std=c17 -o 7_functions 7_functions.c
 ./7_functions
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Write `int square(int n)` and use it to print the squares of 1 to 10.
+2. Write `int max_of(int a, int b)` and use it twice to find the largest of three numbers.
+3. Move a function's definition above `main` and delete its prototype. Does it still compile? Now move it below `main` again, still without the prototype, and read the error.

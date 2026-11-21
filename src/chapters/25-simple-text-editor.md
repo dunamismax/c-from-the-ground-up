@@ -1,5 +1,9 @@
 # Simple Text Editor
 
+> **What you'll learn:** a Part 3 capstone: a line editor built on a doubly linked list, with file loading, saving and a command loop.
+>
+> **Before you start:** Lessons 13-20.
+
 Welcome to your Part 3 capstone project! This is where we put everything
 together to build a substantial application: a command-line text editor.
 
@@ -593,3 +597,12 @@ void delete_line(int line_number)
 cc -Wall -Wextra -std=c17 -o 25_simple_text_editor 25_simple_text_editor.c
 ./25_simple_text_editor my_document.txt
 ```
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add an `n` command that prints the number of lines.
+2. Add an `f TEXT` command that prints every line containing TEXT, using `strstr`.
+3. Add an `r N TEXT` command that replaces line N with TEXT, freeing the old text.

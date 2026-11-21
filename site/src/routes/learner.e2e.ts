@@ -128,7 +128,7 @@ test('zip downloads hold the lesson files', async ({ request }) => {
 	expect(course.status()).toBe(200);
 	const all = unzipSync(new Uint8Array(await course.body()));
 	const names = Object.keys(all);
-	expect(names.filter((name) => name.endsWith('.c'))).toHaveLength(37);
+	expect(names.filter((name) => name.endsWith('.c'))).toHaveLength(40);
 	expect(names).toContain('c-from-the-ground-up/LICENSE');
 	expect(
 		strFromU8(all['c-from-the-ground-up/Part 1 - The Beginner Path_ Core Concepts/1_hello_world.c'])

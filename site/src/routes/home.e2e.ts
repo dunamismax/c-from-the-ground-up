@@ -69,10 +69,26 @@ test('robots.txt and the sitemap list every public page', async ({ request }) =>
 	const sitemap = await request.get('/sitemap.xml');
 	expect(sitemap.status()).toBe(200);
 	const xml = await sitemap.text();
-	expect(xml.match(/<loc>https:\/\/cfromthegroundup\.com\/lessons\/\d{2}-/g)).toHaveLength(35);
+	expect(xml.match(/<loc>https:\/\/cfromthegroundup\.com\/lessons\/\d{2}-/g)).toHaveLength(38);
 	expect(xml).toContain('<loc>https://cfromthegroundup.com/parts/5</loc>');
 	expect(xml).toContain('<loc>https://cfromthegroundup.com/setup</loc>');
+	expect(xml).toContain('<loc>https://cfromthegroundup.com/glossary</loc>');
 	expect(xml).toContain('<loc>https://cfromthegroundup.com/privacy</loc>');
+});
+
+test('the glossary links each term to its lesson', async ({ page }) => {
+	await page.goto('/glossary');
+	await expect(page.getByRole('heading', { level: 1, name: 'Glossary' })).toBeVisible();
+	await page
+		.getByRole('navigation', { name: 'Glossary letters' })
+		.getByRole('link', { name: 'P' })
+		.click();
+	await expect(page).toHaveURL(/#p$/);
+	await page
+		.locator('li', { hasText: 'Pointer arithmetic' })
+		.getByRole('link', { name: 'Lesson 11' })
+		.click();
+	await expect(page).toHaveURL(/\/lessons\/11-pointers-and-arrays$/);
 });
 
 test('pages carry structured data', async ({ page }) => {
@@ -80,7 +96,7 @@ test('pages carry structured data', async ({ page }) => {
 	const course = JSON.parse(
 		(await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}'
 	) as Record<string, unknown>;
-	expect(course).toMatchObject({ '@type': 'Course', numberOfLessons: 35 });
+	expect(course).toMatchObject({ '@type': 'Course', numberOfLessons: 38 });
 
 	await page.goto('/lessons/10-pointers');
 	const lesson = JSON.parse(

@@ -13,6 +13,7 @@ export const GET: RequestHandler = async () => {
 		...course.parts.map((part) => `/parts/${part.number}`),
 		...course.lessons.map((lesson) => `/lessons/${lesson.slug}`),
 		'/setup',
+		'/glossary',
 		'/about',
 		'/privacy'
 	];

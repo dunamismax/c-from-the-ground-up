@@ -17,8 +17,9 @@ export const entries: EntryGenerator = async () => {
 
 async function cardFor(name: string): Promise<OgCard | null> {
 	if (name === 'site') {
+		const { lessons } = await getCourse();
 		return {
-			eyebrow: 'A free course in 35 lessons',
+			eyebrow: `A free course in ${lessons.length} lessons`,
 			title: 'Learn C from the ground up.',
 			description: excerpt(SITE_DESCRIPTION, 140)
 		};

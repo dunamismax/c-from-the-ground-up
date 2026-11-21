@@ -25,7 +25,7 @@ study the source to see it in action.
 
 ## Structure
 
-The book is organized into five progressive parts:
+The book is organized into six progressive parts:
 
 - **Part 1: The Beginner Path** -- Core language fundamentals from Hello World
   through strings
@@ -38,6 +38,8 @@ The book is organized into five progressive parts:
   management, hash tables, and multithreading
 - **Part 5: Expert Systems** -- Multi-file projects, external libraries,
   terminal UI with ncurses, data parsing, and a capstone text adventure
+- **Part 6: The Toolsmith Path** -- Debugging with gdb and lldb, undefined
+  behavior and the sanitizers, and testing in C
 
 ## Quick Start
 

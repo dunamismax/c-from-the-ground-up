@@ -1,5 +1,9 @@
 # Makefiles for Multi-File Projects
 
+> **What you'll learn:** splitting a program into several files, header files and include guards, and building it with a Makefile.
+>
+> **Before you start:** Lessons 7, 22 and 24.
+
 Welcome to a pivotal moment in your C journey. Until now, we have worked with
 single source files. While great for learning, real-world applications are almost
 always split into multiple files for organization, reusability, and clarity.
@@ -406,3 +410,12 @@ That is the power of `make`.
   long `gcc` commands by hand.
 - `make` only re-compiles files that have changed, saving time on large projects.
 - Use `make clean` to remove generated build artifacts.
+
+## Try It Yourself
+
+Practise what this lesson taught. Change a copy of the lesson file, or
+start a new one.
+
+1. Add a new function to `helper.c` and `helper.h` and call it from `main.c`.
+2. Run `make` twice. Why does the second run do nothing? Touch `helper.c` and run it again.
+3. Add a third module with its own `.c` and `.h` file and add it to the Makefile.

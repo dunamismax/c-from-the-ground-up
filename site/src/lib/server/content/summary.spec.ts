@@ -2,6 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { displayTitle, parsePartSummaries, parseSummary } from './summary.js';
 
 describe('parseSummary', () => {
+	it('skips prefix chapters and everything after a --- separator', () => {
+		const parts = parseSummary(
+			[
+				'- [Introduction](index.md)',
+				'- [Setting Up](setup.md)',
+				'',
+				'# Part 1: One',
+				'- [Hello, World!](chapters/01-hello-world.md)',
+				'',
+				'---',
+				'',
+				'- [Glossary](glossary.md)'
+			].join('\n')
+		);
+		expect(parts.map((part) => part.chapters.map((chapter) => chapter.slug))).toEqual([
+			['01-hello-world']
+		]);
+	});
+
 	it('parses parts and chapters and skips the introduction', () => {
 		const parts = parseSummary(
 			[

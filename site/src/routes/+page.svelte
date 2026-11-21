@@ -107,9 +107,9 @@
 	<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6">
 		<h2 id="curriculum-title" class="text-2xl font-bold tracking-tight">The path</h2>
 		<p class="mt-3 max-w-prose text-muted">
-			Five parts, each building on the last. Earlier lessons only use what you have already learned.
+			Six parts, each building on the last. Earlier lessons only use what you have already learned.
 		</p>
-		<ol class="mt-10 grid gap-6 lg:grid-cols-5">
+		<ol class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.parts as part (part.number)}
 				<li class="flex flex-col rounded-xl border border-line bg-raised p-5">
 					<p class="font-mono text-xs font-semibold text-ember">Part {part.number}</p>
