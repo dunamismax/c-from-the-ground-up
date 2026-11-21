@@ -8,11 +8,11 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | | |
 | --- | --- |
 | **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
-| **Next step** | W9 (Umami analytics): code and runbook first, then the install on the server with the maintainer. Everything else in the course content track is done; the Ideas inbox has the optional exercise solutions. |
+| **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Everything else in BUILD.md is done; the Ideas inbox has the optional exercise solutions. |
 | **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: the go-ahead to run `site/deploy/umami/install.sh` on the server, then changing Umami's admin password and adding the website (runbook, "Analytics"). |
-| **Live** | https://cfromthegroundup.com serves `8a5c018`, deployed 2026-11-20 with `site/deploy/`: Part 6, the glossary, the chapter boxes and exercises, and the W9 code with analytics off. The Caddy route for `/stats/` still points at port 4318 (another site's app) until the next deploy moves it to 4321; nothing requests it while analytics is off. Accounts are off until the OAuth app exists. |
-| **`main`** | `make verify` and CI are green at `8a5c018`. |
+| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
+| **Live** | https://cfromthegroundup.com serves `ecbc570`, deployed 2026-11-20, and Umami v3.4.1 runs on the same host (127.0.0.1:4321) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
+| **`main`** | `make verify` and CI are green at `7999685`. |
 | **Last updated** | 2026-11-20 |
 
 ### Milestones at a glance
@@ -27,7 +27,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | [W5. Production deployment](#w5-production-deployment) | Done |
 | [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production until the OAuth app exists |
 | [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer step left: screen-reader pass |
-| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Built and tested in code; the server install and the Umami website need the maintainer |
+| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Umami installed and running; waiting for the admin password change and the website ID |
 | [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Ideas, to triage when W7 is done |
 
 ## How to work this file
@@ -500,15 +500,16 @@ runbook.
 
 #### W9. Analytics (D9: self-hosted Umami)
 
-- [ ] Umami runs on `ubuntu-vm` as its own systemd service on a local port,
+- [x] Umami runs on `ubuntu-vm` as its own systemd service on a local port,
       with its own database and role in the shared PostgreSQL 18, set up by a
       script in `site/deploy/` (no other site's files touched).
       Built 2026-11-20: `site/deploy/umami/install.sh` (pinned Umami v3.4.1,
       built from GitHub as a `umami` system user; role and database `umami`
       over 127.0.0.1 only; root-only `/etc/web-apps/umami/umami.env`) and
       `umami.service` on 127.0.0.1:4321 with the same hardening as the site.
-      Remaining: run it on the server, which needs the maintainer's go-ahead
-      (it downloads and builds Umami and changes `pg_hba.conf`).
+      Installed 2026-11-20 with the maintainer's go-ahead: Umami v3.4.1 on
+      127.0.0.1:4321 (pnpm pinned to 12.3.4, the version its `package.json`
+      requires), active as `umami`, about 190 MB of memory.
 - [x] The tracker reaches Umami through the site's own origin (a Caddy
       `handle` for the script and the collect endpoint), so no new DNS record
       and no new CSP origin are needed. The dashboard is reached over an SSH
@@ -834,6 +835,21 @@ pick them up.
 
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
+
+- **2026-11-20:** eighth production deploy, commit `ecbc570`, which moves the
+  Umami route to port 4321; `/stats/script.js` then answered 503 (nothing
+  there yet) instead of reaching daybyword.com. Then Umami itself, at the
+  maintainer's request. The first two installs stopped at the build, with
+  nothing started: Umami v3.4.1 requires exactly pnpm 12.3.4 but names no
+  `packageManager`, so corepack picked the newest pnpm, first for the
+  install and then for the build's own nested `pnpm` calls (`2c7556a`,
+  `7999685` fix both). The third install built and started it. Checked:
+  `umami.service` active as `umami` on 127.0.0.1:4321; through Caddy
+  `/stats/script.js` is 200 (4.7 KB of JavaScript) and `/stats/api/send`
+  answers (400 for an empty post); `/stats/`, `/stats/login`,
+  `/stats/api/auth/login` and `/stats/api/websites` are 404 from the site;
+  daybyword.com still owns 4318 and answers 200; the site serves `ecbc570`,
+  `/healthz` is ok and no tracker loads yet.
 
 - **2026-11-20:** seventh production deploy, commit `8a5c018` (D1-D9, the
   prose audit, lessons 25 and 35 fixes, Part 6, glossary, boxes and
