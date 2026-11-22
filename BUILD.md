@@ -13,7 +13,7 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 | **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
 | **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC with the new fix-forward cutover: Node 26.13.1, pnpm-built, `pg` driver. Umami v3.4.1 runs on the same host (127.0.0.1:4321, on Node 26.13.1 since 2026-11-21 18:29 UTC) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
 | **`main`** | On 2026-11-21 under Node 26.13.1: `make site-verify` and the 72 e2e tests against `cfromthegroundup_test` on the server, and the C, book and fuzz targets of `make verify` on the Mac. For the Umami move the same day: every target but `tidy` and `book` on the server (its clang-tidy is 21 and it has no mdBook), and those two on the Mac. CI has not yet run with pnpm. |
-| **Last updated** | 2026-11-21 |
+| **Last updated** | 2026-11-22 |
 
 ### Milestones at a glance
 
@@ -890,6 +890,12 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-22:** The README headline said 35 programs; the course has had
+  38 lessons since Part 6 landed, and the site, the portfolio and the profile
+  README all say 38. It now says 38, and so does the GitHub description. Also
+  `origin` now pushes to GitHub and Codeberg over SSH, as the maintainer's
+  other repositories do; the Codeberg mirror was 52 commits behind and is
+  level again. AGENTS.md says so. Checked with `make verify`.
 - **2026-11-21:** Umami moved to Node 26, the last process on the host's
   Node 24 runtime, so that runtime could be removed. `umami.service` now
   starts `/opt/node-26/bin/node`, and `install.sh` builds with that Node and

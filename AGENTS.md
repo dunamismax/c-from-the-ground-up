@@ -113,7 +113,8 @@ and move on. Never tick a box that is not really done.
 ## Repository rules
 
 - Work on `main` only. Do not create branches, worktrees or pull requests. Commit
-  directly to `main` and push with `git push origin main`.
+  directly to `main` and push with `git push origin main`. `origin` has two push
+  URLs (GitHub and Codeberg), so one push updates both. Both are public.
 - Do not add AI attribution anywhere: no `Co-Authored-By` trailers, no "Generated
   with ..." lines, and no credit to an AI tool in commits, code, comments or docs.
   Use the configured git identity and never change git config.

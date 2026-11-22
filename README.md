@@ -4,7 +4,7 @@
 
 # C From The Ground Up
 
-**A free, progressive course in C: 35 small, runnable programs that take you
+**A free, progressive course in C: 38 small, runnable programs that take you
 from your first `printf` to pointers, memory, sockets, threads and a terminal
 game you build yourself.**
 
