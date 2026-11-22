@@ -1,34 +1,55 @@
 # BUILD.md
 
-The roadmap and work tracker for `c-from-the-ground-up`. Start with **Now**.
+The roadmap and work record for `c-from-the-ground-up`, which is complete
+at v2.0.0. Start with **Now**.
 Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
 
 ## Now
 
+**The project is complete.** [v2.0.0](https://github.com/dunamismax/c-from-the-ground-up/releases/tag/v2.0.0),
+released 2026-11-22, is the final release: 38 lessons in six parts, the
+book mirror and https://cfromthegroundup.com. No new work is planned. The
+repository stays public and open to issues, and a wrong comment or a broken
+lesson is still a bug worth fixing (see "After 2.0" below).
+
 | | |
 | --- | --- |
-| **Current phase** | [Phase W: cfromthegroundup.com](#phase-w-cfromthegroundupcom-current-focus): W7 (launch) and W9 (Umami analytics), plus the [course content track](#course-content-track). D1-D10 are all settled (see the Decision log). |
-| **Next step** | W9's last step: commit `UMAMI_WEBSITE_ID` once the maintainer sends it, deploy, and check that a page view reaches Umami. Then W7's screen-reader pass and the OAuth app (maintainer). Otherwise: the rest of **Exercise solutions** under Later (P3), Parts 2-6, a part at a time. The remaining Content expansion items add lessons or dependencies and each needs the maintainer's yes. |
-| **In progress** | Nothing claimed. When sessions run in parallel, claim an item here (its name, a one-line goal and the date) before starting, and take it off when it lands. |
-| **Waiting on the maintainer** | (1) The GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) W9: change Umami's `admin` / `umami` password over the SSH tunnel and add the website (runbook, "Analytics", steps 2-4), then send the website ID so it can be committed and deployed. |
-| **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC with the new fix-forward cutover: Node 26.13.1, pnpm-built, `pg` driver. Umami v3.4.1 runs on the same host (127.0.0.1:4321, on Node 26.13.1 since 2026-11-21 18:29 UTC) with analytics still off on the site until its website ID is committed. Accounts are off until the OAuth app exists. |
-| **`main`** | On 2026-11-21 under Node 26.13.1: `make site-verify` and the 72 e2e tests against `cfromthegroundup_test` on the server, and the C, book and fuzz targets of `make verify` on the Mac. For the Umami move the same day: every target but `tidy` and `book` on the server (its clang-tidy is 21 and it has no mdBook), and those two on the Mac. CI has not yet run with pnpm. |
+| **Status** | Complete at v2.0.0 (see the 2026-11-22 entry in the Decision log). Phase W's milestones W1-W7 are done; W9 is installed but switched off. |
+| **Next step** | None planned. Corrections only: fix the lesson, run `make sync && make verify`, commit to `main`. |
+| **In progress** | Nothing. |
+| **Optional maintainer steps** | None of these blocks anything; the site works fully without them. (1) Accounts: the GitHub OAuth app and `accounts.env` (W0); the steps are under "Accounts" in [`site/deploy/README.md`](site/deploy/README.md). (2) A manual screen-reader pass (W7). (3) Analytics: change Umami's `admin` / `umami` password over the SSH tunnel, add the website (runbook, "Analytics", steps 2-4), then commit `UMAMI_WEBSITE_ID` and deploy. |
+| **Live** | https://cfromthegroundup.com serves `4112094`, deployed 2026-11-21 at 15:56 UTC: Node 26.13.1, pnpm-built, `pg` driver. Every later commit changes only docs or the Umami unit, none of which the site's build reads, so the live site matches v2.0.0. Umami v3.4.1 runs on the same host (127.0.0.1:4321, Node 26.13.1) with analytics off on the site. Accounts are off. |
+| **`main`** | v2.0.0: `make verify` on the Mac and CI's `verify` workflow (pnpm, Node 26) both green. |
 | **Last updated** | 2026-11-22 |
+
+### After 2.0
+
+What was not built is kept below, unticked, as a record; it is not planned.
+
+- **Exercise solutions for Parts 2-6** (chapters 10-38). Part 1 has worked
+  solutions; the later chapters keep their "Try It Yourself" exercises
+  without them.
+- **Content expansion ideas** (a C23 lesson, CMake, `poll()` and Unix
+  sockets, libsodium, cross-compilation) and **W8+** (quizzes,
+  certificates, notes, offline, translations).
+- **Yearly upkeep, if anyone picks the project up again:** the GitHub
+  Actions versions ("CI upkeep"), the Compiler Explorer GCC pin (Ideas
+  inbox), and the pinned tool versions in AGENTS.md.
 
 ### Milestones at a glance
 
 | Milestone | Status |
 | --- | --- |
-| [W0. Inputs from the maintainer](#w0-inputs-from-the-maintainer-agents-ask-do-not-block-on-these) | Server facts, DNS and decisions done; the OAuth app is open |
+| [W0. Inputs from the maintainer](#w0-inputs-from-the-maintainer-agents-ask-do-not-block-on-these) | Done, except the optional OAuth app |
 | [W1. Scaffold the app](#w1-scaffold-the-app) | Done |
 | [W2. Course content pipeline](#w2-course-content-pipeline) | Done |
 | [W3. Design system and core pages](#w3-design-system-and-core-pages) | Done |
 | [W4. Learner experience](#w4-learner-experience-no-accounts-yet) | Done |
 | [W5. Production deployment](#w5-production-deployment) | Done |
-| [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production until the OAuth app exists |
-| [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Maintainer step left: screen-reader pass |
-| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Umami installed and running; waiting for the admin password change and the website ID |
-| [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Ideas, to triage when W7 is done |
+| [W6. Accounts and synced progress](#w6-accounts-and-synced-progress-built-with-d7s-default) | Done in code; off in production (no OAuth app) |
+| [W7. Launch](#w7-launch-and-make-the-site-the-front-door) | Done; the manual screen-reader pass was not run |
+| [W9. Analytics](#w9-analytics-d9-self-hosted-umami) | Built and installed; off on the site (no website ID) |
+| [W8+. Beyond parity](#w8-beyond-parity-triage-into-milestones-when-w7-is-done) | Not planned |
 
 ## How to work this file
 
@@ -50,8 +71,8 @@ Read [AGENTS.md](AGENTS.md) for conventions and the verification workflow.
    unchecked and add a `Remaining:` line saying exactly what is left. Add a
    short entry to the top of the **Done log**; the details belong in the
    commit body.
-6. **Advance.** Update **Now**: next step, in progress, waiting on the
-   maintainer, live, and the date. When a milestone's "Done when" holds, set
+6. **Advance.** Update **Now**: next step, in progress, optional maintainer
+   steps, live, and the date. When a milestone's "Done when" holds, set
    its **Status** line and its row in **Milestones at a glance**.
 
 **Changing the plan.** You may split, add or reword unchecked items when real
@@ -70,7 +91,7 @@ D6-D10 the website.
 
 ---
 
-## Phase W: cfromthegroundup.com (CURRENT FOCUS)
+## Phase W: cfromthegroundup.com
 
 ### Vision
 
@@ -783,6 +804,14 @@ pick them up.
 
 ## Decision log
 
+- **2026-11-22: the project is complete at v2.0.0.** The maintainer
+  declared the course finished and asked for a final release. It is
+  v2.0.0, not v1.0.0: a `v1.0.0` tag and GitHub release already existed
+  (2026-03-26, the move to mdBook), and published tags are not moved. The
+  unfinished items stay in this file, unticked, as a record of what was not
+  built; none of them is planned. Accounts and analytics stay off in
+  production unless the maintainer finishes their optional steps (see
+  **Now**).
 - **2026-11-21: the host's web platform contract.** The maintainer adopted
   one standard for every site on the host (`docs/web-platform.md` in
   `ubuntu-vm-backup`, which wins over this file where they differ): pnpm
@@ -890,6 +919,11 @@ pick them up.
 Newest first. One short entry per piece of work: what changed, why, and how it
 was checked. The full detail belongs in the commit body.
 
+- **2026-11-22:** Released v2.0.0, the final release. **Now** says the
+  project is complete and lists the optional maintainer steps and what was
+  not built; the Milestones table, AGENTS.md and the README say the same,
+  and `CHANGELOG.md` records v1.0.0 and v2.0.0. Checked with `make verify`
+  before tagging; CI's `verify` workflow was green on the commit before.
 - **2026-11-22:** The README headline said 35 programs; the course has had
   38 lessons since Part 6 landed, and the site, the portfolio and the profile
   README all say 38. It now says 38, and so does the GitHub description. Also

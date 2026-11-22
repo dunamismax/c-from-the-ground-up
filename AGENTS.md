@@ -1,8 +1,8 @@
 # AGENTS.md
 
 Guidance for AI agents (and humans) working in `c-from-the-ground-up`. Read this
-file before changing anything. Then read [BUILD.md](BUILD.md) for the roadmap,
-open decisions, and backlog.
+file before changing anything. Then read [BUILD.md](BUILD.md) for the project's
+status, decisions and history.
 
 ## What this project is
 
@@ -18,19 +18,24 @@ Core idea: **every lesson is a small, readable, runnable C program, and the
 comments are the lesson.** The book chapters add a prose overview and embed the
 full source.
 
-## Current focus: the website
+## Status: complete (v2.0.0)
 
-The active phase is building **https://cfromthegroundup.com**, a self-hosted
-course site that becomes the main way to take the course. Its stack is
-SvelteKit 3, Svelte 5, TypeScript, Tailwind CSS 4, PostgreSQL 18 with Drizzle,
-adapter-node and Caddy.
+The course is finished. v2.0.0 (2026-11-22) is the final release, and no new
+lessons or features are planned. Changes from here are corrections: a wrong
+comment, a lesson that fails to compile on a new compiler, a broken link, a
+security fix in the site's dependencies. Anything bigger is a new product
+decision and needs the maintainer (see below). BUILD.md's **Now** lists what
+was left unbuilt and the optional maintainer steps.
 
-- The full plan, architecture defaults and milestones (W0-W8) are in
-  **[BUILD.md](BUILD.md), "Phase W"**. BUILD.md's **Now** section names the
-  next step and what is waiting on the maintainer.
+The site, **https://cfromthegroundup.com**, is the main way to take the
+course. Its stack is SvelteKit 3, Svelte 5, TypeScript, Tailwind CSS 4,
+PostgreSQL 18 with Drizzle, adapter-node and Caddy.
+
+- How it was built, its architecture and milestones (W0-W9) are in
+  **[BUILD.md](BUILD.md), "Phase W"**.
 - The site lives in `site/` (see **The website** below). It reads lesson
   content from `Part */` and `src/chapters/` at build time and never keeps its
-  own copy.
+  own copy, so a fixed lesson reaches the site on the next deploy.
 - SvelteKit 3, Svelte 5, Tailwind 4, Drizzle and Better Auth change quickly
   and differ a lot from older tutorials. Look up current documentation
   (Context7 or the official docs) before writing framework code, rather than
@@ -107,7 +112,7 @@ Ask the maintainer in chat, and do not act until they answer:
 
 An item that needs a person, such as the OAuth app or a screen-reader pass,
 never blocks other work. Do everything up to that step, write the exact
-remaining instruction under **Waiting on the maintainer** in BUILD.md's Now,
+remaining instruction under **Optional maintainer steps** in BUILD.md's Now,
 and move on. Never tick a box that is not really done.
 
 ## Repository rules
@@ -137,7 +142,7 @@ Part 5 - Expert Systems & Application Development/  lessons 31-35
     31_make_files_for_multi_file_projects/          the only multi-file lesson (own Makefile)
 Part 6 - The Toolsmith Path_ Debugging, UB and Testing/  lessons 36-38
 tests/                                              unit tests for lessons 20 and 28 (lesson 38's `#define main` trick); the smoke and sanitizer checks run them
-exercises/NN-slug/                                  worked solutions to a chapter's exercises, one `.c` file each (Part 1 so far); the site shows them on the lesson page
+exercises/NN-slug/                                  worked solutions to a chapter's exercises, one `.c` file each (Part 1, chapters 01-09); the site shows them on the lesson page
 fuzz/                                               libFuzzer targets for the lesson 34 and 35 parsers, with seed inputs in fuzz/corpus/<target>/
 src/SUMMARY.md                                      book table of contents (mdBook)
 src/index.md                                        book introduction page
@@ -149,6 +154,7 @@ scripts/check_book_links.py                         checks internal links and an
 scripts/sanitizer_check.sh                          runs the lessons under ASan/UBSan/LSan, MSan and TSan
 scripts/pty_run.py                                  runs an ncurses lesson in a pseudo-terminal with scripted keys
 scripts/fuzz_check.sh                               builds and runs the fuzz targets (`make fuzz`)
+CHANGELOG.md                                        release notes (v2.0.0 is the final release)
 Makefile                                            maintainer entry points (not a lesson)
 .clang-format                                       lesson code style; `make format`, checked in CI
 .clangd                                             editor flags for the lessons (the smoke check's warnings)
@@ -313,7 +319,7 @@ CI pins mdBook in both workflows. Bump the pin deliberately, in both files, afte
 
 ## The website (`site/`)
 
-SvelteKit 3 app for https://cfromthegroundup.com. The roadmap is BUILD.md,
+SvelteKit 3 app for https://cfromthegroundup.com. How it was built is BUILD.md,
 Phase W; `site/README.md` has the developer quick start.
 
 ```text
@@ -585,8 +591,9 @@ introduces a new UPPERCASE term, add it to the glossary.
   links depend on them; D2 settled that they keep their names.
 - Do not hand-edit synced code blocks, and do not add `{{#include}}`.
 - Do not add third-party dependencies to lessons beyond what is already used
-  (libc, libm, pthreads, ncurses). New ones, such as libsodium, are planned in
-  BUILD.md and need CI and README updates.
+  (libc, libm, pthreads, ncurses). New ones, such as libsodium, were proposed in
+  BUILD.md but not adopted; one would need the maintainer's yes and CI and
+  README updates.
 - Do not "modernize" a lesson past what the reader has learned at that point.
   Lesson 5 should not use function pointers.
 - Do not weaken the smoke-check flags or delete behavioural checks to make a

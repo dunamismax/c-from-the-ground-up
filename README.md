@@ -105,7 +105,8 @@ taught.
 - **This repository:** the source of the course. Every lesson is one `.c` file
   under `Part */`, and the site and the book are both generated from those
   files. Clone it to read and run the lessons in your own editor. Worked
-  solutions to the exercises are in [`exercises/`](exercises/) (Part 1 so far).
+  solutions to the Part 1 exercises (lessons 1-9) are in
+  [`exercises/`](exercises/).
 
 ## Running the lessons from this repository
 
@@ -182,11 +183,19 @@ the `.c` file, run `make sync`, then `make verify`.
 - [AGENTS.md](AGENTS.md) -- repository layout, conventions, and the workflow
   for changing or adding lessons and working on the site (written for AI
   agents, useful for humans too)
-- [BUILD.md](BUILD.md) -- what is being worked on now, the roadmap, open
-  decisions, and the improvement backlog
+- [BUILD.md](BUILD.md) -- how the course and the site were built, the
+  decisions behind them, and what was left unbuilt
+- [CHANGELOG.md](CHANGELOG.md) -- the releases
 
 Found a mistake, or a comment that confused you? A wrong comment is a bug:
 please [open an issue](https://github.com/dunamismax/c-from-the-ground-up/issues).
+
+## Project status
+
+**Complete.** [v2.0.0](https://github.com/dunamismax/c-from-the-ground-up/releases/tag/v2.0.0)
+is the final release: all 38 lessons, the website and the book are finished,
+and no new lessons are planned. The repository stays open, and corrections are
+still welcome.
 
 ## License
 

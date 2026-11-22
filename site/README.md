@@ -6,7 +6,7 @@ adapter-node.
 
 Course content is not stored here. The site reads the lessons (`../Part */`)
 and chapters (`../src/`) at build time. See the repository's `AGENTS.md` for
-conventions and `BUILD.md` (Phase W) for the roadmap.
+conventions and `BUILD.md` (Phase W) for how the site was built.
 
 ## Develop
 
